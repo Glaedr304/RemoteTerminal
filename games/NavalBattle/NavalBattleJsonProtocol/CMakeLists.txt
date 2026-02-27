@@ -13,4 +13,4 @@ target_link_libraries(NavalBattleJsonProtocol PUBLIC
     jsoncpp_static
 )
 
-set_property(TARGET NavalBattleEngine PROPERTY CXX_STANDARD 20)
+set_property(TARGET NavalBattleJsonProtocol PROPERTY CXX_STANDARD 20)

@@ -5,16 +5,16 @@ void GamesHttpController::listGames(const drogon::HttpRequestPtr& req, std::func
     Json::Value games(Json::arrayValue);
 
     // Naval Battle
-    Json::Value battleship;
-    battleship["id"] = "navalbattle";
-    battleship["name"] = "Naval Battle";
-    battleship["description"] = "Classic naval combat strategy game";
-    battleship["route"] = "com.titohq.navalbattle";
-    battleship["url"] = "/navalbattle/";
-    battleship["icon"] = "\u2693";
-    battleship["minPlayers"] = 2;
-    battleship["maxPlayers"] = 2;
-    games.append(battleship);
+    Json::Value navalbattle;
+    navalbattle["id"] = "navalbattle";
+    navalbattle["name"] = "Naval Battle";
+    navalbattle["description"] = "Classic naval combat strategy game";
+    navalbattle["route"] = "com.titohq.navalbattle";
+    navalbattle["url"] = "/navalbattle/";
+    navalbattle["icon"] = "\u2693";
+    navalbattle["minPlayers"] = 2;
+    navalbattle["maxPlayers"] = 2;
+    games.append(navalbattle);
 
     // Tic Tac Toe
     Json::Value tictactoe;

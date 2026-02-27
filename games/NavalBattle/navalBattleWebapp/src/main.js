@@ -491,8 +491,8 @@ function applySetupInfo(setupInfo) {
     gameSection.classList.remove("hidden");
 
     // Populate info
-    meSpan.textContent = setupInfo.you || "ï¿½";
-    opponentSpan.textContent = setupInfo.opponent || "ï¿½";
+    meSpan.textContent = setupInfo.you || "—";
+    opponentSpan.textContent = setupInfo.opponent || "—";
     updatePhaseDisplay(lastPhase);
 
     // Populate ship selector

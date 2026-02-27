@@ -65,7 +65,7 @@ cmake --install "${BUILD_DIR}"
 # dest_subpath is relative to WEB_ROOT ("" means root)
 declare -a WEBAPPS=(
   "platform/remoteTerminalWebapp:"
-  "games/Battleship/battleshipWebapp:navalbattle"
+  "games/NavalBattle/navalBattleWebapp:navalbattle"
   "games/TicTacToe/ticTacToeWebapp:tictactoe"
 )
 

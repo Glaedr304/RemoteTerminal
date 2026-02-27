@@ -1,0 +1,6 @@
+add_subdirectory("NavalBattleEngine")
+add_subdirectory("NavalBattleSession")
+add_subdirectory("NavalBattleSessionManager")
+add_subdirectory("NavalBattleJsonProtocol")
+add_subdirectory("NavalBattleEndpoint")
+add_subdirectory("NavalBattleServer")

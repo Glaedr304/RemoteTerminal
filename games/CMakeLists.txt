@@ -1,2 +1,2 @@
-add_subdirectory("Battleship")
+add_subdirectory("NavalBattle")
 add_subdirectory("TicTacToe")
