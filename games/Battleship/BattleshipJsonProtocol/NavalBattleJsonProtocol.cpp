@@ -1,7 +1,7 @@
-#include "BattleshipJsonProtocol.h"
+#include "NavalBattleJsonProtocol.h"
 
-// Battleship namespace functions
-namespace Battleship {
+// NavalBattle namespace functions
+namespace NavalBattle {
 
 Json::Value toJson(const coord& c) {
 	if (c.isUnspecified())
@@ -499,4 +499,4 @@ OutboundWireMessage outboundWireMessageFromJson(const Json::Value v) {
 	return Json::writeString(wb, v);
 }
 
-} // namespace Battleship
+} // namespace NavalBattle

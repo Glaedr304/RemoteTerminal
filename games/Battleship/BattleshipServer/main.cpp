@@ -1,12 +1,12 @@
-#include "BattleshipEndpoint.h"
-#include "BattleshipJsonProtocol.h"
+#include "NavalBattleEndpoint.h"
+#include "NavalBattleJsonProtocol.h"
 #include <iostream>
 #include <unordered_map>
 
-using namespace Battleship;
+using namespace NavalBattle;
 
 int main() {
-    BattleshipEndpoint messageRouter;
+    NavalBattleEndpoint messageRouter;
     
     // Track which userIds have been "authenticated" (bound) in this CLI session
     // Maps a "connection id" (line number or similar) to userId

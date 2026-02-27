@@ -3,7 +3,7 @@
 #include "coord.h"
 #include <variant>
 
-namespace Battleship {
+namespace NavalBattle {
 
 enum class SessionActionType {
     PlaceShip,
@@ -35,4 +35,4 @@ struct SessionAction {
     SessionActionData data;
 };
 
-} // namespace Battleship
+} // namespace NavalBattle

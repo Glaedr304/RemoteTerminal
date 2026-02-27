@@ -5,7 +5,7 @@
 #include <string>
 #include <set>
 
-namespace Battleship {
+namespace NavalBattle {
 
 class Ship {
 private:
@@ -51,4 +51,4 @@ public:
 	const static Ship carrier;
 };
 
-} // namespace Battleship
+} // namespace NavalBattle

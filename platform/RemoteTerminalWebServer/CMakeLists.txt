@@ -5,7 +5,7 @@ add_executable(RemoteTerminalWebServer
 find_package(Drogon CONFIG REQUIRED)
 
 target_link_libraries(RemoteTerminalWebServer PRIVATE
-	BattleshipEndpoint
+	NavalBattleEndpoint
 	TicTacToeEndpoint
 	RemoteTerminalMessaging
 	Drogon::Drogon

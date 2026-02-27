@@ -1,15 +1,15 @@
 #include "RemoteTerminalWebSocketController.h"
 #include "RemoteTerminalEndpointRegistry.h"
 #include "GamesHttpController.h"
-#include "BattleshipEndpoint.h"
+#include "NavalBattleEndpoint.h"
 #include "TicTacToeEndpoint.h"
 #include <drogon/drogon.h>
 
 int main(int argc, char* argv[]) {
     RemoteTerminalEndpointRegistry registry;
 
-    BattleshipEndpoint* battleshipEndpoint = new BattleshipEndpoint();
-    registry.registerEndpoint("/ws/" + battleshipEndpoint->routePath(), battleshipEndpoint);
+    NavalBattleEndpoint* navalBattleEndpoint = new NavalBattleEndpoint();
+    registry.registerEndpoint("/ws/" + navalBattleEndpoint->routePath(), navalBattleEndpoint);
 
     TicTacToeEndpoint* ticTacToeEndpoint = new TicTacToeEndpoint();
     registry.registerEndpoint("/ws/" + ticTacToeEndpoint->routePath(), ticTacToeEndpoint);

@@ -8,7 +8,7 @@
 #include "Action.h"
 #include "SessionTypes.h"
 
-namespace Battleship {
+namespace NavalBattle {
 
 Json::Value toJson(const coord& c);
 coord coordFromJson(const Json::Value& v);
@@ -97,4 +97,4 @@ ActionRequest actionRequestFromJson(const Json::Value& v);
 
 OutboundWireMessage outboundWireMessageFromJson(const Json::Value v);
 
-} // namespace Battleship
+} // namespace NavalBattle

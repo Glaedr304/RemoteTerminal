@@ -1,9 +1,9 @@
-#include "BattleshipEndpoint.h"
-#include "BattleshipJsonProtocol.h"
+#include "NavalBattleEndpoint.h"
+#include "NavalBattleJsonProtocol.h"
 
-using namespace Battleship;
+using namespace NavalBattle;
 
-WireMessageResult BattleshipEndpoint::onUnauthenticatedMessage(std::string_view message) {
+WireMessageResult NavalBattleEndpoint::onUnauthenticatedMessage(std::string_view message) {
 	WireMessageResult answer;
 
 	JoinRequest inputJoinRequest = joinRequestFromJson(parseJson(message));
@@ -17,7 +17,7 @@ WireMessageResult BattleshipEndpoint::onUnauthenticatedMessage(std::string_view 
 	return answer;
 }
 
-WireMessageResult BattleshipEndpoint::onAuthenticatedMessage(const UserId& userID, std::string_view message) {
+WireMessageResult NavalBattleEndpoint::onAuthenticatedMessage(const UserId& userID, std::string_view message) {
 	WireMessageResult answer;
 
 	if (message.empty())
@@ -34,7 +34,7 @@ WireMessageResult BattleshipEndpoint::onAuthenticatedMessage(const UserId& userI
 	return answer;
 }
 
-AddressedWireMessageBundle BattleshipEndpoint::routeMessagesToWireFormat(const AddressedMessageBundle& b) {
+AddressedWireMessageBundle NavalBattleEndpoint::routeMessagesToWireFormat(const AddressedMessageBundle& b) {
 	AddressedWireMessageBundle wireBundle;
 
 	for (const auto& addressedMessage : b) {
@@ -45,6 +45,6 @@ AddressedWireMessageBundle BattleshipEndpoint::routeMessagesToWireFormat(const A
 	return wireBundle;
 }
 
-std::string BattleshipEndpoint::routePath() {
+std::string NavalBattleEndpoint::routePath() {
 	return "com.titohq.navalbattle";
 }

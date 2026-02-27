@@ -1,15 +1,15 @@
-add_library(BattleshipEndpoint
-	BattleshipEndpoint.cpp
+add_library(NavalBattleEndpoint
+	NavalBattleEndpoint.cpp
 )
 
-target_include_directories(BattleshipEndpoint PUBLIC
+target_include_directories(NavalBattleEndpoint PUBLIC
 	${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-target_link_libraries(BattleshipEndpoint
+target_link_libraries(NavalBattleEndpoint
 	PUBLIC
 		RemoteTerminalMessaging
-		BattleshipSessionManager
+		NavalBattleSessionManager
 	PRIVATE
-		BattleshipJsonProtocol
+		NavalBattleJsonProtocol
 )

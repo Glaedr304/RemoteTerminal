@@ -1,12 +1,12 @@
-#include "BattleshipSession.h"
-#include "BattleshipSession.h"
+#include "NavalBattleSession.h"
+#include "NavalBattleSession.h"
 #include "Action.h"
 
 #include <string>
 
-using namespace Battleship;
+using namespace NavalBattle;
 
-BattleshipSession::BattleshipSession(const GameId& id, const UserId& playerOneId, const UserId& playerTwoId) {
+NavalBattleSession::NavalBattleSession(const GameId& id, const UserId& playerOneId, const UserId& playerTwoId) {
 	_userToPlayerMap[playerOneId] = Player::one;
 	_userToPlayerMap[playerTwoId] = Player::two;
 	_playerToUserMap[Player::one] = playerOneId;
@@ -15,15 +15,15 @@ BattleshipSession::BattleshipSession(const GameId& id, const UserId& playerOneId
 	_gameId = id;
 }
 
-GameId BattleshipSession::getGameId() const {
+GameId NavalBattleSession::getGameId() const {
 	return _gameId;
 }
 
-bool BattleshipSession::isFinished() const {
+bool NavalBattleSession::isFinished() const {
 	return _engine.phase() == Phase::finished;
 }
 
-AddressedMessageBundle BattleshipSession::handleAction(const UserId& user, const SessionAction& action) {
+AddressedMessageBundle NavalBattleSession::handleAction(const UserId& user, const SessionAction& action) {
 	AddressedMessageBundle a;
 	SessionActionResult s;
 	Player p = playerFor(user);
@@ -72,7 +72,7 @@ AddressedMessageBundle BattleshipSession::handleAction(const UserId& user, const
 	return a;
 }
 
-AddressedMessageBundle BattleshipSession::getSnapshotMessageBundles() {
+AddressedMessageBundle NavalBattleSession::getSnapshotMessageBundles() {
 	AddressedMessageBundle answer;
 
 	UserSnapshot p1Snapshot;
@@ -95,7 +95,7 @@ AddressedMessageBundle BattleshipSession::getSnapshotMessageBundles() {
 	return answer;
 }
 
-AddressedMessageBundle BattleshipSession::getStartupInfoMessageBundles() {
+AddressedMessageBundle NavalBattleSession::getStartupInfoMessageBundles() {
 	AddressedMessageBundle answer;
 
 	StartupInfo p1startupInfo(
@@ -126,7 +126,7 @@ AddressedMessageBundle BattleshipSession::getStartupInfoMessageBundles() {
 	return answer;
 }
 
-AddressedMessageBundle BattleshipSession::getSnapshotMessageBundleForUser(const UserId& u) {
+AddressedMessageBundle NavalBattleSession::getSnapshotMessageBundleForUser(const UserId& u) {
 	AddressedMessageBundle answer;
 	UserSnapshot snapshot;
 	snapshot.currentUser = _playerToUserMap[_engine.currentTurn()];
@@ -138,18 +138,18 @@ AddressedMessageBundle BattleshipSession::getSnapshotMessageBundleForUser(const 
 	return answer;
 }
 
-UserId BattleshipSession::opponentForUser(const UserId& u) {
+UserId NavalBattleSession::opponentForUser(const UserId& u) {
 	return _playerToUserMap[opponent(_userToPlayerMap[u])];
 }
 
-Player BattleshipSession::playerFor(const UserId& user) const {
+Player NavalBattleSession::playerFor(const UserId& user) const {
 	auto p = _userToPlayerMap.find(user);
 	if (p == _userToPlayerMap.end())
 		return Player::none;
 	return p->second;
 }
 
-SessionActionResult BattleshipSession::handlePlaceShip(Player p, const SessionAction& a) {
+SessionActionResult NavalBattleSession::handlePlaceShip(Player p, const SessionAction& a) {
 	SessionActionResult answer;
 	
 	PlaceShipData psd = std::get<PlaceShipData>(a.data);
@@ -182,7 +182,7 @@ SessionActionResult BattleshipSession::handlePlaceShip(Player p, const SessionAc
 	return answer;;
 }
 
-SessionActionResult BattleshipSession::handleFire(Player p, const SessionAction& a) {
+SessionActionResult NavalBattleSession::handleFire(Player p, const SessionAction& a) {
 	SessionActionResult answer;
 	FireResult r = _engine.fire(p, std::get<FireData>(a.data).target);
 
@@ -215,7 +215,7 @@ SessionActionResult BattleshipSession::handleFire(Player p, const SessionAction&
 	return answer;
 }
 
-SessionActionResult BattleshipSession::handleReady(Player p) {
+SessionActionResult NavalBattleSession::handleReady(Player p) {
 	SessionActionResult answer;
 	ReadyUpResult r = _engine.readyUp(p);
 	answer.success = r.success;
@@ -241,7 +241,7 @@ SessionActionResult BattleshipSession::handleReady(Player p) {
 	return answer;
 }
 
-SessionActionResult BattleshipSession::handleCheckPlacement(Player p, const SessionAction& a) {
+SessionActionResult NavalBattleSession::handleCheckPlacement(Player p, const SessionAction& a) {
 	SessionActionResult answer;
 	answer.success = true;
 	answer.type = SessionActionResultType::CheckPlacementResult;
@@ -257,7 +257,7 @@ SessionActionResult BattleshipSession::handleCheckPlacement(Player p, const Sess
 	return answer;
 }
 
-SessionActionResult BattleshipSession::handleRematch(Player p) {
+SessionActionResult NavalBattleSession::handleRematch(Player p) {
 	SessionActionResult answer;
 	answer.type = SessionActionResultType::RematchResult;
 	answer.data = RematchResultData{};
@@ -281,7 +281,7 @@ SessionActionResult BattleshipSession::handleRematch(Player p) {
 	return answer;
 }
 
-AddressedMessageBundle BattleshipSession::processRematchRequest(const UserId& user, Player p, const SessionActionResult& result) {
+AddressedMessageBundle NavalBattleSession::processRematchRequest(const UserId& user, Player p, const SessionActionResult& result) {
 	AddressedMessageBundle a;
 	
 	// If rematch request failed, just send error to user
@@ -293,7 +293,7 @@ AddressedMessageBundle BattleshipSession::processRematchRequest(const UserId& us
 	// Check if both players want a rematch
 	if (_playerOneWantsRematch && _playerTwoWantsRematch) {
 		// Reset the engine for a new game
-		_engine = BattleshipEngine();
+		_engine = NavalBattleEngine();
 		_playerOneWantsRematch = false;
 		_playerTwoWantsRematch = false;
 		
@@ -315,4 +315,3 @@ AddressedMessageBundle BattleshipSession::processRematchRequest(const UserId& us
 	a.addMessage(ToUser(user), result);
 	return a;
 }
-

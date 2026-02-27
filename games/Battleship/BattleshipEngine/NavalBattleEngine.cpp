@@ -1,10 +1,10 @@
-﻿#include "BattleshipEngine.h"
+#include "NavalBattleEngine.h"
 #include "GameEntities.h"
 #include "unordered_set"
 
-using namespace Battleship;
+using namespace NavalBattle;
 
-BattleshipEngine::BattleshipEngine() :
+NavalBattleEngine::NavalBattleEngine() :
     _currentPlayer(Player::none),
     _phase(Phase::setup),
     _pOneFleet(getBaseFleet()),
@@ -13,13 +13,13 @@ BattleshipEngine::BattleshipEngine() :
 {
 }
 
-const Fleet& BattleshipEngine::getFleetForPlayer(Player p) const{
+const Fleet& NavalBattleEngine::getFleetForPlayer(Player p) const{
     return p == Player::one ? _pOneFleet : _pTwoFleet;
 }
 
 // only checks the overall status of the fleet
 // not the specific result of changing ship s
-PlaceShipResult BattleshipEngine::placeShip( Player p, int ID, coord pos, int rotation ) {
+PlaceShipResult NavalBattleEngine::placeShip( Player p, int ID, coord pos, int rotation ) {
     PlaceShipResult r;
     r.success = true;
 
@@ -52,7 +52,7 @@ PlaceShipResult BattleshipEngine::placeShip( Player p, int ID, coord pos, int ro
     return r;
 }
 
-ValidatePlacementResult BattleshipEngine::validatePlacement(Player p, int ID, coord pos, int rotation) const {
+ValidatePlacementResult NavalBattleEngine::validatePlacement(Player p, int ID, coord pos, int rotation) const {
     ValidatePlacementResult r;
     r.valid = true;
 
@@ -107,7 +107,7 @@ ValidatePlacementResult BattleshipEngine::validatePlacement(Player p, int ID, co
 }
 
 //build hitmaps and move to gamplay of other player is ready
-ReadyUpResult BattleshipEngine::readyUp(Player p) {
+ReadyUpResult NavalBattleEngine::readyUp(Player p) {
     ReadyUpResult answer;
     auto status = checkFleetStatus(getFleetForPlayer(p));
     if (status.any()) {
@@ -132,7 +132,7 @@ ReadyUpResult BattleshipEngine::readyUp(Player p) {
     return answer;
 }
 
-bool BattleshipEngine::isPlayerReady(Player p) {
+bool NavalBattleEngine::isPlayerReady(Player p) {
     if (p == Player::one)
         return p1IsReady;
     if (p == Player::two)
@@ -141,7 +141,7 @@ bool BattleshipEngine::isPlayerReady(Player p) {
 }
 
 // --- Gameplay ---
-FireResult BattleshipEngine::fire(Player p, coord target) {
+FireResult NavalBattleEngine::fire(Player p, coord target) {
     FireResult answer;
     
     if (_currentPlayer != p) {
@@ -188,11 +188,11 @@ FireResult BattleshipEngine::fire(Player p, coord target) {
 }
 
 // --- Queries ---
-Phase BattleshipEngine::phase() const {
+Phase NavalBattleEngine::phase() const {
     return _phase;
 }
 
-Player BattleshipEngine::getWinner() const{
+Player NavalBattleEngine::getWinner() const{
     if (_phase != Phase::finished)
         return Player::none;
     if (_pOneFleet.isDefeated())
@@ -201,11 +201,11 @@ Player BattleshipEngine::getWinner() const{
         return Player::one;
 }
 
-Player BattleshipEngine::currentTurn() const {
+Player NavalBattleEngine::currentTurn() const {
     return _currentPlayer;
 }
 
-std::string BattleshipEngine::nameForId(int id) const {
+std::string NavalBattleEngine::nameForId(int id) const {
     for (const Ship& s : getFleetForPlayer(Player::one).getShips())
         if (s.getID() == id)
             return s.getName();
@@ -216,34 +216,34 @@ std::string BattleshipEngine::nameForId(int id) const {
     return "";
 }
 
-int BattleshipEngine::boardRows() {
+int NavalBattleEngine::boardRows() {
     return _boardDimensions.first;
 }
 
-int BattleshipEngine::boardCols() {
+int NavalBattleEngine::boardCols() {
     return _boardDimensions.second;
 }
 
-const std::set<coord>& BattleshipEngine::getHitsForPlayer(Player p) const{
+const std::set<coord>& NavalBattleEngine::getHitsForPlayer(Player p) const{
     if (p == Player::one)
         return _p1Hits;
     return _p2Hits; //should never see player::none but this may cause issues if it does
 }
 
-const std::set<coord>& BattleshipEngine::getMissesForPlayer(Player p) const{
+const std::set<coord>& NavalBattleEngine::getMissesForPlayer(Player p) const{
     if (p == Player::one)
         return _p1Misses;
     return _p2Misses; //should never see player::none but this may cause issues if it does
 }
 
-BoardView BattleshipEngine::boardViewForPlayer(Player p) const{
+BoardView NavalBattleEngine::boardViewForPlayer(Player p) const{
     BoardView b;
     b.ownGrid = ownGrid(p);
     b.opponentGrid = opponentGrid(p);
     return b;
 }
 
-GridView BattleshipEngine::ownGrid(Player p) const {
+GridView NavalBattleEngine::ownGrid(Player p) const {
     std::map<coord, SquareState> occupied;
     //layer from bottom to top so only top is visible
     const Fleet& f = getFleetForPlayer(p);
@@ -258,7 +258,7 @@ GridView BattleshipEngine::ownGrid(Player p) const {
     return GridView(occupied);
 }
 
-GridView BattleshipEngine::opponentGrid(Player p) const {
+GridView NavalBattleEngine::opponentGrid(Player p) const {
     std::map<coord, SquareState> occupied;
     //layer from bottom to top so only top is visible
     for (const auto& c : getMissesForPlayer(p))
@@ -268,24 +268,24 @@ GridView BattleshipEngine::opponentGrid(Player p) const {
     return GridView(occupied);
 }
 
-Fleet& BattleshipEngine::getMutableFleetForPlayer(Player p) {
+Fleet& NavalBattleEngine::getMutableFleetForPlayer(Player p) {
     return p == Player::one ? _pOneFleet : _pTwoFleet;
 }
 
-std::set<coord>& BattleshipEngine::getHitsForPlayer(Player p) {
+std::set<coord>& NavalBattleEngine::getHitsForPlayer(Player p) {
     if (p == Player::one)
         return _p1Hits;
     return _p2Hits; //should never see player::none but this may cause issues if it does
 }
 
-std::set<coord>& BattleshipEngine::getMissesForPlayer(Player p) {
+std::set<coord>& NavalBattleEngine::getMissesForPlayer(Player p) {
     if (p == Player::one)
         return _p1Misses;
     return _p2Misses; //should never see player::none but this may cause issues if it does
 }
 
 //default fleet for normal game
-Fleet const& BattleshipEngine::getBaseFleet() {
+Fleet const& NavalBattleEngine::getBaseFleet() {
     static Fleet baseFleet{
         {
             Ship::carrier,
@@ -298,7 +298,7 @@ Fleet const& BattleshipEngine::getBaseFleet() {
     return baseFleet;
 }
 
-std::bitset<8> BattleshipEngine::checkFleetStatus(Fleet f) {
+std::bitset<8> NavalBattleEngine::checkFleetStatus(Fleet f) {
     std::bitset<8> answer;
     std::unordered_set<coord> occupied;
     for (Ship s : f.getShips()) {

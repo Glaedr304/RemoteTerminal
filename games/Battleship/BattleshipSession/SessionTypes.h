@@ -7,7 +7,7 @@
 #include <string>
 #include <variant>
 
-namespace Battleship {
+namespace NavalBattle {
 
 enum class SessionActionResultError {
     //session-level errors
@@ -150,4 +150,4 @@ struct ActionRequest {
     SessionAction action;
 };
 
-} // namespace Battleship
+} // namespace NavalBattle

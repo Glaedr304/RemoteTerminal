@@ -1,9 +1,9 @@
 #pragma once
-#include "BattleshipSession.h"
+#include "NavalBattleSession.h"
 #include "EndpointTypes.h"
 #include <map>
 
-namespace Battleship {
+namespace NavalBattle {
 
 struct MessageResult {
 	SenderAction senderAction = SenderAction::None; //what the session manager requests to happen to the sender
@@ -11,7 +11,7 @@ struct MessageResult {
 	AddressedMessageBundle addressedMessages; //messages to be sent in the format they travel on the wire
 };
 
-class BattleshipSessionManager {
+class NavalBattleSessionManager {
 public:
 	MessageResult handleJoinRequest(const JoinRequest& request);
 
@@ -19,12 +19,12 @@ public:
 
 	void destroySession(GameId g);
 
-	BattleshipSession* findSession(GameId g);
+	NavalBattleSession* findSession(GameId g);
 
 private:
 
-	std::map<GameId, BattleshipSession*> _gameIdToSessionMap;
+	std::map<GameId, NavalBattleSession*> _gameIdToSessionMap;
 	std::map<GameId, UserId> _lobbyGames;
 };
 
-} // namespace Battleship
+} // namespace NavalBattle

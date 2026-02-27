@@ -1,14 +1,14 @@
 #pragma once
 
-#include "BattleshipEngine.h"
+#include "NavalBattleEngine.h"
 #include "Action.h"
 #include "SessionTypes.h"
 
-namespace Battleship {
+namespace NavalBattle {
 
-class BattleshipSession {
+class NavalBattleSession {
 public:
-    BattleshipSession(const GameId& id, const UserId& playerOneId, const UserId& playerTwoId);
+    NavalBattleSession(const GameId& id, const UserId& playerOneId, const UserId& playerTwoId);
 
     std::string getGameId() const;
 
@@ -40,11 +40,11 @@ private:
     std::map<UserId, Player> _userToPlayerMap;
     std::map<Player, UserId> _playerToUserMap;
 
-    BattleshipEngine _engine;
+    NavalBattleEngine _engine;
     
     // Rematch tracking
     bool _playerOneWantsRematch = false;
     bool _playerTwoWantsRematch = false;
 };
 
-} // namespace Battleship
+} // namespace NavalBattle

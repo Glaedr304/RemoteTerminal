@@ -5,7 +5,7 @@
 
 //#include "GameEntities.h"
 
-namespace Battleship {
+namespace NavalBattle {
 
 class Fleet {
 private:
@@ -41,4 +41,4 @@ public:
 
 };
 
-} // namespace Battleship
+} // namespace NavalBattle

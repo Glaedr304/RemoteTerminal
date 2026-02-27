@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "GameEntities.h"
 #include "Fleet.h"
@@ -7,11 +7,11 @@
 #include <bitset>
 #include <unordered_map>
 
-namespace Battleship {
+namespace NavalBattle {
 
-class BattleshipEngine {
+class NavalBattleEngine {
     public:
-        BattleshipEngine();
+        NavalBattleEngine();
 
         // --- Setup ---
         const Fleet& getFleetForPlayer(Player p) const;
@@ -74,4 +74,4 @@ private:
     std::bitset<8> checkFleetStatus(Fleet f);
 };
 
-} // namespace Battleship
+} // namespace NavalBattle

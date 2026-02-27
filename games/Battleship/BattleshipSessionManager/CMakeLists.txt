@@ -1,17 +1,17 @@
-add_library(BattleshipSessionManager
-	BattleshipSessionManager.cpp
-	BattleshipSessionManager.h
+add_library(NavalBattleSessionManager
+	NavalBattleSessionManager.cpp
+	NavalBattleSessionManager.h
 )
 
-target_include_directories(BattleshipSessionManager PUBLIC
+target_include_directories(NavalBattleSessionManager PUBLIC
 	${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-target_link_libraries(BattleshipSessionManager PUBLIC
-		BattleshipSession
+target_link_libraries(NavalBattleSessionManager PUBLIC
+		NavalBattleSession
 		RemoteTerminalMessaging
 	PRIVATE
-		BattleshipJsonProtocol
+		NavalBattleJsonProtocol
 )
 
-set_property(TARGET BattleshipSessionManager PROPERTY CXX_STANDARD 20)
+set_property(TARGET NavalBattleSessionManager PROPERTY CXX_STANDARD 20)

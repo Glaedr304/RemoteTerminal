@@ -1,16 +1,16 @@
-add_library(BattleshipJsonProtocol
-	BattleshipJsonProtocol.cpp
-	BattleshipJsonProtocol.h
+add_library(NavalBattleJsonProtocol
+	NavalBattleJsonProtocol.cpp
+	NavalBattleJsonProtocol.h
 )
 
-target_include_directories(BattleshipJsonProtocol PUBLIC
+target_include_directories(NavalBattleJsonProtocol PUBLIC
 	${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-target_link_libraries(BattleshipJsonProtocol PUBLIC
-	BattleshipSession
+target_link_libraries(NavalBattleJsonProtocol PUBLIC
+	NavalBattleSession
 	RemoteTerminalMessaging
     jsoncpp_static
 )
 
-set_property(TARGET BattleshipEngine PROPERTY CXX_STANDARD 20)
+set_property(TARGET NavalBattleEngine PROPERTY CXX_STANDARD 20)

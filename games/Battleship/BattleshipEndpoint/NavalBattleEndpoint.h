@@ -1,10 +1,10 @@
 #pragma once
 
 #include "IRemoteTerminalEndpoint.h"
-#include "BattleshipSessionManager.h"
+#include "NavalBattleSessionManager.h"
 #include "SessionTypes.h"
 
-class BattleshipEndpoint : public IRemoteTerminalEndpoint {
+class NavalBattleEndpoint : public IRemoteTerminalEndpoint {
 public:
 	virtual WireMessageResult onUnauthenticatedMessage(std::string_view message) override;
 
@@ -13,7 +13,7 @@ public:
 	virtual std::string routePath() override;
 
 private:
-	Battleship::BattleshipSessionManager _sessionManager;
+	NavalBattle::NavalBattleSessionManager _sessionManager;
 
-	AddressedWireMessageBundle routeMessagesToWireFormat(const Battleship::AddressedMessageBundle& b);
+	AddressedWireMessageBundle routeMessagesToWireFormat(const NavalBattle::AddressedMessageBundle& b);
 };
