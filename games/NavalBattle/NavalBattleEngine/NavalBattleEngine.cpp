@@ -7,14 +7,15 @@ using namespace NavalBattle;
 NavalBattleEngine::NavalBattleEngine() :
     _currentPlayer(Player::none),
     _phase(Phase::setup),
-    _pOneFleet(createFleetFromBlueprint(getBaseFleetBlueprint())),
-    _pTwoFleet(createFleetFromBlueprint(getBaseFleetBlueprint())),
+    _p1Data(createFleetFromBlueprint(getBaseFleetBlueprint())),
+    _p2Data(createFleetFromBlueprint(getBaseFleetBlueprint())),
+    _pNoneData(Fleet()),
     _boardDimensions(10,10)
 {
 }
 
 const Fleet& NavalBattleEngine::getFleetForPlayer(Player p) const{
-    return p == Player::one ? _pOneFleet : _pTwoFleet;
+    return getDataForPlayer(p).fleet;
 }
 
 // only checks the overall status of the fleet
@@ -116,8 +117,8 @@ ReadyUpResult NavalBattleEngine::readyUp(Player p) {
 
         return answer;
     }
-    (p == Player::one ? p1IsReady : p2IsReady) = true;
-    if (p1IsReady && p2IsReady) {
+    getDataForPlayer(p).isReady = true;
+    if (getDataForPlayer(Player::one).isReady && getDataForPlayer(Player::two).isReady) {
         _phase = Phase::playing;
         _currentPlayer = Player::one;
     }
@@ -127,11 +128,7 @@ ReadyUpResult NavalBattleEngine::readyUp(Player p) {
 }
 
 bool NavalBattleEngine::isPlayerReady(Player p) {
-    if (p == Player::one)
-        return p1IsReady;
-    if (p == Player::two)
-        return p2IsReady;
-    return false;
+    return getDataForPlayer(p).isReady;
 }
 
 // --- Gameplay ---
@@ -189,7 +186,7 @@ Phase NavalBattleEngine::phase() const {
 Player NavalBattleEngine::getWinner() const{
     if (_phase != Phase::finished)
         return Player::none;
-    if (_pOneFleet.isDefeated())
+    if (getFleetForPlayer(Player::one).isDefeated())
         return Player::two;
     else
         return Player::one;
@@ -219,15 +216,11 @@ int NavalBattleEngine::boardCols() {
 }
 
 const std::set<coord>& NavalBattleEngine::getHitsForPlayer(Player p) const{
-    if (p == Player::one)
-        return _p1Hits;
-    return _p2Hits; //should never see player::none but this may cause issues if it does
+	return getDataForPlayer(p).hits;
 }
 
 const std::set<coord>& NavalBattleEngine::getMissesForPlayer(Player p) const{
-    if (p == Player::one)
-        return _p1Misses;
-    return _p2Misses; //should never see player::none but this may cause issues if it does
+	return getDataForPlayer(p).misses;
 }
 
 BoardView NavalBattleEngine::boardViewForPlayer(Player p) const{
@@ -279,19 +272,15 @@ VehicleId NavalBattle::NavalBattleEngine::getNextVehicleId() {
 }
 
 Fleet& NavalBattleEngine::getMutableFleetForPlayer(Player p) {
-    return p == Player::one ? _pOneFleet : _pTwoFleet;
+	return getDataForPlayer(p).fleet;
 }
 
 std::set<coord>& NavalBattleEngine::getHitsForPlayer(Player p) {
-    if (p == Player::one)
-        return _p1Hits;
-    return _p2Hits; //should never see player::none but this may cause issues if it does
+	return getDataForPlayer(p).hits;
 }
 
 std::set<coord>& NavalBattleEngine::getMissesForPlayer(Player p) {
-    if (p == Player::one)
-        return _p1Misses;
-    return _p2Misses; //should never see player::none but this may cause issues if it does
+	return getDataForPlayer(p).misses;
 }
 
 //default fleet for normal game
@@ -333,4 +322,17 @@ std::bitset<8> NavalBattleEngine::checkFleetStatus(Fleet f) {
         }
     }
     return answer;
+}
+
+NavalBattleEngine::PlayerData& NavalBattleEngine::getDataForPlayer(Player p) {
+    if (p == Player::one)
+        return _p1Data;
+    else if (p == Player::two)
+        return _p2Data;
+
+    return _pNoneData;
+}
+
+const NavalBattleEngine::PlayerData& NavalBattleEngine::getDataForPlayer(Player p) const {
+    return const_cast<NavalBattleEngine*>(this)->getDataForPlayer(p);
 }

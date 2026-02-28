@@ -54,20 +54,26 @@ private:
 
 	VehicleId getNextVehicleId();
 
+    struct PlayerData {
+        PlayerData(const Fleet& fleet) : fleet(fleet) {}
+        bool isReady = false;
+        Fleet fleet;
+        std::set<coord> hits;
+        std::set<coord> misses;
+        std::set<coord> revealedHits;
+        std::set<coord> revealedMisses;
+        std::set<std::set<coord>> scansWithHits;
+    };
+
+    PlayerData _p1Data;
+    PlayerData _p2Data;
+    PlayerData _pNoneData;
+
     Phase _phase;
     Player _currentPlayer;
-    Fleet _pOneFleet;
-    Fleet _pTwoFleet;
-    std::set<coord> _p1Hits;
-    std::set<coord> _p1Misses;
-    std::set<coord> _p2Hits;
-    std::set<coord> _p2Misses;
     std::pair<int, int> _boardDimensions;
 
 	int _nextVehicleId = 0;
-
-    bool p1IsReady = false;
-    bool p2IsReady = false;
 
     FleetBlueprint const& getBaseFleetBlueprint();
 
@@ -78,6 +84,10 @@ private:
     };
 
     std::bitset<8> checkFleetStatus(Fleet f);
+
+    PlayerData& getDataForPlayer(Player p);
+
+    const PlayerData& getDataForPlayer(Player p) const;
 };
 
 } // namespace NavalBattle
