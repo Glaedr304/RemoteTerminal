@@ -9,6 +9,7 @@ Ship::Ship(ShipBlueprint blueprint, VehicleId id, int rotation /*= 0*/, coord po
 	coords(blueprint.coords),
 	_name(blueprint.name),
 	_abilities(blueprint.abilities),
+	_canHoldPlanes(blueprint.canHoldPlanes),
 	pos(pos),
 	_id(id)
 {
@@ -91,6 +92,10 @@ const std::set<coord>& Ship::getCoords() const {
 	return coords;
 }
 
+bool NavalBattle::Ship::canHoldPlanes() const {
+	return _canHoldPlanes;
+}
+
 ShipBlueprint const Ship::carrier{
 	{
 		coord({0,0}),
@@ -132,7 +137,8 @@ ShipBlueprint const Ship::advancedBattleship{
 		coord({0,3})
 	},
 	"Battleship",
-	{ VehicleAbility(VehicleAbilityType::Tomahawk, VehicleAbilityUsagePolicy::limited, 1) }
+	{ VehicleAbility(VehicleAbilityType::Tomahawk, VehicleAbilityUsagePolicy::limited, 1) },
+	true //can hold planes
 };
 
 ShipBlueprint const Ship::destroyer{

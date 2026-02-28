@@ -20,6 +20,8 @@ private:
 
 	std::vector<VehicleAbility> _abilities;
 
+	bool _canHoldPlanes = false;
+
 public:
 	enum class hitShipError {
 		notOnShip,
@@ -44,6 +46,8 @@ public:
 	hitShipResult hit(coord where);
 	bool isPlaced() const;
 	const std::set<coord>& getCoords() const;
+
+	bool canHoldPlanes() const;
 
 	const static ShipBlueprint pt;
 	const static ShipBlueprint sub;

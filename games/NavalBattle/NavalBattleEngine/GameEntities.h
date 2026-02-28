@@ -192,6 +192,7 @@ struct ShipBlueprint {
 	std::set<coord> coords;
 	std::string name;
 	std::vector<VehicleAbility> abilities;
+	bool canHoldPlanes = false;
 };
 
 struct PlaneBlueprint {
