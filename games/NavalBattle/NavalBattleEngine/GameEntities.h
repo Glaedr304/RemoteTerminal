@@ -1,6 +1,8 @@
 #pragma once
 
 #include "coord.h"
+#include "VehicleAbility.h"
+#include <string>
 #include <variant>
 #include <vector>
 #include <map>
@@ -77,26 +79,6 @@ using SquareView = GridView::value_type;
 struct BoardView {
 	GridView ownGrid;
 	GridView opponentGrid;
-};
-
-enum class VehicleAbilityType {
-	//firing
-	Torpedo,
-	Exocet,
-	Apache,
-	Tomahawk,
-
-	//movement
-	relocate,
-
-	//scanning
-	scan,  //check if there is anything in the area, yes or no
-	reveal //report the exact states of all squares
-};
-
-enum class VehicleAbilityUsagePolicy {
-	unlimited,
-	limited
 };
 
 struct TorpedoData {
@@ -202,6 +184,18 @@ struct ActivateAbilityResult {
 	bool success = false;
 	ActivateAbilityResultError error = ActivateAbilityResultError::none;
 	ActivateAbilityResultData data;
+};
+
+using VehicleId = int;
+
+struct ShipBlueprint {
+	std::set<coord> coords;
+	std::string name;
+	std::vector<VehicleAbility> abilities;
+};
+
+struct FleetBlueprint {
+	std::vector<ShipBlueprint> ships;
 };
 
 } // namespace NavalBattle

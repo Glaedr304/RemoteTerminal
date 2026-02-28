@@ -15,12 +15,10 @@ private:
 	std::set<coord> hits;
 	int rotation;
 	bool _sunk = false;
-	int ID;
+	VehicleId _id;
 	std::string _name;
 
 	std::vector<VehicleAbility> _abilities;
-
-	static int nextID;
 
 public:
 	enum class hitShipError {
@@ -35,9 +33,9 @@ public:
 	};
 
 	Ship(const Ship& other);
-	Ship(std::set<coord> coords, std::string name = "", int rotation = 0, coord pos = coord::unspecified);
+	Ship(ShipBlueprint blueprint, VehicleId id, int rotation = 0, coord pos = coord::unspecified);
 	bool isSunk() const;
-	int getID() const;
+	int getId() const;
 	std::string getName() const;
 	int getRotation() const;
 	void setRotation(int rotation);
@@ -47,11 +45,11 @@ public:
 	bool isPlaced() const;
 	const std::set<coord>& getCoords() const;
 
-	const static Ship pt;
-	const static Ship sub;
-	const static Ship destroyer;
-	const static Ship battleship;
-	const static Ship carrier;
+	const static ShipBlueprint pt;
+	const static ShipBlueprint sub;
+	const static ShipBlueprint destroyer;
+	const static ShipBlueprint battleship;
+	const static ShipBlueprint carrier;
 };
 
 } // namespace NavalBattle

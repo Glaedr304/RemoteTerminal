@@ -4,14 +4,13 @@
 
 using namespace NavalBattle;
 
-int Ship::nextID = 0;
-
-Ship::Ship(std::set<coord> coords, std::string name /*=""*/, int rotation /*= 0*/, coord pos /*= coord::unspecified*/) :
+Ship::Ship(ShipBlueprint blueprint, VehicleId id, int rotation /*= 0*/, coord pos /*= coord::unspecified*/) :
 	rotation(rotation),
-	coords(coords),
-	_name(name),
+	coords(blueprint.coords),
+	_name(blueprint.name),
+	_abilities(blueprint.abilities),
 	pos(pos),
-	ID(nextID++)
+	_id(id)
 {
 };
 
@@ -20,7 +19,7 @@ Ship::Ship(const Ship& other) :
 	coords(other.coords),
 	_name(other._name),
 	pos(other.pos),
-	ID(nextID++)
+	_id(other._id)
 {
 }
 
@@ -28,8 +27,8 @@ bool Ship::isSunk() const {
 	return _sunk;
 }
 
-int Ship::getID() const {
-	return ID;
+int Ship::getId() const {
+	return _id;
 }
 
 std::string Ship::getName() const {
@@ -92,7 +91,7 @@ const std::set<coord>& Ship::getCoords() const {
 	return coords;
 }
 
-Ship const Ship::carrier{
+ShipBlueprint const Ship::carrier{
 	{
 		coord({0,0}),
 		coord({0,1}),
@@ -103,7 +102,7 @@ Ship const Ship::carrier{
 	"Aircraft Carrier"
 };
 
-Ship const Ship::battleship{
+ShipBlueprint const Ship::battleship{
 	{
 		coord({0,0}),
 		coord({0,1}),
@@ -113,7 +112,7 @@ Ship const Ship::battleship{
 	"Battleship"
 };
 
-Ship const Ship::destroyer{
+ShipBlueprint const Ship::destroyer{
 	{
 		coord({0,0}),
 		coord({0,1}),
@@ -122,7 +121,7 @@ Ship const Ship::destroyer{
 	"Destroyer"
 };
 
-Ship const Ship::sub{
+ShipBlueprint const Ship::sub{
 	{
 		coord({0,0}),
 		coord({0,1}),
@@ -131,7 +130,7 @@ Ship const Ship::sub{
 	"Submarine"
 };
 
-Ship const Ship::pt{
+ShipBlueprint const Ship::pt{
 	{
 		coord({0,0}),
 		coord({0,1})

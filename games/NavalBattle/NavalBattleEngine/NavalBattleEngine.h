@@ -50,6 +50,10 @@ private:
     GridView ownGrid(Player p) const;
     GridView opponentGrid(Player p) const;
 
+	Fleet createFleetFromBlueprint(FleetBlueprint blueprint);
+
+	VehicleId getNextVehicleId();
+
     Phase _phase;
     Player _currentPlayer;
     Fleet _pOneFleet;
@@ -60,10 +64,12 @@ private:
     std::set<coord> _p2Misses;
     std::pair<int, int> _boardDimensions;
 
+	int _nextVehicleId = 0;
+
     bool p1IsReady = false;
     bool p2IsReady = false;
 
-    Fleet const& getBaseFleet();
+    FleetBlueprint const& getBaseFleetBlueprint();
 
     enum class FleetStatusBits {
         outOfBounds = 0,

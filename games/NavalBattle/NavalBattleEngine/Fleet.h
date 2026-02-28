@@ -28,7 +28,10 @@ public:
 		hitFleetError error;
 	};
 
-	std::vector<Ship>& getShips();
+	void addShip(const Ship& ship);
+
+	void placeShip(VehicleId id, coord pos, int rotation);
+
 	const std::vector<Ship>& getShips() const;
 	
 	Fleet(std::vector<Ship> ships);

@@ -399,7 +399,7 @@ Json::Value toJson(const Fleet& f) {
 Json::Value toJson(const Ship& s) {
 	Json::Value answer(Json::objectValue);
 	answer["name"] = toJson(s.getName());
-	answer["id"] = s.getID();
+	answer["id"] = s.getId();
 	answer["coords"] = toJson(s.getCoords());
 	return answer;
 }

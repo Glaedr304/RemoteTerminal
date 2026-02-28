@@ -25,8 +25,21 @@ std::map<coord, Ship*>& Fleet::getHitmap() {
 	return hitmap;
 }
 
-std::vector<Ship>& Fleet::getShips() {
-	return ships;
+void Fleet::addShip(const Ship& ship) {
+	ships.push_back(ship);
+	hitmapUpToDate = false;
+}
+
+void Fleet::placeShip(VehicleId id, coord pos, int rotation) {
+	//replace with getShipByID when implemented
+	for (Ship& s : ships) {
+		if (s.getId() == id) {
+			s.setPos(pos);
+			s.setRotation(rotation);
+			hitmapUpToDate = false;
+			return;
+		}
+	}
 }
 
 const std::vector<Ship>& Fleet::getShips() const{
@@ -49,7 +62,7 @@ Fleet::hitFleetResult Fleet::hitFleet(coord c) {
 	Ship::hitShipResult result = (*r).second->hit(c);
 	if (result.success) {
 		answer.success = true;
-		answer.hitID = (*r).second->getID();
+		answer.hitID = (*r).second->getId();
 		answer.sunk = result.sunk;
 	}
 	else {

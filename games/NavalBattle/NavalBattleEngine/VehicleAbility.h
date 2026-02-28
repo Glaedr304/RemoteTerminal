@@ -1,9 +1,28 @@
 #pragma once
 
-#include "GameEntities.h"
-
 namespace NavalBattle {
-	class VehicleAbility {
+
+enum class VehicleAbilityType {
+	//firing
+	Torpedo,
+	Exocet,
+	Apache,
+	Tomahawk,
+
+	//movement
+	relocate,
+
+	//scanning
+	scan,  //check if there is anything in the area, yes or no
+	reveal //report the exact states of all squares
+};
+
+enum class VehicleAbilityUsagePolicy {
+	unlimited,
+	limited
+};
+
+class VehicleAbility {
 		VehicleAbilityType _type = VehicleAbilityType::Apache;
 		VehicleAbilityUsagePolicy _usagePolicy = VehicleAbilityUsagePolicy::limited;
 		int _remainingUses = 0;
@@ -33,4 +52,4 @@ namespace NavalBattle {
 			return _type;
 		}
 	};
-}
+} // namespace NavalBattle

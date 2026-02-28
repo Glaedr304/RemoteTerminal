@@ -7,8 +7,8 @@ using namespace NavalBattle;
 NavalBattleEngine::NavalBattleEngine() :
     _currentPlayer(Player::none),
     _phase(Phase::setup),
-    _pOneFleet(getBaseFleet()),
-    _pTwoFleet(getBaseFleet()),
+    _pOneFleet(createFleetFromBlueprint(getBaseFleetBlueprint())),
+    _pTwoFleet(createFleetFromBlueprint(getBaseFleetBlueprint())),
     _boardDimensions(10,10)
 {
 }
@@ -41,13 +41,7 @@ PlaceShipResult NavalBattleEngine::placeShip( Player p, int ID, coord pos, int r
 
     // Validation passed, now actually place the ship
     Fleet& fleet = getMutableFleetForPlayer(p);
-    for (Ship& s : fleet.getShips()) {
-        if (s.getID() == ID) {
-            s.setPos(pos);
-            s.setRotation(rotation);
-            break;
-        }
-    }
+    fleet.placeShip(ID, pos, rotation);
 
     return r;
 }
@@ -61,7 +55,7 @@ ValidatePlacementResult NavalBattleEngine::validatePlacement(Player p, int ID, c
     // Find the ship
     const Ship* targetShip = nullptr;
     for (const Ship& s : fleet.getShips())
-        if (s.getID() == ID)
+        if (s.getId() == ID)
             targetShip = &s;
     
     if (targetShip == nullptr) {
@@ -73,7 +67,7 @@ ValidatePlacementResult NavalBattleEngine::validatePlacement(Player p, int ID, c
     // Collect coords of other placed ships
     std::unordered_set<coord> occupied;
     for (const Ship& s : fleet.getShips()) {
-        if (s.getID() == ID)
+        if (s.getId() == ID)
             continue;
         if (s.isPlaced()) {
             for (const coord& c : s.getCoords()) {
@@ -207,10 +201,10 @@ Player NavalBattleEngine::currentTurn() const {
 
 std::string NavalBattleEngine::nameForId(int id) const {
     for (const Ship& s : getFleetForPlayer(Player::one).getShips())
-        if (s.getID() == id)
+        if (s.getId() == id)
             return s.getName();
     for (const Ship& s : getFleetForPlayer(Player::two).getShips())
-        if (s.getID() == id)
+        if (s.getId() == id)
             return s.getName();
 
     return "";
@@ -268,6 +262,19 @@ GridView NavalBattleEngine::opponentGrid(Player p) const {
     return GridView(occupied);
 }
 
+Fleet NavalBattle::NavalBattleEngine::createFleetFromBlueprint(FleetBlueprint blueprint) {
+    Fleet answer;
+
+    for(const ShipBlueprint& sb : blueprint.ships)
+		answer.addShip(Ship(sb, getNextVehicleId()));
+
+	return answer;
+}
+
+VehicleId NavalBattle::NavalBattleEngine::getNextVehicleId() {
+    return _nextVehicleId++;
+}
+
 Fleet& NavalBattleEngine::getMutableFleetForPlayer(Player p) {
     return p == Player::one ? _pOneFleet : _pTwoFleet;
 }
@@ -285,8 +292,8 @@ std::set<coord>& NavalBattleEngine::getMissesForPlayer(Player p) {
 }
 
 //default fleet for normal game
-Fleet const& NavalBattleEngine::getBaseFleet() {
-    static Fleet baseFleet{
+FleetBlueprint const& NavalBattleEngine::getBaseFleetBlueprint() {
+    static FleetBlueprint baseFleet{
         {
             Ship::carrier,
             Ship::battleship,
