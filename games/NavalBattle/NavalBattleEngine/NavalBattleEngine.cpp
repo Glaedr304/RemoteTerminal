@@ -82,11 +82,10 @@ ValidatePlacementResult NavalBattleEngine::validatePlacement(Player p, int ID, c
         coord transformed = c.applyTransform(pos, rotation);
         
         // Check out of bounds - don't include invalid coords in result
-        if (transformed.d < 0 || transformed.d >= _boardDimensions.first ||
-            transformed.o < 0 || transformed.o >= _boardDimensions.second) {
-            r.valid = false;
-            r.error = PlaceShipError::OutOfBounds;
-            continue;
+		if (!isValidCoord(transformed)) {
+             r.valid = false;
+             r.error = PlaceShipError::OutOfBounds;
+             continue;//cannot be out of bounds and overlapping
         }
         
         r.coords.insert(transformed);
@@ -141,10 +140,7 @@ FireResult NavalBattleEngine::fire(Player p, coord target) {
         return answer;
     }
 
-    if(    target.d >= _boardDimensions.first 
-        || target.o >= _boardDimensions.second
-        || target.d < 0
-        || target.o < 0){
+	if (!isValidCoord(target)) {
         answer.success = false;
         answer.error = FireError::outOfBounds;
         return answer;
@@ -207,11 +203,11 @@ std::string NavalBattleEngine::nameForId(int id) const {
     return "";
 }
 
-int NavalBattleEngine::boardRows() {
+int NavalBattleEngine::boardRows() const{
     return _boardDimensions.first;
 }
 
-int NavalBattleEngine::boardCols() {
+int NavalBattleEngine::boardCols() const{
     return _boardDimensions.second;
 }
 
@@ -255,7 +251,7 @@ GridView NavalBattleEngine::opponentGrid(Player p) const {
     return GridView(occupied);
 }
 
-Fleet NavalBattle::NavalBattleEngine::createFleetFromBlueprint(FleetBlueprint blueprint) {
+Fleet NavalBattleEngine::createFleetFromBlueprint(FleetBlueprint blueprint) {
     Fleet answer;
 
     for(const ShipBlueprint& sb : blueprint.ships)
@@ -267,8 +263,20 @@ Fleet NavalBattle::NavalBattleEngine::createFleetFromBlueprint(FleetBlueprint bl
 	return answer;
 }
 
-VehicleId NavalBattle::NavalBattleEngine::getNextVehicleId() {
+VehicleId NavalBattleEngine::getNextVehicleId() {
     return _nextVehicleId++;
+}
+
+bool NavalBattleEngine::isValidCoord(coord c) const {
+	//should coord::unspecified be considered invalid? For now, treat it as valid
+    return c.d >= 0 && c.d < boardRows() && c.o >= 0 && c.o < boardCols();
+}
+
+bool NavalBattleEngine::isValidCoord(const std::set<coord>& coords) const{
+    for (coord c : coords)
+        if (!isValidCoord(c))
+            return false;
+    return true;
 }
 
 Fleet& NavalBattleEngine::getMutableFleetForPlayer(Player p) {
@@ -304,13 +312,10 @@ std::bitset<8> NavalBattleEngine::checkFleetStatus(Fleet f) {
         if (s.isPlaced()) { //only check ships that are placed
             for (coord c : s.getCoords()) {
                 coord transformed = c.applyTransform(s.getPos(), s.getRotation());
-                if (transformed.d >= _boardDimensions.first
-                    || transformed.o >= _boardDimensions.second
-                    || transformed.d < 0
-                    || transformed.o < 0) {
-                    answer.set((int)FleetStatusBits::outOfBounds, true);
-                    continue;//cannot be out of bounds and overlapping
-                }
+				if (!isValidCoord(transformed)){
+                     answer.set((int)FleetStatusBits::outOfBounds, true);
+					 continue;//cannot be out of bounds and overlapping
+				}
                 size_t occupiedSize = occupied.size();
                 occupied.insert(transformed);
                 if (occupiedSize == occupied.size())

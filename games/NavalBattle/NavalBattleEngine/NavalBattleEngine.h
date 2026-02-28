@@ -33,8 +33,8 @@ class NavalBattleEngine {
         Player currentTurn() const;
         std::string nameForId(int id) const;
 
-        int boardRows();
-        int boardCols();
+        int boardRows() const;
+        int boardCols() const;
 
         const std::set<coord>& getHitsForPlayer(Player p) const;
         const std::set<coord>& getMissesForPlayer(Player p) const;
@@ -68,6 +68,9 @@ private:
     PlayerData _p1Data;
     PlayerData _p2Data;
     PlayerData _pNoneData;
+
+    bool isValidCoord(coord c) const;
+    bool isValidCoord(const std::set<coord>& coords) const;
 
     Phase _phase;
     Player _currentPlayer;
