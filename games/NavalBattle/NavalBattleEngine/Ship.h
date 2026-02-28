@@ -50,6 +50,11 @@ public:
 	const static ShipBlueprint destroyer;
 	const static ShipBlueprint battleship;
 	const static ShipBlueprint carrier;
+
+	const static ShipBlueprint advancedSub;
+	const static ShipBlueprint advancedDestroyer;
+	const static ShipBlueprint advancedBattleship;
+	const static ShipBlueprint advancedCarrier;
 };
 
 } // namespace NavalBattle

@@ -102,6 +102,18 @@ ShipBlueprint const Ship::carrier{
 	"Aircraft Carrier"
 };
 
+ShipBlueprint const Ship::advancedCarrier{
+	{
+		coord({0,0}),
+		coord({0,1}),
+		coord({0,2}),
+		coord({0,3}),
+		coord({0,4})
+	},
+	"Aircraft Carrier",
+	{VehicleAbility(VehicleAbilityType::Exocet, VehicleAbilityUsagePolicy::limited, 2)  }
+};
+
 ShipBlueprint const Ship::battleship{
 	{
 		coord({0,0}),
@@ -110,6 +122,17 @@ ShipBlueprint const Ship::battleship{
 		coord({0,3})
 	},
 	"Battleship"
+};
+
+ShipBlueprint const Ship::advancedBattleship{
+	{
+		coord({0,0}),
+		coord({0,1}),
+		coord({0,2}),
+		coord({0,3})
+	},
+	"Battleship",
+	{ VehicleAbility(VehicleAbilityType::Tomahawk, VehicleAbilityUsagePolicy::limited, 1) }
 };
 
 ShipBlueprint const Ship::destroyer{
@@ -121,6 +144,16 @@ ShipBlueprint const Ship::destroyer{
 	"Destroyer"
 };
 
+ShipBlueprint const Ship::advancedDestroyer{
+	{
+		coord({0,0}),
+		coord({0,1}),
+		coord({0,2}),
+	},
+	"Destroyer",
+	{VehicleAbility(VehicleAbilityType::Apache, VehicleAbilityUsagePolicy::limited, 2)  }
+};
+
 ShipBlueprint const Ship::sub{
 	{
 		coord({0,0}),
@@ -128,6 +161,19 @@ ShipBlueprint const Ship::sub{
 		coord({0,2})
 	},
 	"Submarine"
+};
+
+ShipBlueprint const Ship::advancedSub{
+	{
+		coord({0,0}),
+		coord({0,1}),
+		coord({0,2})
+	},
+	"Submarine",
+	{
+		VehicleAbility(VehicleAbilityType::Torpedo, VehicleAbilityUsagePolicy::limited, 2),
+		VehicleAbility(VehicleAbilityType::scan, VehicleAbilityUsagePolicy::unlimited)
+	}
 };
 
 ShipBlueprint const Ship::pt{
