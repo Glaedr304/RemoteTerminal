@@ -268,6 +268,9 @@ Fleet NavalBattle::NavalBattleEngine::createFleetFromBlueprint(FleetBlueprint bl
     for(const ShipBlueprint& sb : blueprint.ships)
 		answer.addShip(Ship(sb, getNextVehicleId()));
 
+	for (const PlaneBlueprint& pb : blueprint.planes)
+		answer.addPlane(Plane(pb, getNextVehicleId()));
+
 	return answer;
 }
 

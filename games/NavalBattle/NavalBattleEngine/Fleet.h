@@ -1,15 +1,15 @@
 #pragma once
 
 #include "Ship.h"
+#include "Plane.h"
 #include<map>
-
-//#include "GameEntities.h"
 
 namespace NavalBattle {
 
 class Fleet {
 private:
 	std::vector<Ship> ships;
+	std::vector<Plane> planes;
 	void buildHitmap();
 	std::map<coord, Ship*>& getHitmap();
 	bool hitmapUpToDate = false;
@@ -31,6 +31,10 @@ public:
 	void addShip(const Ship& ship);
 
 	void placeShip(VehicleId id, coord pos, int rotation);
+
+	void addPlane(const Plane& plane);
+
+	void placePlane(VehicleId id, coord pos);
 
 	const std::vector<Ship>& getShips() const;
 	

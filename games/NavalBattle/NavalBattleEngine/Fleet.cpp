@@ -42,6 +42,22 @@ void Fleet::placeShip(VehicleId id, coord pos, int rotation) {
 	}
 }
 
+void Fleet::addPlane(const Plane& plane) {
+	planes.push_back(plane);
+	hitmapUpToDate = false;
+}
+
+void Fleet::placePlane(VehicleId id, coord pos) {
+	//replace with getPlaneByID when implemented
+	for (Plane& p : planes) {
+		if (p.getId() == id) {
+			p.setPos(pos);
+			hitmapUpToDate = false;
+			return;
+		}
+	}
+}
+
 const std::vector<Ship>& Fleet::getShips() const{
 	return ships;
 }

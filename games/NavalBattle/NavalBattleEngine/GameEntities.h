@@ -194,8 +194,14 @@ struct ShipBlueprint {
 	std::vector<VehicleAbility> abilities;
 };
 
+struct PlaneBlueprint {
+	std::string name;
+	std::vector<VehicleAbility> abilities;
+};
+
 struct FleetBlueprint {
 	std::vector<ShipBlueprint> ships;
+	std::vector<PlaneBlueprint> planes;
 };
 
 } // namespace NavalBattle
