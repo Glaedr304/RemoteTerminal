@@ -78,4 +78,4 @@ struct BoardView {
 	GridView opponentGrid;
 };
 
- // namespace NavalBattle
+} // namespace NavalBattle
