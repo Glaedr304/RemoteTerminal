@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GameEntities.h"
+#include "VehicleAbility.h"
 #include "coord.h"
 #include <string>
 #include <set>
@@ -16,6 +17,8 @@ private:
 	bool _sunk = false;
 	int ID;
 	std::string _name;
+
+	std::vector<VehicleAbility> _abilities;
 
 	static int nextID;
 
