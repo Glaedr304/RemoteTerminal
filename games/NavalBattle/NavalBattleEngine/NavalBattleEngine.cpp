@@ -15,6 +15,10 @@ NavalBattleEngine::NavalBattleEngine() :
 }
 
 const Fleet& NavalBattleEngine::getFleetForPlayer(Player p) const{
+	return const_cast<NavalBattleEngine*>(this)->getFleetForPlayer(p);
+}
+
+Fleet& NavalBattleEngine::getFleetForPlayer(Player p) {
     return getDataForPlayer(p).fleet;
 }
 
@@ -41,7 +45,7 @@ PlaceShipResult NavalBattleEngine::placeShip( Player p, int ID, coord pos, int r
     }
 
     // Validation passed, now actually place the ship
-    Fleet& fleet = getMutableFleetForPlayer(p);
+    Fleet& fleet = getFleetForPlayer(p);
     fleet.placeShip(ID, pos, rotation);
 
     return r;
@@ -146,7 +150,7 @@ FireResult NavalBattleEngine::fire(Player p, coord target) {
         return answer;
     }
 
-    auto& f = getMutableFleetForPlayer(opponent(p));
+    auto& f = getFleetForPlayer(opponent(p));
     auto r = f.hitFleet(target);
 
     if (r.success) {
@@ -297,10 +301,6 @@ bool NavalBattleEngine::isValidCoord(const std::set<coord>& coords) const{
         if (!isValidCoord(c))
             return false;
     return true;
-}
-
-Fleet& NavalBattleEngine::getMutableFleetForPlayer(Player p) {
-	return getDataForPlayer(p).fleet;
 }
 
 std::set<coord>& NavalBattleEngine::getHitsForPlayer(Player p) {

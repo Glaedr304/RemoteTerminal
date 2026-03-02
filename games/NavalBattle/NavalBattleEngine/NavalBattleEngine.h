@@ -46,10 +46,11 @@ class NavalBattleEngine {
         BoardView boardViewForPlayer(Player p) const;
 
 private:
-    Fleet& getMutableFleetForPlayer(Player p);
 
     std::set<coord>& getHitsForPlayer(Player p);
     std::set<coord>& getMissesForPlayer(Player p);
+
+    Fleet& getFleetForPlayer(Player p);
 
     GridView ownGrid(Player p) const;
     GridView opponentGrid(Player p) const;

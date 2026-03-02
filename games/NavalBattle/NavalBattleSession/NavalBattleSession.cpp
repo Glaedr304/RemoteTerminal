@@ -98,26 +98,28 @@ AddressedMessageBundle NavalBattleSession::getSnapshotMessageBundles() {
 AddressedMessageBundle NavalBattleSession::getStartupInfoMessageBundles() {
 	AddressedMessageBundle answer;
 
+	const auto& engine = static_cast<const NavalBattleEngine&>(_engine);
+
 	StartupInfo p1startupInfo(
-		_engine.phase(),
+		engine.phase(),
 		_playerToUserMap[Player::one],
 		_playerToUserMap[opponent(Player::one)],
 		_gameId,
-		_engine.getFleetForPlayer(Player::one),
-		UserView(_playerToUserMap[Player::one], _engine.boardViewForPlayer(Player::one)),
-		_engine.boardRows(),
-		_engine.boardCols()
+		engine.getFleetForPlayer(Player::one),
+		UserView(_playerToUserMap[Player::one], engine.boardViewForPlayer(Player::one)),
+		engine.boardRows(),
+		engine.boardCols()
 	);
 
 	StartupInfo p2startupInfo(
-		_engine.phase(),
+		engine.phase(),
 		_playerToUserMap[Player::two],
 		_playerToUserMap[opponent(Player::two)],
 		_gameId,
-		_engine.getFleetForPlayer(Player::two),
-		UserView(_playerToUserMap[Player::two], _engine.boardViewForPlayer(Player::two)),
-		_engine.boardRows(),
-		_engine.boardCols()
+		engine.getFleetForPlayer(Player::two),
+		UserView(_playerToUserMap[Player::two], engine.boardViewForPlayer(Player::two)),
+		engine.boardRows(),
+		engine.boardCols()
 	);
 
 	answer.addMessage(ToUser(_playerToUserMap[Player::one]), p1startupInfo);
