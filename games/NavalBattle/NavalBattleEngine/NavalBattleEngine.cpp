@@ -203,12 +203,32 @@ std::string NavalBattleEngine::nameForId(int id) const {
     return "";
 }
 
+Fleet::hitFleetResult NavalBattleEngine::hitCoord(Player p, coord target) {
+    auto& f = getDataForPlayer(p).fleet;
+    auto r = f.hitFleet(target);
+    if (r.success) {
+        clearScansWithSquareForPlayer(opponent(p), target);
+        getDataForPlayer(opponent(p)).hits.insert(target);
+    }
+    return r;
+}
+
+void NavalBattleEngine::clearScansWithSquareForPlayer(Player p, coord c) {
+    std::erase_if(getDataForPlayer(p).scansWithHits, [c](const std::set<coord>& s) {
+        return s.contains(c);
+        });
+}
+
 int NavalBattleEngine::boardRows() const{
     return _boardDimensions.first;
 }
 
 int NavalBattleEngine::boardCols() const{
     return _boardDimensions.second;
+}
+
+bool NavalBattleEngine::checkCoord(Player p, coord where) {
+    return getDataForPlayer(p).fleet.wouldBeHit(where);
 }
 
 const std::set<coord>& NavalBattleEngine::getHitsForPlayer(Player p) const{

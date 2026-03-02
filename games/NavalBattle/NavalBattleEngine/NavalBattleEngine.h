@@ -32,9 +32,13 @@ class NavalBattleEngine {
         Player getWinner() const;
         Player currentTurn() const;
         std::string nameForId(int id) const;
+        Fleet::hitFleetResult hitCoord(Player p, coord target);
+
+        void clearScansWithSquareForPlayer(Player p, coord c);
 
         int boardRows() const;
         int boardCols() const;
+        bool checkCoord(Player p, coord where);
 
         const std::set<coord>& getHitsForPlayer(Player p) const;
         const std::set<coord>& getMissesForPlayer(Player p) const;
