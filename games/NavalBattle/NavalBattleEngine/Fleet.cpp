@@ -25,20 +25,25 @@ std::map<coord, Ship*>& Fleet::getHitmap() {
 	return hitmap;
 }
 
+Ship* Fleet::getShipById(VehicleId id) {
+	for (Ship& s : ships)
+		if (s.getId() == id)
+			return &s;
+	return nullptr;
+}
+
 void Fleet::addShip(const Ship& ship) {
 	ships.push_back(ship);
 	hitmapUpToDate = false;
 }
 
 void Fleet::placeShip(VehicleId id, coord pos, int rotation) {
-	//replace with getShipByID when implemented
-	for (Ship& s : ships) {
-		if (s.getId() == id) {
-			s.setPos(pos);
-			s.setRotation(rotation);
-			hitmapUpToDate = false;
-			return;
-		}
+	Ship* s = getShipById(id);
+	if (s) {
+		s->setPos(pos);
+		s->setRotation(rotation);
+		hitmapUpToDate = false;
+		return;
 	}
 }
 
@@ -56,6 +61,10 @@ void Fleet::placePlane(VehicleId id, coord pos) {
 			return;
 		}
 	}
+}
+
+const Ship* Fleet::getShipById(VehicleId id) const {
+	return const_cast<Fleet*>(this)->getShipById(id);
 }
 
 const std::vector<Ship>& Fleet::getShips() const{

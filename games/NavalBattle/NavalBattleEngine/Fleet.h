@@ -15,6 +15,8 @@ private:
 	bool hitmapUpToDate = false;
 	std::map<coord, Ship*> hitmap;
 
+	Ship* getShipById(VehicleId id);
+
 public:
 	enum class hitFleetError {
 		coordNotInFleet,
@@ -35,6 +37,8 @@ public:
 	void addPlane(const Plane& plane);
 
 	void placePlane(VehicleId id, coord pos);
+
+	const Ship* getShipById(VehicleId id) const;
 
 	const std::vector<Ship>& getShips() const;
 	
