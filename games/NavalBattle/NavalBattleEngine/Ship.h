@@ -34,6 +34,7 @@ public:
 		hitShipError error;
 	};
 
+	bool hasAbility(const VehicleAbilityType& abilityType) const;
 	Ship(const Ship& other);
 	Ship(ShipBlueprint blueprint, VehicleId id, int rotation = 0, coord pos = coord::unspecified);
 	bool isSunk() const;

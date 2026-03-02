@@ -24,6 +24,13 @@ Ship::Ship(const Ship& other) :
 {
 }
 
+bool Ship::hasAbility(const VehicleAbilityType& abilityType) const {
+	for (const VehicleAbility& a : _abilities)
+		if (a.getType() == abilityType && a.canUse())
+			return true;
+	return false;
+}
+
 bool Ship::isSunk() const {
 	return _sunk;
 }
