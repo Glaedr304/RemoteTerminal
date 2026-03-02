@@ -150,8 +150,7 @@ FireResult NavalBattleEngine::fire(Player p, coord target) {
         return answer;
     }
 
-    auto& f = getFleetForPlayer(opponent(p));
-    auto r = f.hitFleet(target);
+	Fleet::hitFleetResult r = hitCoord(opponent(p), target);
 
     if (r.success) {
         answer.success = true;
@@ -167,7 +166,7 @@ FireResult NavalBattleEngine::fire(Player p, coord target) {
         answer.isHit = false;
     }
 
-    if (f.isDefeated()) {
+    if (getDataForPlayer(opponent(p)).fleet.isDefeated()) {
         _phase = Phase::finished;
         _currentPlayer = Player::none;
     }
