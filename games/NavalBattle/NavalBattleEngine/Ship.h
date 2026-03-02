@@ -48,6 +48,8 @@ public:
 	bool isPlaced() const;
 	const std::set<coord>& getCoords() const;
 
+	bool useAbility(VehicleAbilityType abilityType);
+
 	bool canHoldPlanes() const;
 
 	const static ShipBlueprint pt;

@@ -38,6 +38,8 @@ public:
 
 	void placePlane(VehicleId id, coord pos);
 
+	bool useShipAbility(VehicleId id, VehicleAbilityType ability);
+
 	const Ship* getShipById(VehicleId id) const;
 
 	const std::vector<Ship>& getShips() const;
@@ -46,6 +48,8 @@ public:
 	Fleet();
 
 	hitFleetResult hitFleet(coord c);
+	
+	bool wouldBeHit(const coord& c);
 
 	bool isDefeated() const;
 

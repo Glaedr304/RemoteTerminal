@@ -63,6 +63,13 @@ void Fleet::placePlane(VehicleId id, coord pos) {
 	}
 }
 
+bool Fleet::useShipAbility(VehicleId id, VehicleAbilityType abilityType) {
+	Ship* s = getShipById(id);
+	if (s == nullptr)
+		return false;
+	return s->useAbility(abilityType);
+}
+
 const Ship* Fleet::getShipById(VehicleId id) const {
 	return const_cast<Fleet*>(this)->getShipById(id);
 }
@@ -102,6 +109,14 @@ Fleet::hitFleetResult Fleet::hitFleet(coord c) {
 	}
 	
 	return answer;
+}
+
+bool Fleet::wouldBeHit(const coord& c) {
+	auto m = getHitmap();
+	auto r = m.find(c);
+	if (r == m.end())
+		return false;
+	return true;
 }
 
 bool Fleet::isDefeated() const{

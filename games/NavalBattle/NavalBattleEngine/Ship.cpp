@@ -99,7 +99,15 @@ const std::set<coord>& Ship::getCoords() const {
 	return coords;
 }
 
-bool NavalBattle::Ship::canHoldPlanes() const {
+bool Ship::useAbility(VehicleAbilityType abilityType) {
+	for (VehicleAbility& a : _abilities)
+		if (a.getType() == abilityType)
+			if (a.use())
+				return true;
+	return false;
+}
+
+bool Ship::canHoldPlanes() const {
 	return _canHoldPlanes;
 }
 
