@@ -32,6 +32,51 @@ PlaceShipData placeShipDataFromJson(const Json::Value& v);
 Json::Value toJson(const RematchData& d);
 RematchData rematchDataFromJson(const Json::Value& v);
 
+Json::Value toJson(const FireAntiAircraftData& d);
+FireAntiAircraftData fireAntiAircraftDataFromJson(const Json::Value& v);
+
+Json::Value toJson(const ActivateAbilityData& d);
+ActivateAbilityData activateAbilityDataFromJson(const Json::Value& v);
+
+Json::Value toJson(const VehicleAbilityType& t);
+VehicleAbilityType vehicleAbilityTypeFromJson(const Json::Value& v);
+
+Json::Value toJson(const TorpedoData::FiringPattern& p);
+TorpedoData::FiringPattern torpedoFiringPatternFromJson(const Json::Value& v);
+
+Json::Value toJson(const ApacheData::FiringPattern& p);
+ApacheData::FiringPattern apacheFiringPatternFromJson(const Json::Value& v);
+
+Json::Value toJson(const TomahawkData::FiringPattern& p);
+TomahawkData::FiringPattern tomahawkFiringPatternFromJson(const Json::Value& v);
+
+Json::Value toJson(const RevealData::FiringPattern& p);
+RevealData::FiringPattern revealFiringPatternFromJson(const Json::Value& v);
+
+Json::Value toJson(const TorpedoData& d);
+TorpedoData torpedoDataFromJson(const Json::Value& v);
+
+Json::Value toJson(const ExocetData& d);
+ExocetData exocetDataFromJson(const Json::Value& v);
+
+Json::Value toJson(const ApacheData& d);
+ApacheData apacheDataFromJson(const Json::Value& v);
+
+Json::Value toJson(const TomahawkData& d);
+TomahawkData tomahawkDataFromJson(const Json::Value& v);
+
+Json::Value toJson(const RelocateData& d);
+RelocateData relocateDataFromJson(const Json::Value& v);
+
+Json::Value toJson(const ScanData& d);
+ScanData scanDataFromJson(const Json::Value& v);
+
+Json::Value toJson(const RevealData& d);
+RevealData revealDataFromJson(const Json::Value& v);
+
+Json::Value toJson(const VehicleAbilityAction& a);
+VehicleAbilityAction vehicleAbilityActionFromJson(const Json::Value& v);
+
 Json::Value toJson(const SessionActionType& t);
 SessionActionType sessionActionTypeFromJson(const Json::Value& v);
 
@@ -68,6 +113,24 @@ Json::Value toJson(const ReadyResultData& f);
 Json::Value toJson(const PlaceShipResultData& f);
 
 Json::Value toJson(const CheckPlacementResultData& f);
+
+Json::Value toJson(const FireAntiAircraftResultData& f);
+
+Json::Value toJson(const ActivateAbilityResultError& e);
+
+Json::Value toJson(const TorpedoResultData& d);
+
+Json::Value toJson(const BulkFireResultData& d);
+
+Json::Value toJson(const RelocateResultData& d);
+
+Json::Value toJson(const ScanResultData& d);
+
+Json::Value toJson(const RevealResultData& d);
+
+Json::Value toJson(const ActivateAbilityResultData& d);
+
+Json::Value toJson(const ActivateAbilityResult& f);
 
 Json::Value toJson(const RematchResultData& f);
 
