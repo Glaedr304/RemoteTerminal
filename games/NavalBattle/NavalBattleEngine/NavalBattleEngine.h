@@ -27,12 +27,15 @@ class NavalBattleEngine {
         // --- Gameplay ---
         FireResult fire(Player p, coord target);
 
+        ActivateAbilityResult activateAbility(Player p, int shipId, const VehicleAbilityAction& activateAbilityAction);
+
         // --- Queries ---
         Phase phase() const;
         Player getWinner() const;
         Player currentTurn() const;
         std::string nameForId(int id) const;
         Fleet::hitFleetResult hitCoord(Player p, coord target);
+
 
         void clearScansWithSquareForPlayer(Player p, coord c);
 
@@ -45,6 +48,7 @@ class NavalBattleEngine {
 
         BoardView boardViewForPlayer(Player p) const;
 
+
 private:
 
     std::set<coord>& getHitsForPlayer(Player p);
@@ -55,7 +59,20 @@ private:
     GridView ownGrid(Player p) const;
     GridView opponentGrid(Player p) const;
 
-	Fleet createFleetFromBlueprint(FleetBlueprint blueprint);
+    FireResult fireAntiAircraft(Player p, coord target);
+
+    // --- Ability Handlers ---
+    ActivateAbilityResult handleTorpedoAction(Player p, TorpedoData d);
+    ActivateAbilityResult handleExocetAction(Player p, ExocetData d);
+    ActivateAbilityResult handleApacheAction(Player p, ApacheData d);
+    ActivateAbilityResult handleTomahawkAction(Player p, TomahawkData d);
+    ActivateAbilityResult handleRelocateAction(Player p, RelocateData d);
+    ActivateAbilityResult handleScanAction(Player p, ScanData d);
+    ActivateAbilityResult handleRevealAction(Player p, RevealData d);
+
+    ActivateAbilityResult bulkFire(Player p, const std::set<coord>& targets);
+
+	Fleet createFleetFromBlueprint(const FleetBlueprint& blueprint);
 
 	VehicleId getNextVehicleId();
 
@@ -91,7 +108,7 @@ private:
         unplaced    = 2
     };
 
-    std::bitset<8> checkFleetStatus(Fleet f);
+    std::bitset<8> checkFleetStatus(const Fleet& f);
 
     PlayerData& getDataForPlayer(Player p);
 

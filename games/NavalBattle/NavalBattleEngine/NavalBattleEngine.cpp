@@ -1,6 +1,6 @@
 #include "NavalBattleEngine.h"
 #include "GameEntities.h"
-#include "unordered_set"
+#include <unordered_set>
 
 using namespace NavalBattle;
 
@@ -19,7 +19,7 @@ const Fleet& NavalBattleEngine::getFleetForPlayer(Player p) const{
 }
 
 Fleet& NavalBattleEngine::getFleetForPlayer(Player p) {
-    return getDataForPlayer(p).fleet;
+	return getDataForPlayer(p).fleet;
 }
 
 // only checks the overall status of the fleet
@@ -60,8 +60,10 @@ ValidatePlacementResult NavalBattleEngine::validatePlacement(Player p, int ID, c
     // Find the ship
     const Ship* targetShip = nullptr;
     for (const Ship& s : fleet.getShips())
-        if (s.getId() == ID)
+        if (s.getId() == ID){
             targetShip = &s;
+			break;
+		}
     
     if (targetShip == nullptr) {
         r.valid = false;
@@ -104,7 +106,307 @@ ValidatePlacementResult NavalBattleEngine::validatePlacement(Player p, int ID, c
     return r;
 }
 
-//build hitmaps and move to gamplay of other player is ready
+ActivateAbilityResult NavalBattleEngine::activateAbility(Player p, int shipId, const VehicleAbilityAction& VehicleAbilityAction) {
+    ActivateAbilityResult answer;
+
+    if (_currentPlayer != p) {
+        answer.success = false;
+        answer.error = ActivateAbilityResultError::notYourTurn;
+        return answer;
+    }
+
+    auto& f = getDataForPlayer(p).fleet;
+	const Ship* s = static_cast<const Fleet&>(f).getShipById(shipId);
+
+    if (s == nullptr) {
+        answer.success = false;
+        answer.error = ActivateAbilityResultError::notYourShip;
+        return answer;
+    }
+
+    if (s->isSunk()) {
+        answer.success = false;
+        answer.error = ActivateAbilityResultError::shipSunk;
+        return answer;
+    }
+
+    if (!s->hasAbility(VehicleAbilityAction.type)) {
+        answer.success = false;
+        answer.error = ActivateAbilityResultError::noSuchAbility;
+        return answer;
+    }
+
+    switch (VehicleAbilityAction.type) {
+    case VehicleAbilityType::Torpedo: {
+        answer = handleTorpedoAction(p, std::get<TorpedoData>(VehicleAbilityAction.data));
+        break;
+    }
+    case VehicleAbilityType::Exocet: {
+        answer = handleExocetAction(p, std::get<ExocetData>(VehicleAbilityAction.data));
+        break;
+    }
+    case VehicleAbilityType::Apache: {
+        answer = handleApacheAction(p, std::get<ApacheData>(VehicleAbilityAction.data));
+        break;
+    }
+    case VehicleAbilityType::Tomahawk: {
+        answer = handleTomahawkAction(p, std::get<TomahawkData>(VehicleAbilityAction.data));
+        break;
+    }
+    case VehicleAbilityType::relocate: {
+        answer = handleRelocateAction(p, std::get<RelocateData>(VehicleAbilityAction.data));
+        break;
+    }
+    case VehicleAbilityType::scan: {
+        answer = handleScanAction(p, std::get<ScanData>(VehicleAbilityAction.data));
+        break;
+    }
+    case VehicleAbilityType::reveal: {
+        answer = handleRevealAction(p, std::get<RevealData>(VehicleAbilityAction.data));
+        break;
+    }
+    }
+
+    if (answer.success) {
+        _currentPlayer = opponent(p);
+        f.useShipAbility(shipId, VehicleAbilityAction.type);
+    }
+    return answer;
+}
+
+FireResult NavalBattleEngine::fireAntiAircraft(Player p, coord target) {
+    FireResult answer;
+
+    if (phase() != Phase::playing) {
+        answer.success = false;
+        answer.error = FireError::notYourTurn;
+        return answer;
+    }
+
+    //to be implemented
+
+    return answer;
+}
+
+
+ActivateAbilityResult NavalBattleEngine::handleTorpedoAction(Player p, TorpedoData d) {
+    ActivateAbilityResult answer;
+    BulkFireResultData data;
+
+    coord currentPos = d.startPoint;
+
+    std::function<void()> incrementPos;
+
+    if (d.firingPattern == TorpedoData::FiringPattern::vertical)
+        //downwards
+        if (currentPos.d == 0)
+            incrementPos = [&currentPos]() {currentPos.d++; };
+    //upwards
+        else if (currentPos.d == boardRows() - 1)
+            incrementPos = [&currentPos]() {currentPos.d--; };
+    //invalid
+        else {
+            answer.success = false;
+            return answer;
+        }
+    else
+        //rightwards
+        if (currentPos.o == 0)
+            incrementPos = [&currentPos]() {currentPos.o++; };
+    //leftwards
+        else if (currentPos.o == boardCols() - 1)
+            incrementPos = [&currentPos]() {currentPos.o--; };
+    //invalid
+        else {
+            answer.success = false;
+            return answer;
+        };
+
+    bool isHit = false;
+    do {
+        if (checkCoord(opponent(p), currentPos)) {
+            hitCoord(opponent(p), currentPos);
+            isHit = true;
+            break;
+        }
+        else {
+            getDataForPlayer(p).revealedMisses.insert(currentPos);
+        }
+        incrementPos();
+    } while (isValidCoord(currentPos));
+
+    //not sure if this actually works
+    answer.success = true;
+    data.isHit = isHit;
+    answer.data = data;
+
+    return answer;
+}
+
+ActivateAbilityResult NavalBattleEngine::bulkFire(Player p, const std::set<coord>& targets) {
+    ActivateAbilityResult answer;
+    BulkFireResultData data;
+
+    if (!isValidCoord(targets)) {
+        answer.success = false;
+        answer.error = ActivateAbilityResultError::outOfBounds;
+        return answer;
+    }
+
+    for (const coord& c : targets)
+        if (hitCoord(opponent(p), c).success)
+            data.isHit = true;
+
+    answer.success = true;
+    answer.data = data;
+    return answer;
+}
+
+ActivateAbilityResult NavalBattleEngine::handleExocetAction(Player p, ExocetData data) {
+    ActivateAbilityResult answer;
+    BulkFireResultData resultData;
+
+    std::set<coord> targets;
+    for (int d = data.target.d - 1; d <= data.target.d + 1; d++)
+        for (int o = data.target.o - 1; o <= data.target.o + 1; o++)
+            targets.insert(coord({ d,o }));
+
+    return bulkFire(p, targets);
+}
+
+ActivateAbilityResult NavalBattleEngine::handleApacheAction(Player p, ApacheData d) {
+    std::set<coord> targets;
+
+    targets.insert(d.target);
+    if (d.firingPattern == ApacheData::FiringPattern::vertical) {
+        targets.insert(d.target + coord({ -1, 0 }));
+        targets.insert(d.target + coord({ 1, 0 }));
+    }
+    else {
+        targets.insert(d.target + coord({ 0, -1 }));
+        targets.insert(d.target + coord({ 0, 1 }));
+    }
+
+    return bulkFire(p, targets);
+}
+
+ActivateAbilityResult NavalBattleEngine::handleTomahawkAction(Player p, TomahawkData d) {
+    std::set<coord> targets;
+
+    targets.insert(d.target);
+    if (d.firingPattern == TomahawkData::FiringPattern::plus)
+        for (int i = -1; i < 2; i += 2) {//i is -1 and 1
+            targets.insert(d.target + coord({ i, 0 }));
+            targets.insert(d.target + coord({ 0, i }));
+        }
+    else if (d.firingPattern == TomahawkData::FiringPattern::x)
+        for (int i = -1; i < 2; i += 2) //i is -1 and 1
+            for (int j = -1; j < 2; j += 2) //j is -1 and 1
+                targets.insert(d.target + coord({ i, j }));
+
+    return bulkFire(p, targets);
+}
+
+ActivateAbilityResult NavalBattleEngine::handleRelocateAction(Player p, RelocateData d) {
+    ActivateAbilityResult answer;
+    RelocateResultData data;
+    answer.data = data;
+
+    if (!isValidCoord(d.target)) {
+        answer.success = false;
+        answer.error = ActivateAbilityResultError::outOfBounds;
+        return answer;
+    }
+
+    //ID has already been validated so we should not have to check for nullptr
+    const Fleet& fleet = getDataForPlayer(p).fleet;
+    const Ship* s = fleet.getShipById(d.shipId);
+    getDataForPlayer(p).fleet.placeShip(d.shipId, d.target, s->getRotation());
+    answer.success = true;
+
+    return answer;
+}
+
+ActivateAbilityResult NavalBattleEngine::handleScanAction(Player p, ScanData data) {
+    ActivateAbilityResult answer;
+    ScanResultData resultData;
+
+    answer.success = true;
+
+    //generate all squares in the scan pattern
+    std::set<coord> scannedSquares;
+    for (int d = data.target.d - 1; d <= data.target.d + 1; d++)
+        for (int o = data.target.o - 1; o <= data.target.o + 1; o++)
+            scannedSquares.insert(coord({ d,o }));
+
+    if (!isValidCoord(scannedSquares)) {
+        answer.success = false;
+		answer.error = ActivateAbilityResultError::outOfBounds;
+        return answer;
+    }
+
+    for (const coord& c : scannedSquares)
+        if (getDataForPlayer(opponent(p)).fleet.wouldBeHit(c)) {
+            getDataForPlayer(p).scansWithHits.insert(scannedSquares);
+
+            resultData.isFound = true;
+            answer.data = resultData;
+            return answer;
+        }
+
+    //scan is clear
+    //this is the same as guessing/ missing all scanned squares 
+    getDataForPlayer(p).revealedMisses.insert(scannedSquares.begin(), scannedSquares.end());
+
+    resultData.isFound = false;
+    answer.data = resultData;
+    return answer;
+}
+
+ActivateAbilityResult NavalBattleEngine::handleRevealAction(Player p, RevealData d) {
+    ActivateAbilityResult answer;
+    RevealResultData data;
+
+    std::set<coord> squaresToReveal;
+    if (d.firingPattern == RevealData::FiringPattern::square) {
+        squaresToReveal.insert(coord({ d.target.d - 1, d.target.o - 1 }));
+        squaresToReveal.insert(coord({ d.target.d - 1, d.target.o + 1 }));
+        squaresToReveal.insert(coord({ d.target.d + 1, d.target.o - 1 }));
+        squaresToReveal.insert(coord({ d.target.d + 1, d.target.o + 1 }));
+    }
+    else if (d.firingPattern == RevealData::FiringPattern::diamond) {
+        squaresToReveal.insert(coord({ d.target.d - 1, d.target.o }));
+        squaresToReveal.insert(coord({ d.target.d, d.target.o - 1 }));
+        squaresToReveal.insert(coord({ d.target.d, d.target.o + 1 }));
+        squaresToReveal.insert(coord({ d.target.d + 1, d.target.o }));
+    }
+    else {
+        answer.success = false;
+        answer.error = ActivateAbilityResultError::noSuchAbility;
+        return answer;
+    }
+
+    if (!isValidCoord(squaresToReveal)) {
+        answer.success = false;
+        answer.error = ActivateAbilityResultError::outOfBounds;
+        return answer;
+    }
+
+	answer.success = true;
+
+    for (const coord& c : squaresToReveal)
+        if (checkCoord(opponent(p), c)) { // c would be a hit
+            getDataForPlayer(p).revealedHits.insert(c);
+            data.hitsRevealed.insert(c);
+        }
+        else
+            getDataForPlayer(p).revealedMisses.insert(c);
+
+    answer.data = data;
+    return answer;
+}
+
+//build hitmaps and move to gamplay if other player is ready
 ReadyUpResult NavalBattleEngine::readyUp(Player p) {
     ReadyUpResult answer;
     auto status = checkFleetStatus(getFleetForPlayer(p));
@@ -274,7 +576,7 @@ GridView NavalBattleEngine::opponentGrid(Player p) const {
     return GridView(occupied);
 }
 
-Fleet NavalBattleEngine::createFleetFromBlueprint(FleetBlueprint blueprint) {
+Fleet NavalBattleEngine::createFleetFromBlueprint(const FleetBlueprint& blueprint) {
     Fleet answer;
 
     for(const ShipBlueprint& sb : blueprint.ships)
@@ -324,10 +626,10 @@ FleetBlueprint const& NavalBattleEngine::getBaseFleetBlueprint() {
     return baseFleet;
 }
 
-std::bitset<8> NavalBattleEngine::checkFleetStatus(Fleet f) {
+std::bitset<8> NavalBattleEngine::checkFleetStatus(const Fleet& f) {
     std::bitset<8> answer;
     std::unordered_set<coord> occupied;
-    for (Ship s : f.getShips()) {
+    for (const Ship& s : f.getShips()) {
         if (s.isPlaced()) { //only check ships that are placed
             for (coord c : s.getCoords()) {
                 coord transformed = c.applyTransform(s.getPos(), s.getRotation());
