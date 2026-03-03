@@ -46,6 +46,10 @@ AddressedMessageBundle NavalBattleSession::handleAction(const UserId& user, cons
 			s = handleFire(p, action);
 			break;
 		}
+		case SessionActionType::FireAntiAircraft: {
+			s = handleFireAntiAircraft(p, action);
+			break;
+		}
 		case SessionActionType::CheckPlacement: {
 			// Only return the action result with preview data, no snapshot
 			s = handleCheckPlacement(p, action);
@@ -54,6 +58,10 @@ AddressedMessageBundle NavalBattleSession::handleAction(const UserId& user, cons
 		case SessionActionType::Rematch: {
 			s = handleRematch(p);
 			return processRematchRequest(user, p, s);
+		}
+		case SessionActionType::ActivateAbility: {
+			s = handleActivateAbility(p, action);
+			break;
 		}
 		default: {
 			s.success = false;
@@ -217,6 +225,39 @@ SessionActionResult NavalBattleSession::handleFire(Player p, const SessionAction
 	return answer;
 }
 
+SessionActionResult NavalBattleSession::handleFireAntiAircraft(Player p, const SessionAction& a) {
+	SessionActionResult answer;
+	FireResult r = _engine.fireAntiAircraft(p, std::get<FireAntiAircraftData>(a.data).target);
+
+	answer.success = r.success;
+	answer.type = SessionActionResultType::FireAntiAircraftResult;
+
+	if (answer.success) {
+		FireAntiAircraftResultData d;
+		d.isHit = r.isHit;
+		d.isDestroyed = r.isSink;
+		if (r.isSink) {
+			d.destroyedName = _engine.nameForId(r.hitId);
+			d.hitId = r.hitId;
+		}
+		answer.data = d;
+	}
+	else {
+		switch (r.error) {
+			case FireError::outOfBounds: {
+				answer.error = SessionActionResultError::invalidPlacement;
+				break;
+			}
+			case FireError::notYourTurn: {
+				answer.error = SessionActionResultError::notYourTurn;
+				break;
+			}
+		}
+	}
+
+	return answer;
+}
+
 SessionActionResult NavalBattleSession::handleReady(Player p) {
 	SessionActionResult answer;
 	ReadyUpResult r = _engine.readyUp(p);
@@ -316,4 +357,47 @@ AddressedMessageBundle NavalBattleSession::processRematchRequest(const UserId& u
 	a.addMessage(ToUser(opponent), RematchRequest{user});
 	a.addMessage(ToUser(user), result);
 	return a;
+}
+
+SessionActionResult NavalBattleSession::handleActivateAbility(Player p, const SessionAction& a) {
+	SessionActionResult answer;
+	answer.type = SessionActionResultType::ActivateAbilityResult;
+
+	const auto& abilityData = std::get<ActivateAbilityData>(a.data);
+	ActivateAbilityResult r = _engine.activateAbility(p, abilityData.vehicleId, abilityData.abilityAction);
+
+	answer.success = r.success;
+
+	if (answer.success)
+		answer.data = r;
+	else {
+		switch (r.error) {
+			case ActivateAbilityResultError::outOfBounds: {
+				answer.error = SessionActionResultError::invalidPlacement;
+				break;
+			}
+			case ActivateAbilityResultError::notYourTurn: {
+				answer.error = SessionActionResultError::notYourTurn;
+				break;
+			}
+			case ActivateAbilityResultError::notYourShip: {
+				answer.error = SessionActionResultError::vehicleNotFound;
+				break;
+			}
+			case ActivateAbilityResultError::shipSunk: {
+				answer.error = SessionActionResultError::vehicleSunk;
+				break;
+			}
+			case ActivateAbilityResultError::noSuchAbility: {
+				answer.error = SessionActionResultError::noSuchAbility;
+				break;
+			}
+			default: {
+				answer.error = SessionActionResultError::internalError;
+				break;
+			}
+		}
+	}
+
+	return answer;
 }

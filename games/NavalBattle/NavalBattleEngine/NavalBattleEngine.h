@@ -27,6 +27,8 @@ class NavalBattleEngine {
         // --- Gameplay ---
         FireResult fire(Player p, coord target);
 
+        FireResult fireAntiAircraft(Player p, coord target);
+
         ActivateAbilityResult activateAbility(Player p, int shipId, const VehicleAbilityAction& activateAbilityAction);
 
         // --- Queries ---
@@ -58,8 +60,6 @@ private:
 
     GridView ownGrid(Player p) const;
     GridView opponentGrid(Player p) const;
-
-    FireResult fireAntiAircraft(Player p, coord target);
 
     // --- Ability Handlers ---
     ActivateAbilityResult handleTorpedoAction(Player p, TorpedoData d);

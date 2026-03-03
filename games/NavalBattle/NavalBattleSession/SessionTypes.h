@@ -20,16 +20,23 @@ enum class SessionActionResultError {
     invalidPlacement, //tried to so something with invalid coordinates
     notYourTurn,      //tried to do something when not allowed to act
 
+    //ability errors
+    vehicleNotFound,  //the specified vehicleId is not in this session
+    vehicleSunk,      //the vehicle is sunk and cannot use abilities
+    noSuchAbility,    //the vehicle does not have the requested ability
+
     //catch all for engine
     internalError     //generic error
 };
 
 enum class SessionActionResultType {
     FireResult,
+    FireAntiAircraftResult,
     ReadyResult,
     PlaceShipResult,
     CheckPlacementResult,
-    RematchResult
+    RematchResult,
+    ActivateAbilityResult
 };
 
 struct PlaceShipResultData {
@@ -47,6 +54,13 @@ struct FireResultData {
     int hitId = 0;
 };
 
+struct FireAntiAircraftResultData {
+    bool isHit = false;
+    bool isDestroyed = false;
+    std::string destroyedName = "";
+    int hitId = 0;
+};
+
 struct CheckPlacementResultData {
     bool valid = false;
     std::set<coord> coords;
@@ -56,7 +70,7 @@ struct RematchResultData {
     // no data needed
 };
 
-using SessionActionResultData = std::variant<PlaceShipResultData, ReadyResultData, FireResultData, CheckPlacementResultData, RematchResultData>;
+using SessionActionResultData = std::variant<PlaceShipResultData, ReadyResultData, FireResultData, FireAntiAircraftResultData, CheckPlacementResultData, RematchResultData, ActivateAbilityResult>;
 
 struct SessionActionResult {
     bool success = false;

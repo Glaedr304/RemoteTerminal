@@ -1,6 +1,7 @@
 #pragma once
 
 #include "coord.h"
+#include "GameEntities.h"
 #include <variant>
 
 namespace NavalBattle {
@@ -9,8 +10,10 @@ enum class SessionActionType {
     PlaceShip,
     Ready,
     Fire,
+    FireAntiAircraft,
     CheckPlacement,
-    Rematch
+    Rematch,
+    ActivateAbility
 };
 
 struct PlaceShipData {
@@ -27,8 +30,17 @@ struct FireData {
     coord target;
 };
 
+struct FireAntiAircraftData {
+    coord target;
+};
+
+struct ActivateAbilityData {
+    int vehicleId;
+    VehicleAbilityAction abilityAction;
+};
+
 // Note: CheckPlacement uses PlaceShipData directly, not in the variant
-using SessionActionData = std::variant<PlaceShipData, ReadyData, FireData, RematchData>;
+using SessionActionData = std::variant<PlaceShipData, ReadyData, FireData, FireAntiAircraftData, RematchData, ActivateAbilityData>;
 
 struct SessionAction {
     SessionActionType type;
