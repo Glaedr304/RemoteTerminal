@@ -51,5 +51,13 @@ class VehicleAbility {
 		VehicleAbilityType getType() const {
 			return _type;
 		}
+
+		VehicleAbilityUsagePolicy getUsagePolicy() const {
+			return _usagePolicy;
+		}
+
+		int getRemainingUses() const {
+			return _remainingUses;
+		}
 	};
 } // namespace NavalBattle

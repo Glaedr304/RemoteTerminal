@@ -7,6 +7,8 @@
 #include "coord.h"
 #include "Action.h"
 #include "SessionTypes.h"
+#include "VehicleAbility.h"
+#include "Plane.h"
 
 namespace NavalBattle {
 
@@ -40,6 +42,12 @@ ActivateAbilityData activateAbilityDataFromJson(const Json::Value& v);
 
 Json::Value toJson(const VehicleAbilityType& t);
 VehicleAbilityType vehicleAbilityTypeFromJson(const Json::Value& v);
+
+Json::Value toJson(const VehicleAbilityUsagePolicy& p);
+
+Json::Value toJson(const VehicleAbility& a);
+
+Json::Value toJson(const Plane& p);
 
 Json::Value toJson(const TorpedoData::FiringPattern& p);
 TorpedoData::FiringPattern torpedoFiringPatternFromJson(const Json::Value& v);

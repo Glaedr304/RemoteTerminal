@@ -65,6 +65,10 @@ bool Plane::isPlaced() const {
 	return !_pos.isUnspecified();
 }
 
+const std::vector<VehicleAbility>& Plane::getAbilities() const {
+	return _abilities;
+}
+
 PlaneBlueprint const Plane::reconPlane{
 	"Recon Plane",
 	{

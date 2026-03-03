@@ -126,6 +126,38 @@ VehicleAbilityType vehicleAbilityTypeFromJson(const Json::Value& v) {
 	return VehicleAbilityType::Torpedo;
 }
 
+Json::Value toJson(const VehicleAbilityUsagePolicy& p) {
+	switch (p) {
+		case VehicleAbilityUsagePolicy::unlimited: return "unlimited";
+		case VehicleAbilityUsagePolicy::limited: return "limited";
+	}
+	return "unknown";
+}
+
+Json::Value toJson(const VehicleAbility& a) {
+	Json::Value answer(Json::objectValue);
+	answer["type"] = toJson(a.getType());
+	answer["usagepolicy"] = toJson(a.getUsagePolicy());
+	answer["remaininguses"] = a.getRemainingUses();
+	answer["canuse"] = a.canUse();
+	return answer;
+}
+
+Json::Value toJson(const Plane& p) {
+	Json::Value answer(Json::objectValue);
+	answer["name"] = toJson(p.getName());
+	answer["id"] = p.getId();
+	answer["pos"] = toJson(p.getPos());
+	answer["isdestroyed"] = p.isDestroyed();
+
+	Json::Value abilities(Json::arrayValue);
+	for (const VehicleAbility& a : p.getAbilities())
+		abilities.append(toJson(a));
+	answer["abilities"] = abilities;
+
+	return answer;
+}
+
 Json::Value toJson(const TorpedoData::FiringPattern& p) {
 	switch (p) {
 		case TorpedoData::FiringPattern::vertical: return "vertical";
@@ -776,9 +808,18 @@ Json::Value toJson(const UserSnapshot& u) {
 }
 
 Json::Value toJson(const Fleet& f) {
-	Json::Value answer(Json::arrayValue);
+	Json::Value answer(Json::objectValue);
+
+	Json::Value ships(Json::arrayValue);
 	for (const Ship& s : f.getShips())
-		answer.append(toJson(s));
+		ships.append(toJson(s));
+	answer["ships"] = ships;
+
+	Json::Value planes(Json::arrayValue);
+	for (const Plane& p : f.getPlanes())
+		planes.append(toJson(p));
+	answer["planes"] = planes;
+
 	return answer;
 }
 
@@ -787,6 +828,14 @@ Json::Value toJson(const Ship& s) {
 	answer["name"] = toJson(s.getName());
 	answer["id"] = s.getId();
 	answer["coords"] = toJson(s.getCoords());
+	answer["issunk"] = s.isSunk();
+	answer["canholdplanes"] = s.canHoldPlanes();
+
+	Json::Value abilities(Json::arrayValue);
+	for (const VehicleAbility& a : s.getAbilities())
+		abilities.append(toJson(a));
+	answer["abilities"] = abilities;
+
 	return answer;
 }
 

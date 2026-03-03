@@ -45,6 +45,8 @@ namespace NavalBattle
 		HitPlaneResult hit(coord where);
 		bool isPlaced() const;
 
+		const std::vector<VehicleAbility>& getAbilities() const;
+
 		const static PlaneBlueprint reconPlane;
 	};
 
