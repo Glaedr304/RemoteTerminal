@@ -78,6 +78,10 @@ const std::vector<Ship>& Fleet::getShips() const{
 	return ships;
 }
 
+const std::vector<Plane>& Fleet::getPlanes() const {
+	return planes;
+}
+
 Fleet::Fleet() {}
 
 Fleet::hitFleetResult Fleet::hitFleet(coord c) {

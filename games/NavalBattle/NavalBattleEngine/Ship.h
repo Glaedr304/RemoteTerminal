@@ -50,6 +50,8 @@ public:
 
 	bool useAbility(VehicleAbilityType abilityType);
 
+	const std::vector<VehicleAbility>& getAbilities() const;
+
 	bool canHoldPlanes() const;
 
 	const static ShipBlueprint pt;

@@ -107,6 +107,10 @@ bool Ship::useAbility(VehicleAbilityType abilityType) {
 	return false;
 }
 
+const std::vector<VehicleAbility>& Ship::getAbilities() const {
+	return _abilities;
+}
+
 bool Ship::canHoldPlanes() const {
 	return _canHoldPlanes;
 }

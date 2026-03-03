@@ -43,7 +43,9 @@ public:
 	const Ship* getShipById(VehicleId id) const;
 
 	const std::vector<Ship>& getShips() const;
-	
+
+	const std::vector<Plane>& getPlanes() const;
+
 	Fleet(std::vector<Ship> ships);
 	Fleet();
 
