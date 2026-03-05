@@ -497,7 +497,7 @@ function applySetupInfo(setupInfo) {
 
     // Populate ship selector
     shipSelect.innerHTML = "";
-    for (const ship of setupInfo.fleet || []) {
+    for (const ship of setupInfo.fleet?.ships || []) {
         const opt = document.createElement("option");
         opt.value = String(ship.id);
         opt.textContent = ship.name;
