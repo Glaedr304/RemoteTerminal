@@ -686,9 +686,9 @@ function applySetupInfo(setupInfo) {
     opponentSpan.textContent = setupInfo.opponent || "—";
     updatePhaseDisplay(lastPhase);
 
-    // Populate ship selector
+    // Populate ship selector from fleetview
     shipSelect.innerHTML = "";
-    for (const ship of setupInfo.fleet?.ships || []) {
+    for (const ship of setupInfo.fleetview?.yourships || []) {
         const opt = document.createElement("option");
         opt.value = String(ship.id);
         opt.textContent = ship.name;
@@ -698,12 +698,10 @@ function applySetupInfo(setupInfo) {
     // Build grids
     buildGrids(setupInfo.boardrows, setupInfo.boardcols);
 
-    // Render initial fleet panels from setupinfo (both fleets start the same)
-    const initialFleetView = {
-        yourships: setupInfo.fleet?.ships || [],
-        opponentships: setupInfo.fleet?.ships || []
-    };
-    updateFleetPanels(initialFleetView);
+    // Render initial fleet panels from setupinfo
+    if (setupInfo.fleetview) {
+        updateFleetPanels(setupInfo.fleetview);
+    }
 
     showMessage("Game started! Place your ships.", "success");
 }
@@ -796,7 +794,7 @@ function applyFireResult(result) {
         // If hitid matches one of our fleet ships, we were hit (opponent fired)
         // Otherwise we fired
         const hitId = result.data?.hitid;
-        const myFleetIds = (lastSetupInfo?.fleet?.ships || []).map(s => s.id);
+        const myFleetIds = (lastSetupInfo?.fleetview?.yourships || []).map(s => s.id);
         const wasHitOnMe = hitId !== undefined && myFleetIds.includes(hitId);
 
         if (result.data?.ishit) {

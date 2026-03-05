@@ -791,7 +791,7 @@ Json::Value toJson(const StartupInfo& s) {
 	answer["opponent"] = toJson(s.opponent);
 	answer["gameid"] = toJson(s.gameId);
 	answer["userview"] = toJson(s.userView);
-	answer["fleet"] = toJson(s.fleet);
+	answer["fleetview"] = toJson(s.fleetView);
 	answer["boardrows"] = s.boardRows;
 	answer["boardcols"] = s.boardCols;
 	return answer;

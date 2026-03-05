@@ -105,8 +105,8 @@ struct StartupInfo {
     UserId you;
     UserId opponent;
     GameId gameId;
-    const Fleet& fleet;
     UserView userView;
+    FleetView fleetView;
     int boardRows;
     int boardCols;
 };

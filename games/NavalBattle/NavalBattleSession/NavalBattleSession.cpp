@@ -127,8 +127,13 @@ AddressedMessageBundle NavalBattleSession::getStartupInfoMessageBundles() {
 		_playerToUserMap[Player::one],
 		_playerToUserMap[opponent(Player::one)],
 		_gameId,
-		engine.getFleetForPlayer(Player::one),
 		UserView(_playerToUserMap[Player::one], engine.boardViewForPlayer(Player::one)),
+		FleetView{
+			engine.getFleetForPlayer(Player::one).getShips(),
+			engine.getFleetForPlayer(Player::two).getShips(),
+			engine.getFleetForPlayer(Player::one).getPlanes(),
+			engine.getFleetForPlayer(Player::two).getPlanes()
+		},
 		engine.boardRows(),
 		engine.boardCols()
 	);
@@ -138,15 +143,20 @@ AddressedMessageBundle NavalBattleSession::getStartupInfoMessageBundles() {
 		_playerToUserMap[Player::two],
 		_playerToUserMap[opponent(Player::two)],
 		_gameId,
-		engine.getFleetForPlayer(Player::two),
 		UserView(_playerToUserMap[Player::two], engine.boardViewForPlayer(Player::two)),
+		FleetView{
+			engine.getFleetForPlayer(Player::two).getShips(),
+			engine.getFleetForPlayer(Player::one).getShips(),
+			engine.getFleetForPlayer(Player::two).getPlanes(),
+			engine.getFleetForPlayer(Player::one).getPlanes()
+		},
 		engine.boardRows(),
 		engine.boardCols()
 	);
 
 	answer.addMessage(ToUser(_playerToUserMap[Player::one]), p1startupInfo);
 	answer.addMessage(ToUser(_playerToUserMap[Player::two]), p2startupInfo);
-	
+
 	return answer;
 }
 
