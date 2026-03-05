@@ -53,7 +53,7 @@ MessageResult NavalBattleSessionManager::handleJoinRequest(const JoinRequest& re
 	//...and this is the second user
 	//can add rand here to assign who is player one and two
 	action = SenderAction::Bind;
-	NavalBattleSession* s = new NavalBattleSession(g, lobbyGame->second, u);
+	NavalBattleSession* s = new NavalBattleSession(g, lobbyGame->second, u, _gameMode);
 	_gameIdToSessionMap[g] = s;
 	_lobbyGames.erase(lobbyGame);
 	AddUserToGameResult r;

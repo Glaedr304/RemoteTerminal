@@ -1,6 +1,7 @@
 #pragma once
 #include "NavalBattleSession.h"
 #include "EndpointTypes.h"
+#include "GameEntities.h"
 #include <map>
 
 namespace NavalBattle {
@@ -13,6 +14,8 @@ struct MessageResult {
 
 class NavalBattleSessionManager {
 public:
+	NavalBattleSessionManager(GameMode mode = GameMode::classic) : _gameMode(mode) {}
+
 	MessageResult handleJoinRequest(const JoinRequest& request);
 
 	MessageResult handleActionRequest(const ActionRequest& request);
@@ -22,7 +25,7 @@ public:
 	NavalBattleSession* findSession(GameId g);
 
 private:
-
+	GameMode _gameMode;
 	std::map<GameId, NavalBattleSession*> _gameIdToSessionMap;
 	std::map<GameId, UserId> _lobbyGames;
 };

@@ -6,7 +6,9 @@
 
 using namespace NavalBattle;
 
-NavalBattleSession::NavalBattleSession(const GameId& id, const UserId& playerOneId, const UserId& playerTwoId) {
+NavalBattleSession::NavalBattleSession(const GameId& id, const UserId& playerOneId, const UserId& playerTwoId, GameMode mode)
+	: _engine(mode)
+{
 	_userToPlayerMap[playerOneId] = Player::one;
 	_userToPlayerMap[playerTwoId] = Player::two;
 	_playerToUserMap[Player::one] = playerOneId;

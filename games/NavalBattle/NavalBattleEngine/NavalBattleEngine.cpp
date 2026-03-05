@@ -10,7 +10,7 @@ NavalBattleEngine::NavalBattleEngine(GameMode mode) :
     _p1Data(createFleetFromBlueprint(getBlueprintForMode(mode))),
     _p2Data(createFleetFromBlueprint(getBlueprintForMode(mode))),
     _pNoneData(Fleet()),
-    _boardDimensions(10,10)
+    _boardDimensions(getBoardDimensionsForMode(mode))
 {
 }
 
@@ -648,6 +648,14 @@ FleetBlueprint const& NavalBattleEngine::getBlueprintForMode(GameMode mode) {
     if (mode == GameMode::advanced)
         return getAdvancedFleetBlueprint();
     return getBaseFleetBlueprint();
+}
+
+std::pair<int, int> NavalBattleEngine::getBoardDimensionsForMode(GameMode mode) {
+    switch (mode) {
+        case GameMode::advanced: return {10, 14};
+        case GameMode::classic:  return {10, 10};
+    }
+    return {10, 10};
 }
 
 std::bitset<8> NavalBattleEngine::checkFleetStatus(const Fleet& f) {

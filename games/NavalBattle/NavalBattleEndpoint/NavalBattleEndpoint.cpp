@@ -46,5 +46,7 @@ AddressedWireMessageBundle NavalBattleEndpoint::routeMessagesToWireFormat(const 
 }
 
 std::string NavalBattleEndpoint::routePath() {
+	if (_gameMode == NavalBattle::GameMode::advanced)
+		return "com.titohq.advancednavalbattle";
 	return "com.titohq.navalbattle";
 }

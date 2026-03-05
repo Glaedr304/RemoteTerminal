@@ -11,7 +11,7 @@ namespace NavalBattle {
 
 class NavalBattleEngine {
     public:
-        NavalBattleEngine();
+        NavalBattleEngine(GameMode mode = GameMode::classic);
 
         // --- Setup ---
         const Fleet& getFleetForPlayer(Player p) const;
@@ -103,6 +103,7 @@ private:
     FleetBlueprint const& getBaseFleetBlueprint();
         FleetBlueprint const& getAdvancedFleetBlueprint();
         FleetBlueprint const& getBlueprintForMode(GameMode mode);
+        static std::pair<int, int> getBoardDimensionsForMode(GameMode mode);
 
     enum class FleetStatusBits {
         outOfBounds = 0,

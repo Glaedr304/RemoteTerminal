@@ -3,12 +3,13 @@
 #include "NavalBattleEngine.h"
 #include "Action.h"
 #include "SessionTypes.h"
+#include "GameEntities.h"
 
 namespace NavalBattle {
 
 class NavalBattleSession {
 public:
-    NavalBattleSession(const GameId& id, const UserId& playerOneId, const UserId& playerTwoId);
+    NavalBattleSession(const GameId& id, const UserId& playerOneId, const UserId& playerTwoId, GameMode mode = GameMode::classic);
 
     std::string getGameId() const;
 
