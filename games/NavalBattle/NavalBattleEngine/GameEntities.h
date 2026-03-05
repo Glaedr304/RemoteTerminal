@@ -205,4 +205,9 @@ struct FleetBlueprint {
 	std::vector<PlaneBlueprint> planes;
 };
 
+enum class GameMode {
+	classic,
+	advanced
+};
+
 } // namespace NavalBattle

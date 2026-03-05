@@ -4,11 +4,11 @@
 
 using namespace NavalBattle;
 
-NavalBattleEngine::NavalBattleEngine() :
+NavalBattleEngine::NavalBattleEngine(GameMode mode) :
     _currentPlayer(Player::none),
     _phase(Phase::setup),
-    _p1Data(createFleetFromBlueprint(getBaseFleetBlueprint())),
-    _p2Data(createFleetFromBlueprint(getBaseFleetBlueprint())),
+    _p1Data(createFleetFromBlueprint(getBlueprintForMode(mode))),
+    _p2Data(createFleetFromBlueprint(getBlueprintForMode(mode))),
     _pNoneData(Fleet()),
     _boardDimensions(10,10)
 {
@@ -624,6 +624,30 @@ FleetBlueprint const& NavalBattleEngine::getBaseFleetBlueprint() {
         }
     };
     return baseFleet;
+}
+
+//fleet with abilities for advanced game
+FleetBlueprint const& NavalBattleEngine::getAdvancedFleetBlueprint() {
+    static FleetBlueprint advancedFleet{
+        {
+            Ship::advancedCarrier,
+            Ship::advancedBattleship,
+            Ship::advancedDestroyer,
+            Ship::advancedSub,
+            Ship::pt,
+        },
+        {
+            Plane::reconPlane,
+            Plane::reconPlane
+        }
+    };
+    return advancedFleet;
+}
+
+FleetBlueprint const& NavalBattleEngine::getBlueprintForMode(GameMode mode) {
+    if (mode == GameMode::advanced)
+        return getAdvancedFleetBlueprint();
+    return getBaseFleetBlueprint();
 }
 
 std::bitset<8> NavalBattleEngine::checkFleetStatus(const Fleet& f) {
