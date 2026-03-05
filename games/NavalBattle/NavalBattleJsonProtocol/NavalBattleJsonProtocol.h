@@ -148,6 +148,8 @@ Json::Value toJson(const RematchStart& r);
 
 Json::Value toJson(const UserSnapshot& u);
 
+Json::Value toJson(const FleetView& f);
+
 Json::Value toJson(const StartupInfo& s);
 
 Json::Value toJson(const Fleet& f);

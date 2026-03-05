@@ -39,6 +39,9 @@ const ownRowLabels = document.getElementById("ownRowLabels");
 const oppColLabels = document.getElementById("oppColLabels");
 const oppRowLabels = document.getElementById("oppRowLabels");
 
+const yourFleetList = document.getElementById("yourFleetList");
+const opponentFleetList = document.getElementById("opponentFleetList");
+
 // === State ===
 let socket = null;
 let rotation = 0;
@@ -212,6 +215,190 @@ function buildGrids(rows, cols) {
             oppGrid.appendChild(cell);
         }
     }
+}
+
+// === Fleet Panel Rendering ===
+function getAbilityIcon(abilityType) {
+    const icons = {
+        torpedo: "??",
+        exocet: "??",
+        apache: "??",
+        tomahawk: "??",
+        scan: "??",
+        reveal: "???",
+        relocate: "??"
+    };
+    return icons[abilityType] || "?";
+}
+
+function getAbilityDisplayName(abilityType) {
+    const names = {
+        torpedo: "Torpedo",
+        exocet: "Exocet",
+        apache: "Apache",
+        tomahawk: "Tomahawk",
+        scan: "Scan",
+        reveal: "Reveal",
+        relocate: "Relocate"
+    };
+    return names[abilityType] || abilityType;
+}
+
+function calculateShipBounds(coords) {
+    if (!coords || coords.length === 0) return { minRow: 0, maxRow: 0, minCol: 0, maxCol: 0, rows: 1, cols: 1 };
+
+    let minRow = Infinity, maxRow = -Infinity;
+    let minCol = Infinity, maxCol = -Infinity;
+
+    for (const c of coords) {
+        if (c.row < minRow) minRow = c.row;
+        if (c.row > maxRow) maxRow = c.row;
+        if (c.col < minCol) minCol = c.col;
+        if (c.col > maxCol) maxCol = c.col;
+    }
+
+    return {
+        minRow,
+        maxRow,
+        minCol,
+        maxCol,
+        rows: maxRow - minRow + 1,
+        cols: maxCol - minCol + 1
+    };
+}
+
+function createShipFormGrid(coords) {
+    const bounds = calculateShipBounds(coords);
+    const container = document.createElement("div");
+    container.className = "ship-form";
+
+    const grid = document.createElement("div");
+    grid.className = "ship-form-grid";
+    grid.style.gridTemplateColumns = `repeat(${bounds.cols}, 12px)`;
+    grid.style.gridTemplateRows = `repeat(${bounds.rows}, 12px)`;
+
+    // Create a set for quick lookup
+    const coordSet = new Set(coords.map(c => `${c.row},${c.col}`));
+
+    // Fill grid
+    for (let r = bounds.minRow; r <= bounds.maxRow; r++) {
+        for (let c = bounds.minCol; c <= bounds.maxCol; c++) {
+            const cell = document.createElement("div");
+            cell.className = "ship-form-cell";
+            if (coordSet.has(`${r},${c}`)) {
+                cell.classList.add("ship");
+            } else {
+                cell.classList.add("empty");
+            }
+            grid.appendChild(cell);
+        }
+    }
+
+    container.appendChild(grid);
+    return container;
+}
+
+function createAbilityButton(ability, shipId, isYours) {
+    const element = document.createElement(isYours ? "button" : "div");
+    element.className = isYours ? "ability-btn" : "ability-display";
+    element.dataset.abilityType = ability.type;
+    element.dataset.shipId = shipId;
+
+    const icon = document.createElement("span");
+    icon.className = "ability-icon";
+    icon.textContent = getAbilityIcon(ability.type);
+
+    const name = document.createElement("span");
+    name.className = "ability-name";
+    name.textContent = getAbilityDisplayName(ability.type);
+
+    const uses = document.createElement("span");
+    uses.className = "ability-uses";
+    if (ability.usagepolicy === "unlimited") {
+        uses.textContent = "?";
+        uses.classList.add("unlimited");
+    } else {
+        uses.textContent = `${ability.remaininguses}`;
+    }
+
+    element.appendChild(icon);
+    element.appendChild(name);
+    element.appendChild(uses);
+
+    if (isYours) {
+        element.disabled = !ability.canuse;
+        element.addEventListener("click", () => handleAbilityClick(shipId, ability.type));
+    }
+
+    return element;
+}
+
+function createShipCard(ship, isYours) {
+    const card = document.createElement("div");
+    card.className = "ship-card";
+    card.dataset.shipId = ship.id;
+
+    if (ship.issunk) {
+        card.classList.add("sunk");
+    }
+
+    // Ship name
+    const nameEl = document.createElement("div");
+    nameEl.className = "ship-name";
+    nameEl.textContent = ship.name;
+    card.appendChild(nameEl);
+
+    // Ship form (mini grid visualization)
+    const formGrid = createShipFormGrid(ship.coords);
+    card.appendChild(formGrid);
+
+    // Abilities
+    if (ship.abilities && ship.abilities.length > 0) {
+        const abilitiesContainer = document.createElement("div");
+        abilitiesContainer.className = "ship-abilities";
+
+        for (const ability of ship.abilities) {
+            const abilityEl = createAbilityButton(ability, ship.id, isYours);
+            abilitiesContainer.appendChild(abilityEl);
+        }
+
+        card.appendChild(abilitiesContainer);
+    }
+
+    return card;
+}
+
+function renderFleetPanel(container, ships, isYours) {
+    container.innerHTML = "";
+
+    if (!ships || ships.length === 0) {
+        const emptyMsg = document.createElement("div");
+        emptyMsg.className = "fleet-empty";
+        emptyMsg.textContent = "No ships";
+        container.appendChild(emptyMsg);
+        return;
+    }
+
+    for (const ship of ships) {
+        const card = createShipCard(ship, isYours);
+        container.appendChild(card);
+    }
+}
+
+function updateFleetPanels(fleetView) {
+    if (!fleetView) return;
+
+    // Render your fleet
+    renderFleetPanel(yourFleetList, fleetView.yourships || [], true);
+
+    // Render opponent fleet
+    renderFleetPanel(opponentFleetList, fleetView.opponentships || [], false);
+}
+
+function handleAbilityClick(shipId, abilityType) {
+    // For now, just log the click - actual functionality to be implemented
+    logLine(`Ability clicked: Ship ${shipId}, Ability: ${abilityType}`);
+    showMessage(`Selected ${getAbilityDisplayName(abilityType)} ability`, "info");
 }
 
 // === Click Handlers ===
@@ -472,11 +659,15 @@ function handleRematchStart() {
     placedShipIds.clear();
     rotation = 0;
     lastPhase = null;
-    
+
     // Clear grids
     ownGrid.innerHTML = "";
     oppGrid.innerHTML = "";
-    
+
+    // Clear fleet panels
+    yourFleetList.innerHTML = "";
+    opponentFleetList.innerHTML = "";
+
     showMessage("Rematch starting!", "success");
 }
 
@@ -506,6 +697,13 @@ function applySetupInfo(setupInfo) {
 
     // Build grids
     buildGrids(setupInfo.boardrows, setupInfo.boardcols);
+
+    // Render initial fleet panels from setupinfo (both fleets start the same)
+    const initialFleetView = {
+        yourships: setupInfo.fleet?.ships || [],
+        opponentships: setupInfo.fleet?.ships || []
+    };
+    updateFleetPanels(initialFleetView);
 
     showMessage("Game started! Place your ships.", "success");
 }
@@ -568,6 +766,11 @@ function applySnapshot(snapshot) {
         const cell = oppGrid.children[idx];
         if (cell && state) cell.classList.add(state);
     }
+
+    // Update fleet panels from snapshot
+    if (snapshot.fleetview) {
+        updateFleetPanels(snapshot.fleetview);
+    }
 }
 
 function applyActionResult(result) {
@@ -589,15 +792,13 @@ function applyActionResult(result) {
 
 function applyFireResult(result) {
     if (result.success) {
-        const isMyShot = result.data?.ishit !== undefined;
-        
         // Both players receive this result - determine who fired
         // If hitid matches one of our fleet ships, we were hit (opponent fired)
         // Otherwise we fired
         const hitId = result.data?.hitid;
-        const myFleetIds = (lastSetupInfo?.fleet || []).map(s => s.id);
+        const myFleetIds = (lastSetupInfo?.fleet?.ships || []).map(s => s.id);
         const wasHitOnMe = hitId !== undefined && myFleetIds.includes(hitId);
-        
+
         if (result.data?.ishit) {
             if (result.data.issunk) {
                 if (wasHitOnMe) {
@@ -605,6 +806,7 @@ function applyFireResult(result) {
                 } else {
                     showMessage(`You sank their ${result.data.sunkname}!`, "success");
                 }
+                // Fleet panels will be updated by the snapshot that follows
             } else {
                 if (wasHitOnMe) {
                     showMessage("Your ship was hit!", "error");

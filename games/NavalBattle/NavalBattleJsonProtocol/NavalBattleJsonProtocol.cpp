@@ -802,8 +802,35 @@ Json::Value toJson(const UserSnapshot& u) {
 	answer["phase"] = toJson(u.phase);
 	answer["currentturn"] = toJson(u.currentUser);
 	answer["userview"] = toJson(u.userView);
+	answer["fleetview"] = toJson(u.fleetView);
 	answer["youready"] = u.youReady;
 	answer["opponentready"] = u.opponentReady;
+	return answer;
+}
+
+Json::Value toJson(const FleetView& f) {
+	Json::Value answer(Json::objectValue);
+
+	Json::Value yourShips(Json::arrayValue);
+	for (const Ship& s : f.yourShips)
+		yourShips.append(toJson(s));
+	answer["yourships"] = yourShips;
+
+	Json::Value opponentShips(Json::arrayValue);
+	for (const Ship& s : f.opponentShips)
+		opponentShips.append(toJson(s));
+	answer["opponentships"] = opponentShips;
+
+	Json::Value yourPlanes(Json::arrayValue);
+	for (const Plane& p : f.yourPlanes)
+		yourPlanes.append(toJson(p));
+	answer["yourplanes"] = yourPlanes;
+
+	Json::Value opponentPlanes(Json::arrayValue);
+	for (const Plane& p : f.opponentPlanes)
+		opponentPlanes.append(toJson(p));
+	answer["opponentplanes"] = opponentPlanes;
+
 	return answer;
 }
 

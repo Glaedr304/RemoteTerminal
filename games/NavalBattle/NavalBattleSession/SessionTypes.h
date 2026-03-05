@@ -84,10 +84,18 @@ struct UserView {
     BoardView boardView;
 };
 
+struct FleetView {
+    std::vector<Ship> yourShips;
+    std::vector<Ship> opponentShips;
+    std::vector<Plane> yourPlanes;
+    std::vector<Plane> opponentPlanes;
+};
+
 struct UserSnapshot {
     Phase phase;
     UserId currentUser;
     UserView userView;
+    FleetView fleetView;
     bool youReady;
     bool opponentReady;
 };

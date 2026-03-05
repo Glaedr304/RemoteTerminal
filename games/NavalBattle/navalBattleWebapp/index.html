@@ -1,4 +1,4 @@
-<!doctype html>
+ï»¿<!doctype html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -38,7 +38,7 @@
             <header class="game-header">
                 <div class="player-info">
                     <span class="label">You</span>
-                    <span id="me" class="player-name">—</span>
+                    <span id="me" class="player-name">â€”</span>
                     <span id="youReadyBadge" class="ready-badge hidden">Ready</span>
                 </div>
                 <div class="phase-info">
@@ -47,7 +47,7 @@
                 </div>
                 <div class="player-info">
                     <span class="label">Opponent</span>
-                    <span id="opponent" class="player-name">—</span>
+                    <span id="opponent" class="player-name">â€”</span>
                     <span id="opponentReadyBadge" class="ready-badge hidden">Ready</span>
                 </div>
             </header>
@@ -79,25 +79,40 @@
                 <button id="readyBtn" class="btn-primary btn-sm">Ready</button>
             </div>
 
-            <!-- Grids Container -->
-            <div class="grids-container">
-                <div class="grid-wrapper">
+            <!-- Main Game Area -->
+            <div class="game-area">
+                <!-- Your Fleet Panel (Left) -->
+                <div class="fleet-panel your-fleet">
                     <h3>Your Fleet</h3>
-                    <div class="grid-with-labels">
-                        <div class="corner-spacer"></div>
-                        <div id="ownColLabels" class="col-labels"></div>
-                        <div id="ownRowLabels" class="row-labels"></div>
-                        <div id="ownGrid" class="grid"></div>
+                    <div id="yourFleetList" class="fleet-list"></div>
+                </div>
+
+                <!-- Grids Container (Center) -->
+                <div class="grids-container">
+                    <div class="grid-wrapper">
+                        <h3>Your Waters</h3>
+                        <div class="grid-with-labels">
+                            <div class="corner-spacer"></div>
+                            <div id="ownColLabels" class="col-labels"></div>
+                            <div id="ownRowLabels" class="row-labels"></div>
+                            <div id="ownGrid" class="grid"></div>
+                        </div>
+                    </div>
+                    <div class="grid-wrapper">
+                        <h3>Enemy Waters</h3>
+                        <div class="grid-with-labels">
+                            <div class="corner-spacer"></div>
+                            <div id="oppColLabels" class="col-labels"></div>
+                            <div id="oppRowLabels" class="row-labels"></div>
+                            <div id="oppGrid" class="grid"></div>
+                        </div>
                     </div>
                 </div>
-                <div class="grid-wrapper">
-                    <h3>Enemy Waters</h3>
-                    <div class="grid-with-labels">
-                        <div class="corner-spacer"></div>
-                        <div id="oppColLabels" class="col-labels"></div>
-                        <div id="oppRowLabels" class="row-labels"></div>
-                        <div id="oppGrid" class="grid"></div>
-                    </div>
+
+                <!-- Opponent Fleet Panel (Right) -->
+                <div class="fleet-panel opponent-fleet">
+                    <h3>Enemy Fleet</h3>
+                    <div id="opponentFleetList" class="fleet-list"></div>
                 </div>
             </div>
         </section>

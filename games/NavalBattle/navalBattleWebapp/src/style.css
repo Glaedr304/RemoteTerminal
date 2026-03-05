@@ -63,7 +63,7 @@ body {
 }
 
 #app {
-    max-width: 1000px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 1rem;
     min-height: 100vh;
@@ -461,9 +461,10 @@ kbd {
 /* === Grids === */
 .grids-container {
     display: flex;
-    gap: 1.5rem;
+    gap: 1rem;
     justify-content: center;
     flex-wrap: wrap;
+    flex: 1;
 }
 
 .grid-wrapper {
@@ -649,32 +650,263 @@ kbd {
     #app {
         padding: 0.5rem;
     }
-    
+
     .card {
         margin: 1rem auto;
         padding: 1.25rem;
     }
-    
+
     h1 {
         font-size: 1.75rem;
     }
-    
+
     .game-header {
         flex-direction: column;
         gap: 0.5rem;
         padding: 0.5rem;
     }
-    
+
     .controls-bar {
         flex-wrap: wrap;
     }
-    
+
     .grids-container {
         gap: 1rem;
     }
-    
+
     :root {
         --cell-size: 24px;
         --label-size: 16px;
     }
+
+    .game-area {
+        flex-direction: column;
+    }
+
+    .fleet-panel {
+        max-width: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .ship-card {
+        width: auto;
+        min-width: 140px;
+    }
+}
+
+/* === Game Area Layout === */
+.game-area {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+/* === Fleet Panels === */
+.fleet-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 0.75rem;
+    min-width: 160px;
+    max-width: 200px;
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+    box-shadow: var(--shadow-sm);
+}
+
+.fleet-panel h3 {
+    text-align: center;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.fleet-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.fleet-empty {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    padding: 1rem 0;
+}
+
+/* === Ship Card === */
+.ship-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    padding: 0.5rem;
+    transition: all 0.2s;
+}
+
+.ship-card.sunk {
+    opacity: 0.4;
+    filter: grayscale(1);
+}
+
+.ship-card.sunk .ship-name {
+    text-decoration: line-through;
+}
+
+.ship-name {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.4rem;
+    text-align: center;
+}
+
+/* === Ship Form (Mini Grid) === */
+.ship-form {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+}
+
+.ship-form-grid {
+    display: inline-grid;
+    gap: 1px;
+    background: var(--bg-secondary);
+    padding: 2px;
+    border-radius: 3px;
+}
+
+.ship-form-cell {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+}
+
+.ship-form-cell.ship {
+    background: linear-gradient(135deg, var(--ship) 0%, var(--ship-hover) 100%);
+}
+
+.ship-form-cell.empty {
+    background: transparent;
+}
+
+.ship-card.sunk .ship-form-cell.ship {
+    background: linear-gradient(135deg, var(--text-muted) 0%, var(--bg-hover) 100%);
+}
+
+/* === Ship Abilities === */
+.ship-abilities {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.ability-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.65rem;
+    font-weight: 500;
+    background: var(--bg-hover);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.ability-btn:hover:not(:disabled) {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+}
+
+.ability-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.ability-btn .ability-name {
+    text-transform: capitalize;
+}
+
+.ability-btn .ability-uses {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    background: var(--bg-primary);
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+}
+
+.ability-btn .ability-uses.unlimited {
+    color: var(--accent-success);
+}
+
+/* === Opponent Ability Display (non-interactive) === */
+.ability-display {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.65rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    color: var(--text-secondary);
+}
+
+.ability-display .ability-name {
+    text-transform: capitalize;
+}
+
+.ability-display .ability-uses {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+}
+
+/* === Ability Type Icons === */
+.ability-icon {
+    margin-right: 0.25rem;
+}
+
+.ability-icon::before {
+    font-size: 0.7rem;
+}
+
+/* Ability type colors */
+.ability-btn[data-ability-type="torpedo"],
+.ability-display[data-ability-type="torpedo"] {
+    border-left: 2px solid #06b6d4;
+}
+
+.ability-btn[data-ability-type="exocet"],
+.ability-display[data-ability-type="exocet"] {
+    border-left: 2px solid #f59e0b;
+}
+
+.ability-btn[data-ability-type="apache"],
+.ability-display[data-ability-type="apache"] {
+    border-left: 2px solid #ef4444;
+}
+
+.ability-btn[data-ability-type="tomahawk"],
+.ability-display[data-ability-type="tomahawk"] {
+    border-left: 2px solid #8b5cf6;
+}
+
+.ability-btn[data-ability-type="scan"],
+.ability-display[data-ability-type="scan"] {
+    border-left: 2px solid #22c55e;
+}
+
+.ability-btn[data-ability-type="reveal"],
+.ability-display[data-ability-type="reveal"] {
+    border-left: 2px solid #3b82f6;
+}
+
+.ability-btn[data-ability-type="relocate"],
+.ability-display[data-ability-type="relocate"] {
+    border-left: 2px solid #ec4899;
 }
