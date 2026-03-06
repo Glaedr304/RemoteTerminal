@@ -790,31 +790,27 @@ function applyActionResult(result) {
 
 function applyFireResult(result) {
     if (result.success) {
-        // Both players receive this result - determine who fired
-        // If hitid matches one of our fleet ships, we were hit (opponent fired)
-        // Otherwise we fired
-        const hitId = result.data?.hitid;
-        const myFleetIds = (lastSetupInfo?.fleetview?.yourships || []).map(s => s.id);
-        const wasHitOnMe = hitId !== undefined && myFleetIds.includes(hitId);
+        // Compare actinguser to determine if we fired or were fired upon
+        const iDidThis = result.actinguser === myUserId;
 
         if (result.data?.ishit) {
             if (result.data.issunk) {
-                if (wasHitOnMe) {
-                    showMessage(`Your ${result.data.sunkname} was sunk!`, "error");
-                } else {
+                if (iDidThis) {
                     showMessage(`You sank their ${result.data.sunkname}!`, "success");
+                } else {
+                    showMessage(`Your ${result.data.sunkname} was sunk!`, "error");
                 }
                 // Fleet panels will be updated by the snapshot that follows
             } else {
-                if (wasHitOnMe) {
-                    showMessage("Your ship was hit!", "error");
-                } else {
+                if (iDidThis) {
                     showMessage("Hit!", "success");
+                } else {
+                    showMessage("Your ship was hit!", "error");
                 }
             }
         } else {
-            // Miss - only show for the shooter (they get miss, target gets nothing meaningful)
-            if (!wasHitOnMe) {
+            // Miss - only show for the shooter
+            if (iDidThis) {
                 showMessage("Miss", "info");
             }
         }

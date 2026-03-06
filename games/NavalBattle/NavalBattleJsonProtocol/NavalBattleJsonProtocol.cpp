@@ -507,6 +507,7 @@ Json::Value toJson(const SessionActionResult& r) {
 	Json::Value answer(Json::objectValue);
 
 	answer["success"] = r.success;
+	answer["actinguser"] = toJson(r.actingUser);
 	answer["error"] = toJson(r.error);
 	answer["type"] = toJson(r.type);
 	answer["data"] = toJson(r.data);

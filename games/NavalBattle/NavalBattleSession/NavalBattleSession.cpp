@@ -72,6 +72,8 @@ AddressedMessageBundle NavalBattleSession::handleAction(const UserId& user, cons
 		}
 	}
 
+	s.actingUser = user;
+
 	a.addMessage(ToUser(user), s);
 	a.addMessageBundle(getSnapshotMessageBundleForUser(user));
 	if (s.success && s.type != SessionActionResultType::PlaceShipResult) {//do not alert opponent on ship placement or failed actions

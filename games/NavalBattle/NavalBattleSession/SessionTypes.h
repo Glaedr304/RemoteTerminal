@@ -74,6 +74,7 @@ using SessionActionResultData = std::variant<PlaceShipResultData, ReadyResultDat
 
 struct SessionActionResult {
     bool success = false;
+    UserId actingUser; // the user who performed this action
     SessionActionResultError error = SessionActionResultError::internalError;
     SessionActionResultType type = SessionActionResultType::FireResult;
     SessionActionResultData data = FireResultData();
