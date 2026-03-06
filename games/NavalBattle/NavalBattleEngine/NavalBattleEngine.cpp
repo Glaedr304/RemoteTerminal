@@ -432,7 +432,7 @@ ReadyUpResult NavalBattleEngine::readyUp(Player p) {
     return answer;
 }
 
-bool NavalBattleEngine::isPlayerReady(Player p) {
+bool NavalBattleEngine::isPlayerReady(Player p) const{
     return getDataForPlayer(p).isReady;
 }
 

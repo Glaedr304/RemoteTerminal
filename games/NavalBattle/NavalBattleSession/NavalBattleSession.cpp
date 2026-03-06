@@ -85,30 +85,32 @@ AddressedMessageBundle NavalBattleSession::handleAction(const UserId& user, cons
 AddressedMessageBundle NavalBattleSession::getSnapshotMessageBundles() {
 	AddressedMessageBundle answer;
 
+	const auto& engine = static_cast<const NavalBattleEngine&>(_engine);
+
 	UserSnapshot p1Snapshot;
-	p1Snapshot.currentUser = _playerToUserMap[_engine.currentTurn()];
-	p1Snapshot.phase = _engine.phase();
-	p1Snapshot.userView = UserView(_playerToUserMap[Player::one], _engine.boardViewForPlayer(Player::one));
-	p1Snapshot.youReady = _engine.isPlayerReady(Player::one);
-	p1Snapshot.opponentReady = _engine.isPlayerReady(opponent(Player::one));
+	p1Snapshot.currentUser = _playerToUserMap[engine.currentTurn()];
+	p1Snapshot.phase = engine.phase();
+	p1Snapshot.userView = UserView(_playerToUserMap[Player::one], engine.boardViewForPlayer(Player::one));
+	p1Snapshot.youReady = engine.isPlayerReady(Player::one);
+	p1Snapshot.opponentReady = engine.isPlayerReady(opponent(Player::one));
 	p1Snapshot.fleetView = FleetView{
-		_engine.getFleetForPlayer(Player::one).getShips(),
-		_engine.getFleetForPlayer(Player::two).getShips(),
-		_engine.getFleetForPlayer(Player::one).getPlanes(),
-		_engine.getFleetForPlayer(Player::two).getPlanes()
+		engine.getFleetForPlayer(Player::one).getShips(),
+		engine.getFleetForPlayer(Player::two).getShips(),
+		engine.getFleetForPlayer(Player::one).getPlanes(),
+		engine.getFleetForPlayer(Player::two).getPlanes()
 	};
 
 	UserSnapshot p2Snapshot;
 	p2Snapshot.currentUser = p1Snapshot.currentUser;
 	p2Snapshot.phase = p1Snapshot.phase;
-	p2Snapshot.userView = UserView(_playerToUserMap[Player::two], _engine.boardViewForPlayer(Player::two));
-	p2Snapshot.youReady = _engine.isPlayerReady(Player::two);
-	p2Snapshot.opponentReady = _engine.isPlayerReady(opponent(Player::two));
+	p2Snapshot.userView = UserView(_playerToUserMap[Player::two], engine.boardViewForPlayer(Player::two));
+	p2Snapshot.youReady = engine.isPlayerReady(Player::two);
+	p2Snapshot.opponentReady = engine.isPlayerReady(opponent(Player::two));
 	p2Snapshot.fleetView = FleetView{
-		_engine.getFleetForPlayer(Player::two).getShips(),
-		_engine.getFleetForPlayer(Player::one).getShips(),
-		_engine.getFleetForPlayer(Player::two).getPlanes(),
-		_engine.getFleetForPlayer(Player::one).getPlanes()
+		engine.getFleetForPlayer(Player::two).getShips(),
+		engine.getFleetForPlayer(Player::one).getShips(),
+		engine.getFleetForPlayer(Player::two).getPlanes(),
+		engine.getFleetForPlayer(Player::one).getPlanes()
 	};
 	
 	answer.addMessage(ToUser(_playerToUserMap[Player::one]), p1Snapshot);
@@ -165,6 +167,8 @@ AddressedMessageBundle NavalBattleSession::getSnapshotMessageBundleForUser(const
 	Player p = playerFor(u);
 	Player opp = opponent(p);
 
+	const auto& engine = static_cast<const NavalBattleEngine&>(_engine);
+
 	UserSnapshot snapshot;
 	snapshot.currentUser = _playerToUserMap[_engine.currentTurn()];
 	snapshot.phase = _engine.phase();
@@ -172,10 +176,10 @@ AddressedMessageBundle NavalBattleSession::getSnapshotMessageBundleForUser(const
 	snapshot.youReady = _engine.isPlayerReady(p);
 	snapshot.opponentReady = _engine.isPlayerReady(opp);
 	snapshot.fleetView = FleetView{
-		_engine.getFleetForPlayer(p).getShips(),
-		_engine.getFleetForPlayer(opp).getShips(),
-		_engine.getFleetForPlayer(p).getPlanes(),
-		_engine.getFleetForPlayer(opp).getPlanes()
+		engine.getFleetForPlayer(p).getShips(),
+		engine.getFleetForPlayer(opp).getShips(),
+		engine.getFleetForPlayer(p).getPlanes(),
+		engine.getFleetForPlayer(opp).getPlanes()
 	};
 
 	answer.addMessage(ToUser(u), snapshot);

@@ -22,7 +22,7 @@ class NavalBattleEngine {
 
         ReadyUpResult readyUp(Player p);
 
-        bool isPlayerReady(Player p);
+        bool isPlayerReady(Player p) const;
 
         // --- Gameplay ---
         FireResult fire(Player p, coord target);
