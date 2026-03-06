@@ -18,7 +18,11 @@ Ship::Ship(ShipBlueprint blueprint, VehicleId id, int rotation /*= 0*/, coord po
 Ship::Ship(const Ship& other) :
 	rotation(other.rotation),
 	coords(other.coords),
+	hits(other.hits),
+	_sunk(other._sunk),
 	_name(other._name),
+	_abilities(other._abilities),
+	_canHoldPlanes(other._canHoldPlanes),
 	pos(other.pos),
 	_id(other._id)
 {
