@@ -661,6 +661,9 @@ std::pair<int, int> NavalBattleEngine::getBoardDimensionsForMode(GameMode mode) 
 std::bitset<8> NavalBattleEngine::checkFleetStatus(const Fleet& f) {
     std::bitset<8> answer;
     std::unordered_set<coord> occupied;
+    std::unordered_set<coord> planeAllowedCoords; //squares that planes are allowed to occupy
+
+    //check ships
     for (const Ship& s : f.getShips()) {
         if (s.isPlaced()) { //only check ships that are placed
             for (coord c : s.getCoords()) {
@@ -673,12 +676,34 @@ std::bitset<8> NavalBattleEngine::checkFleetStatus(const Fleet& f) {
                 occupied.insert(transformed);
                 if (occupiedSize == occupied.size())
                     answer.set((int)FleetStatusBits::overlapping, true);
+
+				planeAllowedCoords.insert(transformed);
             }
         }
         else {
             answer.set((int)FleetStatusBits::unplaced, true);
         }
     }
+
+	std::set<coord> planeOccupied;
+	//check planes
+	for (const Plane& p : f.getPlanes()) {
+		if (p.isPlaced()) {
+			coord pos = p.getPos();
+			if (!planeAllowedCoords.contains(pos)) {
+				answer.set((int)FleetStatusBits::outOfBounds, true);
+				continue;
+			}
+			if (planeOccupied.find(pos) != planeOccupied.end())
+				answer.set((int)FleetStatusBits::overlapping, true);
+			planeOccupied.insert(pos);
+		}
+        else
+        {
+			answer.set((int)FleetStatusBits::unplaced, true);
+        }
+	}
+
     return answer;
 }
 
