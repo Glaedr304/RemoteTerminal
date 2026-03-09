@@ -676,8 +676,8 @@ std::bitset<8> NavalBattleEngine::checkFleetStatus(const Fleet& f) {
                 occupied.insert(transformed);
                 if (occupiedSize == occupied.size())
                     answer.set((int)FleetStatusBits::overlapping, true);
-
-				planeAllowedCoords.insert(transformed);
+                if(s.canHoldPlanes())
+    				planeAllowedCoords.insert(transformed);
             }
         }
         else {
