@@ -368,31 +368,101 @@ function createShipCard(ship, isYours) {
     return card;
 }
 
-function renderFleetPanel(container, ships, isYours) {
+function createPlaneCard(plane, isYours) {
+    const card = document.createElement("div");
+    card.className = "plane-card";
+    card.dataset.planeId = plane.id;
+
+    if (plane.isdestroyed) {
+        card.classList.add("destroyed");
+    }
+
+    // Plane name
+    const nameEl = document.createElement("div");
+    nameEl.className = "plane-name";
+    nameEl.textContent = plane.name;
+    card.appendChild(nameEl);
+
+    // Plane icon/indicator
+    const iconEl = document.createElement("div");
+    iconEl.className = "plane-icon";
+    iconEl.textContent = "?";
+    card.appendChild(iconEl);
+
+    // Position indicator (if placed)
+    if (plane.pos && plane.pos.row !== undefined && plane.pos.col !== undefined) {
+        const posEl = document.createElement("div");
+        posEl.className = "plane-position";
+        const rowLabel = String.fromCharCode(65 + plane.pos.row);
+        posEl.textContent = `${rowLabel}${plane.pos.col + 1}`;
+        card.appendChild(posEl);
+    }
+
+    // Abilities
+    if (plane.abilities && plane.abilities.length > 0) {
+        const abilitiesContainer = document.createElement("div");
+        abilitiesContainer.className = "plane-abilities";
+
+        for (const ability of plane.abilities) {
+            const abilityEl = createAbilityButton(ability, plane.id, isYours);
+            abilitiesContainer.appendChild(abilityEl);
+        }
+
+        card.appendChild(abilitiesContainer);
+    }
+
+    return card;
+}
+
+function renderFleetPanel(container, ships, planes, isYours) {
     container.innerHTML = "";
 
-    if (!ships || ships.length === 0) {
+    const hasShips = ships && ships.length > 0;
+    const hasPlanes = planes && planes.length > 0;
+
+    if (!hasShips && !hasPlanes) {
         const emptyMsg = document.createElement("div");
         emptyMsg.className = "fleet-empty";
-        emptyMsg.textContent = "No ships";
+        emptyMsg.textContent = "No vehicles";
         container.appendChild(emptyMsg);
         return;
     }
 
-    for (const ship of ships) {
-        const card = createShipCard(ship, isYours);
-        container.appendChild(card);
+    // Render ships
+    if (hasShips) {
+        for (const ship of ships) {
+            const card = createShipCard(ship, isYours);
+            container.appendChild(card);
+        }
+    }
+
+    // Render planes
+    if (hasPlanes) {
+        for (const plane of planes) {
+            const card = createPlaneCard(plane, isYours);
+            container.appendChild(card);
+        }
     }
 }
 
 function updateFleetPanels(fleetView) {
     if (!fleetView) return;
 
-    // Render your fleet
-    renderFleetPanel(yourFleetList, fleetView.yourships || [], true);
+    // Render your fleet (ships and planes)
+    renderFleetPanel(
+        yourFleetList, 
+        fleetView.yourships || [], 
+        fleetView.yourplanes || [],
+        true
+    );
 
-    // Render opponent fleet
-    renderFleetPanel(opponentFleetList, fleetView.opponentships || [], false);
+    // Render opponent fleet (ships and planes)
+    renderFleetPanel(
+        opponentFleetList, 
+        fleetView.opponentships || [], 
+        fleetView.opponentplanes || [],
+        false
+    );
 }
 
 function handleAbilityClick(shipId, abilityType) {

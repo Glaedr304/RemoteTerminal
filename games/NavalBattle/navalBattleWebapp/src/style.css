@@ -910,3 +910,49 @@ kbd {
 .ability-display[data-ability-type="relocate"] {
     border-left: 2px solid #ec4899;
 }
+
+/* === Plane Card === */
+.plane-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    padding: 0.5rem;
+    transition: all 0.2s;
+}
+
+.plane-card.destroyed {
+    opacity: 0.4;
+    filter: grayscale(1);
+}
+
+.plane-card.destroyed .plane-name {
+    text-decoration: line-through;
+}
+
+.plane-name {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.4rem;
+    text-align: center;
+}
+
+.plane-icon {
+    font-size: 1.5rem;
+    text-align: center;
+    margin-bottom: 0.3rem;
+}
+
+.plane-position {
+    font-size: 0.65rem;
+    text-align: center;
+    color: var(--text-muted);
+    margin-bottom: 0.3rem;
+    font-family: monospace;
+}
+
+.plane-abilities {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
