@@ -16,6 +16,7 @@ private:
 	std::map<coord, Ship*> hitmap;
 
 	Ship* getShipById(VehicleId id);
+	Plane* getPlaneById(VehicleId id);
 
 public:
 	enum class hitFleetError {
@@ -41,6 +42,8 @@ public:
 	bool useShipAbility(VehicleId id, VehicleAbilityType ability);
 
 	const Ship* getShipById(VehicleId id) const;
+
+	const Plane* getPlaneById(VehicleId id) const;
 
 	const std::vector<Ship>& getShips() const;
 

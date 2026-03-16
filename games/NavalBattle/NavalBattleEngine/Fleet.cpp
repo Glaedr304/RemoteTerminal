@@ -32,6 +32,13 @@ Ship* Fleet::getShipById(VehicleId id) {
 	return nullptr;
 }
 
+Plane* Fleet::getPlaneById(VehicleId id) {
+	for (Plane& p : planes)
+		if (p.getId() == id)
+			return &p;
+	return nullptr;
+}
+
 void Fleet::addShip(const Ship& ship) {
 	ships.push_back(ship);
 	hitmapUpToDate = false;
@@ -53,13 +60,10 @@ void Fleet::addPlane(const Plane& plane) {
 }
 
 void Fleet::placePlane(VehicleId id, coord pos) {
-	//replace with getPlaneByID when implemented
-	for (Plane& p : planes) {
-		if (p.getId() == id) {
-			p.setPos(pos);
-			hitmapUpToDate = false;
-			return;
-		}
+	Plane* p = getPlaneById(id);
+	if (p) {
+		p->setPos(pos);
+		hitmapUpToDate = false;
 	}
 }
 
@@ -72,6 +76,10 @@ bool Fleet::useShipAbility(VehicleId id, VehicleAbilityType abilityType) {
 
 const Ship* Fleet::getShipById(VehicleId id) const {
 	return const_cast<Fleet*>(this)->getShipById(id);
+}
+
+const Plane* Fleet::getPlaneById(VehicleId id) const {
+	return const_cast<Fleet*>(this)->getPlaneById(id);
 }
 
 const std::vector<Ship>& Fleet::getShips() const{

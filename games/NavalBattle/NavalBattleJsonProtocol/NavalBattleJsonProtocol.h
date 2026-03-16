@@ -31,6 +31,9 @@ ReadyData readyDataFromJson(const Json::Value& v);
 Json::Value toJson(const PlaceShipData& d);
 PlaceShipData placeShipDataFromJson(const Json::Value& v);
 
+Json::Value toJson(const PlacePlaneData& d);
+PlacePlaneData placePlaneDataFromJson(const Json::Value& v);
+
 Json::Value toJson(const RematchData& d);
 RematchData rematchDataFromJson(const Json::Value& v);
 
@@ -120,7 +123,11 @@ Json::Value toJson(const ReadyResultData& f);
 
 Json::Value toJson(const PlaceShipResultData& f);
 
+Json::Value toJson(const PlacePlaneResultData& f);
+
 Json::Value toJson(const CheckPlacementResultData& f);
+
+Json::Value toJson(const CheckPlanePlacementResultData& f);
 
 Json::Value toJson(const FireAntiAircraftResultData& f);
 

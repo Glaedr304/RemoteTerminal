@@ -8,10 +8,12 @@ namespace NavalBattle {
 
 enum class SessionActionType {
     PlaceShip,
+    PlacePlane,
     Ready,
     Fire,
     FireAntiAircraft,
     CheckPlacement,
+    CheckPlanePlacement,
     Rematch,
     ActivateAbility
 };
@@ -19,6 +21,11 @@ enum class SessionActionType {
 struct PlaceShipData {
     int shipId;
     int rotation;
+    coord position;
+};
+
+struct PlacePlaneData {
+    int planeId;
     coord position;
 };
 
@@ -40,7 +47,7 @@ struct ActivateAbilityData {
 };
 
 // Note: CheckPlacement uses PlaceShipData directly, not in the variant
-using SessionActionData = std::variant<PlaceShipData, ReadyData, FireData, FireAntiAircraftData, RematchData, ActivateAbilityData>;
+using SessionActionData = std::variant<PlaceShipData, PlacePlaneData, ReadyData, FireData, FireAntiAircraftData, RematchData, ActivateAbilityData>;
 
 struct SessionAction {
     SessionActionType type;

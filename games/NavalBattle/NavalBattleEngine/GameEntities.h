@@ -51,10 +51,28 @@ struct PlaceShipResult {
 	PlaceShipError error;
 };
 
+enum class PlacePlaneError {
+	WrongPhase,
+	OverlapsAnotherPlane,
+	NotOnCarrier,
+	invalidID
+};
+
+struct PlacePlaneResult {
+	bool success;
+	PlacePlaneError error;
+};
+
 struct ValidatePlacementResult {
 	bool valid;
 	PlaceShipError error;
 	std::set<coord> coords;
+};
+
+struct ValidatePlanePlacementResult {
+	bool valid;
+	PlacePlaneError error;
+	coord position = coord::unspecified;
 };
 
 enum class ReadyUpError {

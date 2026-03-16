@@ -35,6 +35,8 @@ SessionAction sessionActionFromJson(const Json::Value& v) {
 
 	if (t == SessionActionType::PlaceShip)
 		d = placeShipDataFromJson(actionDataJson);
+	else if (t == SessionActionType::PlacePlane)
+		d = placePlaneDataFromJson(actionDataJson);
 	else if (t == SessionActionType::Ready)
 		d = readyDataFromJson(actionDataJson);
 	else if (t == SessionActionType::Fire)
@@ -43,6 +45,8 @@ SessionAction sessionActionFromJson(const Json::Value& v) {
 		d = fireAntiAircraftDataFromJson(actionDataJson);
 	else if (t == SessionActionType::CheckPlacement)
 		d = placeShipDataFromJson(actionDataJson); // Uses same data format as PlaceShip
+	else if (t == SessionActionType::CheckPlanePlacement)
+		d = placePlaneDataFromJson(actionDataJson); // Uses same data format as PlacePlane
 	else if (t == SessionActionType::Rematch)
 		d = rematchDataFromJson(actionDataJson);
 	else if (t == SessionActionType::ActivateAbility)
@@ -385,11 +389,28 @@ PlaceShipData placeShipDataFromJson(const Json::Value& v) {
 	return PlaceShipData(i, r, c);
 }
 
+Json::Value toJson(const PlacePlaneData& d) {
+	Json::Value answer(Json::objectValue);
+	answer["position"] = toJson(d.position);
+	answer["planeid"] = d.planeId;
+	return answer;
+}
+
+PlacePlaneData placePlaneDataFromJson(const Json::Value& v) {
+	coord c = coordFromJson(v["position"]);
+	int i = v["planeid"].asInt();
+	return PlacePlaneData{i, c};
+}
+
 Json::Value toJson(const SessionActionType& t) {
 	Json::Value answer(Json::stringValue);
 	switch (t) {
 		case SessionActionType::PlaceShip: {
 			answer = "placeship";
+			break;
+		}
+		case SessionActionType::PlacePlane: {
+			answer = "placeplane";
 			break;
 		}
 		case SessionActionType::Ready: {
@@ -406,6 +427,10 @@ Json::Value toJson(const SessionActionType& t) {
 		}
 		case SessionActionType::CheckPlacement: {
 			answer = "checkplacement";
+			break;
+		}
+		case SessionActionType::CheckPlanePlacement: {
+			answer = "checkplaneplacement";
 			break;
 		}
 		case SessionActionType::Rematch: {
@@ -426,6 +451,8 @@ SessionActionType sessionActionTypeFromJson(const Json::Value& v) {
 	std::string s = v.asString();
 	if (s == "placeship")
 		answer = SessionActionType::PlaceShip;
+	else if (s == "placeplane")
+		answer = SessionActionType::PlacePlane;
 	else if (s == "ready")
 		answer = SessionActionType::Ready;
 	else if (s == "fire")
@@ -434,6 +461,8 @@ SessionActionType sessionActionTypeFromJson(const Json::Value& v) {
 		answer = SessionActionType::FireAntiAircraft;
 	else if (s == "checkplacement")
 		answer = SessionActionType::CheckPlacement;
+	else if (s == "checkplaneplacement")
+		answer = SessionActionType::CheckPlanePlacement;
 	else if (s == "rematch")
 		answer = SessionActionType::Rematch;
 	else if (s == "activateability")
@@ -451,6 +480,8 @@ Json::Value toJson(const SessionActionData& d) {
 		return toJson(std::get<ReadyData>(d));
 	if (std::holds_alternative<PlaceShipData>(d))
 		return toJson(std::get<PlaceShipData>(d));
+	if (std::holds_alternative<PlacePlaneData>(d))
+		return toJson(std::get<PlacePlaneData>(d));
 	if (std::holds_alternative<RematchData>(d))
 		return toJson(std::get<RematchData>(d));
 	if (std::holds_alternative<ActivateAbilityData>(d))
@@ -474,6 +505,10 @@ Json::Value toJson(const SessionActionResultType& r) {
 			answer = "placeshipresult";
 			break;
 		}
+		case SessionActionResultType::PlacePlaneResult: {
+			answer = "placeplaneresult";
+			break;
+		}
 		case SessionActionResultType::ReadyResult: {
 			answer = "readyresult";
 			break;
@@ -488,6 +523,10 @@ Json::Value toJson(const SessionActionResultType& r) {
 		}
 		case SessionActionResultType::CheckPlacementResult: {
 			answer = "checkplacementresult";
+			break;
+		}
+		case SessionActionResultType::CheckPlanePlacementResult: {
+			answer = "checkplaneplacementresult";
 			break;
 		}
 		case SessionActionResultType::RematchResult: {
@@ -608,8 +647,12 @@ Json::Value toJson(const SessionActionResultData& s) {
 		answer = toJson(std::get<ReadyResultData>(s));
 	else if (std::holds_alternative<PlaceShipResultData>(s))
 		answer = toJson(std::get<PlaceShipResultData>(s));
+	else if (std::holds_alternative<PlacePlaneResultData>(s))
+		answer = toJson(std::get<PlacePlaneResultData>(s));
 	else if (std::holds_alternative<CheckPlacementResultData>(s))
 		answer = toJson(std::get<CheckPlacementResultData>(s));
+	else if (std::holds_alternative<CheckPlanePlacementResultData>(s))
+		answer = toJson(std::get<CheckPlanePlacementResultData>(s));
 	else if (std::holds_alternative<RematchResultData>(s))
 		answer = toJson(std::get<RematchResultData>(s));
 	else if (std::holds_alternative<ActivateAbilityResult>(s))
@@ -683,6 +726,10 @@ Json::Value toJson(const PlaceShipResultData& p) {
 	return Json::Value(Json::nullValue);
 }
 
+Json::Value toJson(const PlacePlaneResultData& p) {
+	return Json::Value(Json::nullValue);
+}
+
 Json::Value toJson(const RematchResultData& r) {
 	return Json::Value(Json::nullValue);
 }
@@ -691,6 +738,13 @@ Json::Value toJson(const CheckPlacementResultData& c) {
 	Json::Value answer(Json::objectValue);
 	answer["valid"] = c.valid;
 	answer["coords"] = toJson(c.coords);
+	return answer;
+}
+
+Json::Value toJson(const CheckPlanePlacementResultData& c) {
+	Json::Value answer(Json::objectValue);
+	answer["valid"] = c.valid;
+	answer["position"] = toJson(c.position);
 	return answer;
 }
 

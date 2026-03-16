@@ -20,6 +20,10 @@ class NavalBattleEngine {
 
         ValidatePlacementResult validatePlacement(Player p, int ID, coord pos, int rotation) const;
 
+        PlacePlaneResult placePlane(Player p, int ID, coord pos);
+
+        ValidatePlanePlacementResult validatePlanePlacement(Player p, int ID, coord pos) const;
+
         ReadyUpResult readyUp(Player p);
 
         bool isPlayerReady(Player p) const;

@@ -40,6 +40,10 @@ AddressedMessageBundle NavalBattleSession::handleAction(const UserId& user, cons
 			s = handlePlaceShip(p, action);
 			break;
 		}
+		case SessionActionType::PlacePlane: {
+			s = handlePlacePlane(p, action);
+			break;
+		}
 		case SessionActionType::Ready: {
 			s = handleReady(p);
 			break;
@@ -55,6 +59,11 @@ AddressedMessageBundle NavalBattleSession::handleAction(const UserId& user, cons
 		case SessionActionType::CheckPlacement: {
 			// Only return the action result with preview data, no snapshot
 			s = handleCheckPlacement(p, action);
+			return a.addMessage(ToUser(user), s);
+		}
+		case SessionActionType::CheckPlanePlacement: {
+			// Only return the action result with preview data, no snapshot
+			s = handleCheckPlanePlacement(p, action);
 			return a.addMessage(ToUser(user), s);
 		}
 		case SessionActionType::Rematch: {
@@ -76,7 +85,7 @@ AddressedMessageBundle NavalBattleSession::handleAction(const UserId& user, cons
 
 	a.addMessage(ToUser(user), s);
 	a.addMessageBundle(getSnapshotMessageBundleForUser(user));
-	if (s.success && s.type != SessionActionResultType::PlaceShipResult) {//do not alert opponent on ship placement or failed actions
+	if (s.success && s.type != SessionActionResultType::PlaceShipResult && s.type != SessionActionResultType::PlacePlaneResult) {//do not alert opponent on ship/plane placement or failed actions
 		a.addMessage(ToUser(opponentForUser(user)), s);
 		a.addMessageBundle(getSnapshotMessageBundleForUser(opponentForUser(user)));
 	}
@@ -232,6 +241,39 @@ SessionActionResult NavalBattleSession::handlePlaceShip(Player p, const SessionA
 	return answer;;
 }
 
+SessionActionResult NavalBattleSession::handlePlacePlane(Player p, const SessionAction& a) {
+	SessionActionResult answer;
+
+	PlacePlaneData ppd = std::get<PlacePlaneData>(a.data);
+	auto r = _engine.placePlane(p, ppd.planeId, ppd.position);
+
+	answer.success = r.success;
+	answer.type = SessionActionResultType::PlacePlaneResult;
+
+	if (answer.success) {
+		answer.data = PlacePlaneResultData();
+	}
+	else {
+		switch (r.error) {
+			case PlacePlaneError::OverlapsAnotherPlane:
+			case PlacePlaneError::NotOnCarrier: {
+				answer.error = SessionActionResultError::invalidPlacement;
+				break;
+			}
+			case PlacePlaneError::WrongPhase: {
+				answer.error = SessionActionResultError::wrongPhase;
+				break;
+			}
+			case PlacePlaneError::invalidID: {
+				answer.error = SessionActionResultError::vehicleNotFound;
+				break;
+			}
+		}
+	}
+
+	return answer;
+}
+
 SessionActionResult NavalBattleSession::handleFire(Player p, const SessionAction& a) {
 	SessionActionResult answer;
 	FireResult r = _engine.fire(p, std::get<FireData>(a.data).target);
@@ -328,15 +370,31 @@ SessionActionResult NavalBattleSession::handleCheckPlacement(Player p, const Ses
 	SessionActionResult answer;
 	answer.success = true;
 	answer.type = SessionActionResultType::CheckPlacementResult;
-	
+
 	PlaceShipData psd = std::get<PlaceShipData>(a.data);
 	auto r = _engine.validatePlacement(p, psd.shipId, psd.position, psd.rotation);
-	
+
 	CheckPlacementResultData data;
 	data.valid = r.valid;
 	data.coords = r.coords;
 	answer.data = data;
-	
+
+	return answer;
+}
+
+SessionActionResult NavalBattleSession::handleCheckPlanePlacement(Player p, const SessionAction& a) {
+	SessionActionResult answer;
+	answer.success = true;
+	answer.type = SessionActionResultType::CheckPlanePlacementResult;
+
+	PlacePlaneData ppd = std::get<PlacePlaneData>(a.data);
+	auto r = _engine.validatePlanePlacement(p, ppd.planeId, ppd.position);
+
+	CheckPlanePlacementResultData data;
+	data.valid = r.valid;
+	data.position = r.position;
+	answer.data = data;
+
 	return answer;
 }
 

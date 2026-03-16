@@ -30,10 +30,12 @@ private:
     Player playerFor(const UserId& user) const;
 
     SessionActionResult handlePlaceShip(Player p, const SessionAction& a);
+    SessionActionResult handlePlacePlane(Player p, const SessionAction& a);
     SessionActionResult handleFire(Player p, const SessionAction& a);
     SessionActionResult handleFireAntiAircraft(Player p, const SessionAction& a);
     SessionActionResult handleReady(Player p);
     SessionActionResult handleCheckPlacement(Player p, const SessionAction& a);
+    SessionActionResult handleCheckPlanePlacement(Player p, const SessionAction& a);
     SessionActionResult handleRematch(Player p);
     SessionActionResult handleActivateAbility(Player p, const SessionAction& a);
     AddressedMessageBundle processRematchRequest(const UserId& user, Player p, const SessionActionResult& result);

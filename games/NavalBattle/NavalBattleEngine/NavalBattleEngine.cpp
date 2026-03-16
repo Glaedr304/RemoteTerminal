@@ -106,6 +106,77 @@ ValidatePlacementResult NavalBattleEngine::validatePlacement(Player p, int ID, c
     return r;
 }
 
+PlacePlaneResult NavalBattleEngine::placePlane(Player p, int ID, coord pos) {
+    PlacePlaneResult r;
+    r.success = true;
+
+    // Only place in setup phase
+    if (phase() != Phase::setup) {
+        r.error = PlacePlaneError::WrongPhase;
+        r.success = false;
+        return r;
+    }
+
+    // Validate the placement
+    auto validation = validatePlanePlacement(p, ID, pos);
+
+    if (!validation.valid) {
+        r.success = false;
+        r.error = validation.error;
+        return r;
+    }
+
+    // Validation passed, place the plane
+    Fleet& fleet = getFleetForPlayer(p);
+    fleet.placePlane(ID, pos);
+
+    return r;
+}
+
+ValidatePlanePlacementResult NavalBattleEngine::validatePlanePlacement(Player p, int ID, coord pos) const {
+    ValidatePlanePlacementResult r;
+    r.valid = true;
+    r.position = pos;
+
+    const Fleet& fleet = getFleetForPlayer(p);
+
+    // Find the plane
+    const Plane* targetPlane = fleet.getPlaneById(ID);
+
+    if (targetPlane == nullptr) {
+        r.valid = false;
+        r.error = PlacePlaneError::invalidID;
+        return r;
+    }
+
+    // Collect squares that can hold planes (carrier squares)
+    std::unordered_set<coord> carrierSquares;
+    for (const Ship& s : fleet.getShips()) 
+        if (s.isPlaced() && s.canHoldPlanes()) 
+            for (const coord& c : s.getCoords()) 
+                carrierSquares.insert(c.applyTransform(s.getPos(), s.getRotation()));
+
+    // Check if target position is on a carrier
+    if (carrierSquares.find(pos) == carrierSquares.end()) {
+        r.valid = false;
+        r.error = PlacePlaneError::NotOnCarrier;
+        return r;
+    }
+
+    // Check for overlap with other planes
+    for (const Plane& plane : fleet.getPlanes()) {
+        if (plane.getId() == ID)
+            continue;
+        if (plane.isPlaced() && plane.getPos() == pos) {
+            r.valid = false;
+            r.error = PlacePlaneError::OverlapsAnotherPlane;
+            return r;
+        }
+    }
+
+    return r;
+}
+
 ActivateAbilityResult NavalBattleEngine::activateAbility(Player p, int shipId, const VehicleAbilityAction& VehicleAbilityAction) {
     ActivateAbilityResult answer;
 

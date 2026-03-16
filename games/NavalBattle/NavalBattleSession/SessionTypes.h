@@ -34,12 +34,18 @@ enum class SessionActionResultType {
     FireAntiAircraftResult,
     ReadyResult,
     PlaceShipResult,
+    PlacePlaneResult,
     CheckPlacementResult,
+    CheckPlanePlacementResult,
     RematchResult,
     ActivateAbilityResult
 };
 
 struct PlaceShipResultData {
+    //does not need data, will be enough to see if result was successful
+};
+
+struct PlacePlaneResultData {
     //does not need data, will be enough to see if result was successful
 };
 
@@ -66,11 +72,16 @@ struct CheckPlacementResultData {
     std::set<coord> coords;
 };
 
+struct CheckPlanePlacementResultData {
+    bool valid = false;
+    coord position = coord::unspecified;
+};
+
 struct RematchResultData {
     // no data needed
 };
 
-using SessionActionResultData = std::variant<PlaceShipResultData, ReadyResultData, FireResultData, FireAntiAircraftResultData, CheckPlacementResultData, RematchResultData, ActivateAbilityResult>;
+using SessionActionResultData = std::variant<PlaceShipResultData, PlacePlaneResultData, ReadyResultData, FireResultData, FireAntiAircraftResultData, CheckPlacementResultData, CheckPlanePlacementResultData, RematchResultData, ActivateAbilityResult>;
 
 struct SessionActionResult {
     bool success = false;
