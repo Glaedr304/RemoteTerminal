@@ -55,6 +55,18 @@ let gameId = null;
 let rematchRequested = false;
 let opponentWantsRematch = false;
 let selectedVehicle = null; // { type: 'ship' | 'plane', id: number }
+let activeAbility = null; // { vehicleId: number, type: string, firingPattern: string | null }
+
+// Ability configuration - what additional options each ability needs
+const ABILITY_CONFIG = {
+    torpedo: { needsTarget: true, needsFiringPattern: true, patterns: ["vertical", "horizontal"], targetType: "opponent" },
+    exocet: { needsTarget: true, needsFiringPattern: false, targetType: "opponent" },
+    apache: { needsTarget: true, needsFiringPattern: true, patterns: ["vertical", "horizontal"], targetType: "opponent" },
+    tomahawk: { needsTarget: true, needsFiringPattern: true, patterns: ["plus", "x"], targetType: "opponent" },
+    scan: { needsTarget: true, needsFiringPattern: false, targetType: "opponent" },
+    reveal: { needsTarget: true, needsFiringPattern: true, patterns: ["square", "diamond"], targetType: "opponent" },
+    relocate: { needsTarget: true, needsFiringPattern: false, targetType: "own", needsShipId: true }
+};
 
 // === Utility Functions ===
 function logLine(text) {
@@ -303,7 +315,7 @@ function createAbilityButton(ability, shipId, isYours) {
     const element = document.createElement(isYours ? "button" : "div");
     element.className = isYours ? "ability-btn" : "ability-display";
     element.dataset.abilityType = ability.type;
-    element.dataset.shipId = shipId;
+    element.dataset.vehicleId = shipId;
 
     const icon = document.createElement("span");
     icon.className = "ability-icon";
@@ -316,7 +328,7 @@ function createAbilityButton(ability, shipId, isYours) {
     const uses = document.createElement("span");
     uses.className = "ability-uses";
     if (ability.usagepolicy === "unlimited") {
-        uses.textContent = "?";
+        uses.textContent = "\u221E"; // ? infinity symbol
         uses.classList.add("unlimited");
     } else {
         uses.textContent = `${ability.remaininguses}`;
@@ -507,10 +519,173 @@ function updateFleetPanels(fleetView) {
     );
 }
 
-function handleAbilityClick(shipId, abilityType) {
-    // For now, just log the click - actual functionality to be implemented
-    logLine(`Ability clicked: Ship ${shipId}, Ability: ${abilityType}`);
-    showMessage(`Selected ${getAbilityDisplayName(abilityType)} ability`, "info");
+function handleAbilityClick(vehicleId, abilityType) {
+    const config = ABILITY_CONFIG[abilityType];
+    if (!config) {
+        showMessage(`Unknown ability type: ${abilityType}`, "error");
+        return;
+    }
+
+    // If ability needs a firing pattern, prompt user to select one first
+    if (config.needsFiringPattern) {
+        showFiringPatternSelector(vehicleId, abilityType, config.patterns);
+        return;
+    }
+
+    // Otherwise, activate ability mode directly
+    activateAbilityMode(vehicleId, abilityType, null);
+}
+
+function showFiringPatternSelector(vehicleId, abilityType, patterns) {
+    // Create a simple pattern selector UI
+    const selector = document.createElement("div");
+    selector.className = "pattern-selector-overlay";
+    selector.id = "patternSelector";
+
+    const content = document.createElement("div");
+    content.className = "pattern-selector-content";
+
+    const title = document.createElement("h3");
+    title.textContent = `Select ${getAbilityDisplayName(abilityType)} Pattern`;
+    content.appendChild(title);
+
+    const buttonsDiv = document.createElement("div");
+    buttonsDiv.className = "pattern-buttons";
+
+    for (const pattern of patterns) {
+        const btn = document.createElement("button");
+        btn.className = "btn-secondary pattern-btn";
+        btn.textContent = pattern.charAt(0).toUpperCase() + pattern.slice(1);
+        btn.addEventListener("click", () => {
+            document.getElementById("patternSelector")?.remove();
+            activateAbilityMode(vehicleId, abilityType, pattern);
+        });
+        buttonsDiv.appendChild(btn);
+    }
+
+    const cancelBtn = document.createElement("button");
+    cancelBtn.className = "btn-secondary";
+    cancelBtn.textContent = "Cancel";
+    cancelBtn.addEventListener("click", () => {
+        document.getElementById("patternSelector")?.remove();
+    });
+    buttonsDiv.appendChild(cancelBtn);
+
+    content.appendChild(buttonsDiv);
+    selector.appendChild(content);
+    document.body.appendChild(selector);
+}
+
+function activateAbilityMode(vehicleId, abilityType, firingPattern) {
+    activeAbility = { vehicleId, type: abilityType, firingPattern };
+    selectedVehicle = null; // Clear placement selection
+
+    const config = ABILITY_CONFIG[abilityType];
+    const targetGrid = config.targetType === "opponent" ? "opponent's grid" : "your grid";
+    showMessage(`${getAbilityDisplayName(abilityType)} active - Click on ${targetGrid} to target`, "info");
+
+    // Add visual indicator to the grids
+    updateAbilityModeUI();
+}
+
+function cancelAbilityMode() {
+    activeAbility = null;
+    updateAbilityModeUI();
+}
+
+function updateAbilityModeUI() {
+    // Add/remove ability-mode class from grids
+    const ownGridWrapper = ownGrid.closest(".grid-wrapper");
+    const oppGridWrapper = oppGrid.closest(".grid-wrapper");
+
+    if (activeAbility) {
+        const config = ABILITY_CONFIG[activeAbility.type];
+        if (config.targetType === "opponent") {
+            oppGridWrapper?.classList.add("ability-target");
+            ownGridWrapper?.classList.remove("ability-target");
+        } else {
+            ownGridWrapper?.classList.add("ability-target");
+            oppGridWrapper?.classList.remove("ability-target");
+        }
+    } else {
+        ownGridWrapper?.classList.remove("ability-target");
+        oppGridWrapper?.classList.remove("ability-target");
+    }
+}
+
+function executeAbility(row, col) {
+    if (!activeAbility || !lastSetupInfo) return;
+
+    const { vehicleId, type, firingPattern } = activeAbility;
+    const config = ABILITY_CONFIG[type];
+
+    let abilityData;
+    switch (type) {
+        case "torpedo":
+            abilityData = {
+                firingpattern: firingPattern,
+                startpoint: { row, col }
+            };
+            break;
+        case "exocet":
+            abilityData = { target: { row, col } };
+            break;
+        case "apache":
+            abilityData = {
+                firingpattern: firingPattern,
+                target: { row, col }
+            };
+            break;
+        case "tomahawk":
+            abilityData = {
+                firingpattern: firingPattern,
+                target: { row, col }
+            };
+            break;
+        case "scan":
+            abilityData = { target: { row, col } };
+            break;
+        case "reveal":
+            abilityData = {
+                firingpattern: firingPattern,
+                target: { row, col }
+            };
+            break;
+        case "relocate":
+            // For relocate, we need to specify which ship to move
+            // For now, we'll need another selection step - this is complex
+            // Simplified: prompt for ship selection or use the activating vehicle's ship
+            abilityData = {
+                shipid: vehicleId, // Move the ship that has the ability
+                target: { row, col }
+            };
+            break;
+        default:
+            showMessage(`Unknown ability: ${type}`, "error");
+            cancelAbilityMode();
+            return;
+    }
+
+    const message = {
+        gameid: lastSetupInfo.gameid,
+        userid: lastSetupInfo.you,
+        sessionaction: {
+            type: "activateability",
+            data: {
+                vehicleid: vehicleId,
+                abilityaction: {
+                    type: type,
+                    data: abilityData
+                }
+            }
+        }
+    };
+
+    logLine(`Sending activateability: ${type} at (${row}, ${col})`);
+    socket.send(JSON.stringify(message));
+
+    // Clear ability mode after execution
+    cancelAbilityMode();
 }
 
 function selectVehicle(type, id) {
@@ -547,6 +722,16 @@ function selectNextUnplacedVehicle(fleetView) {
 
 // === Click Handlers ===
 function handleOwnGridClick(row, col) {
+    // Check if we're in ability mode targeting own grid (e.g., relocate)
+    if (activeAbility) {
+        const config = ABILITY_CONFIG[activeAbility.type];
+        if (config.targetType === "own") {
+            executeAbility(row, col);
+            return;
+        }
+    }
+
+    // Ship/plane placement during setup
     if (!selectedVehicle || !lastSetupInfo) return;
 
     if (selectedVehicle.type === 'ship') {
@@ -631,6 +816,16 @@ function clearPreviewAndHover() {
 function handleOppGridClick(row, col) {
     if (!lastSetupInfo) return;
 
+    // Check if we're in ability mode targeting opponent grid
+    if (activeAbility) {
+        const config = ABILITY_CONFIG[activeAbility.type];
+        if (config.targetType === "opponent") {
+            executeAbility(row, col);
+            return;
+        }
+    }
+
+    // Default: regular fire action
     const message = {
         gameid: lastSetupInfo.gameid,
         userid: lastSetupInfo.you,
@@ -670,8 +865,18 @@ document.addEventListener("keydown", (e) => {
         // Don't trigger if user is typing in an input
         if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
         if (lastPhase !== "setup") return;
-        
+
         rotateBtn.click();
+    }
+
+    // Cancel ability mode with Escape
+    if (e.key === "Escape") {
+        if (activeAbility) {
+            cancelAbilityMode();
+            showMessage("Ability cancelled", "info");
+        }
+        // Also close pattern selector if open
+        document.getElementById("patternSelector")?.remove();
     }
 });
 
@@ -869,24 +1074,26 @@ function applySnapshot(snapshot) {
         const hasShipsLeft = ownGridData.some(entry => entry.state === "ship");
         showGameOver(hasShipsLeft);
     }
-    
+
     // Now update the phase tracking
     lastPhase = currentPhase;
-    
+
     updatePhaseDisplay(currentPhase);
     updateTurnIndicator(snapshot.currentturn, myUserId);
     updateReadyStatus(snapshot.youready, snapshot.opponentready);
 
     // Clear all state classes from grids (but not preview classes)
+    const stateClasses = [
+        "ship", "hit", "miss", 
+        "revealedmiss", "revealedhit", "scannedpositive",
+        "plane", "plane-color-0", "plane-color-1", "plane-color-2", 
+        "plane-color-3", "plane-color-4", "plane-color-5"
+    ];
     for (const cell of ownGrid.children) {
-        cell.classList.remove("ship", "hit", "miss", "plane", 
-            "plane-color-0", "plane-color-1", "plane-color-2", 
-            "plane-color-3", "plane-color-4", "plane-color-5");
+        cell.classList.remove(...stateClasses);
     }
     for (const cell of oppGrid.children) {
-        cell.classList.remove("ship", "hit", "miss", "plane",
-            "plane-color-0", "plane-color-1", "plane-color-2", 
-            "plane-color-3", "plane-color-4", "plane-color-5");
+        cell.classList.remove(...stateClasses);
     }
 
     const cols = lastSetupInfo?.boardcols || 10;
@@ -962,6 +1169,9 @@ function applyActionResult(result) {
             break;
         case "checkplaneplacementresult":
             applyCheckPlanePlacementResult(result);
+            break;
+        case "activateabilityresult":
+            applyActivateAbilityResult(result);
             break;
     }
 }
@@ -1102,5 +1312,60 @@ function applyCheckPlanePlacementResult(result) {
     const cell = ownGrid.children[idx];
     if (cell) {
         cell.classList.add(previewClass);
+    }
+}
+
+function applyActivateAbilityResult(result) {
+    const iDidThis = result.actinguser === myUserId;
+
+    if (result.success) {
+        const data = result.data;
+
+        // Handle different ability result types
+        if (data?.ishit !== undefined) {
+            // Torpedo or bulk fire result
+            if (data.ishit) {
+                if (iDidThis) {
+                    showMessage("Ability hit!", "success");
+                }
+            } else {
+                if (iDidThis) {
+                    showMessage("Ability missed", "info");
+                }
+            }
+        } else if (data?.isfound !== undefined) {
+            // Scan result
+            if (iDidThis) {
+                if (data.isfound) {
+                    showMessage("Scan detected enemy ships in the area!", "success");
+                } else {
+                    showMessage("Scan found no ships in the area", "info");
+                }
+            }
+        } else if (data?.hitsrevealed !== undefined) {
+            // Reveal result
+            if (iDidThis) {
+                const count = data.hitsrevealed?.length || 0;
+                if (count > 0) {
+                    showMessage(`Revealed ${count} ship positions!`, "success");
+                } else {
+                    showMessage("No ships found in revealed area", "info");
+                }
+            }
+        } else {
+            // Generic success (e.g., relocate)
+            if (iDidThis) {
+                showMessage("Ability activated successfully", "success");
+            }
+        }
+    } else {
+        const errorMessages = {
+            notyourturn: "It's not your turn",
+            notyourship: "That's not your ship",
+            shipsunk: "That ship is sunk and cannot use abilities",
+            nosuchability: "That vehicle doesn't have this ability",
+            outofbounds: "Target is out of bounds",
+        };
+        showMessage(errorMessages[result.error] || "Unable to activate ability", "error");
     }
 }

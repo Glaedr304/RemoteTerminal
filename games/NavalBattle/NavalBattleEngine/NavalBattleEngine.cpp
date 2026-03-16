@@ -318,15 +318,25 @@ ActivateAbilityResult NavalBattleEngine::bulkFire(Player p, const std::set<coord
     ActivateAbilityResult answer;
     BulkFireResultData data;
 
+    if (_currentPlayer != p) {
+        answer.success = false;
+        answer.error = ActivateAbilityResultError::notYourTurn;
+        return answer;
+    }
+
     if (!isValidCoord(targets)) {
         answer.success = false;
         answer.error = ActivateAbilityResultError::outOfBounds;
         return answer;
     }
 
-    for (const coord& c : targets)
-        if (hitCoord(opponent(p), c).success)
+    for (const coord& c : targets) {
+        Fleet::hitFleetResult r = hitCoord(opponent(p), c);
+        if (r.success)
             data.isHit = true;
+        else if (r.error != Fleet::hitFleetError::coordAlreadyHit) //not a true miss if this coord was hit before
+            getMissesForPlayer(p).insert(c);
+    }
 
     answer.success = true;
     answer.data = data;
@@ -525,8 +535,8 @@ FireResult NavalBattleEngine::fire(Player p, coord target) {
 
 	Fleet::hitFleetResult r = hitCoord(opponent(p), target);
 
+    answer.success = true;
     if (r.success) {
-        answer.success = true;
         answer.isHit = true;
         getHitsForPlayer(p).insert(target);
         answer.isSink = r.sunk;
@@ -535,7 +545,6 @@ FireResult NavalBattleEngine::fire(Player p, coord target) {
     else {
         if(r.error != Fleet::hitFleetError::coordAlreadyHit) //not a true miss if this coord was hit before
             getMissesForPlayer(p).insert(target);
-        answer.success = true;
         answer.isHit = false;
     }
 
@@ -640,6 +649,13 @@ GridView NavalBattleEngine::ownGrid(Player p) const {
 GridView NavalBattleEngine::opponentGrid(Player p) const {
     std::map<coord, SquareState> occupied;
     //layer from bottom to top so only top is visible
+    for (const auto& c : getDataForPlayer(p).revealedMisses)
+        occupied[c] = SquareState::revealedMiss;
+    for (const auto& c : getDataForPlayer(p).revealedHits)
+        occupied[c] = SquareState::revealedHit;
+    for (const auto& s : getDataForPlayer(p).scansWithHits)
+        for (const auto& c : s)
+            occupied[c] = SquareState::scannedPositive;
     for (const auto& c : getMissesForPlayer(p))
         occupied[c] = SquareState::miss;
     for (const auto& c : getHitsForPlayer(p))

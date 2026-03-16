@@ -624,6 +624,18 @@ Json::Value toJson(const SquareState& s) {
 			answer = "ship";
 			break;
 		}
+		case SquareState::revealedMiss: {
+			answer = "revealedmiss";
+			break;
+		}
+		case SquareState::revealedHit: {
+			answer = "revealedhit";
+			break;
+		}
+		case SquareState::scannedPositive: {
+			answer = "scannedpositive";
+			break;
+		}
 	}
 	return answer;
 }
