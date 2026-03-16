@@ -19,7 +19,6 @@ const youReadyBadge = document.getElementById("youReadyBadge");
 const opponentReadyBadge = document.getElementById("opponentReadyBadge");
 
 const setupControls = document.getElementById("setupControls");
-const shipSelect = document.getElementById("shipSelect");
 const rotateBtn = document.getElementById("rotateBtn");
 const readyBtn = document.getElementById("readyBtn");
 
@@ -49,11 +48,13 @@ let lastSetupInfo = null;
 let messageTimeout = null;
 let lastPhase = null;
 let placedShipIds = new Set();
+let placedPlaneIds = new Set();
 let hoveredCell = null; // Track currently hovered cell for preview refresh
 let myUserId = null;
 let gameId = null;
 let rematchRequested = false;
 let opponentWantsRematch = false;
+let selectedVehicle = null; // { type: 'ship' | 'plane', id: number }
 
 // === Utility Functions ===
 function logLine(text) {
@@ -220,15 +221,15 @@ function buildGrids(rows, cols) {
 // === Fleet Panel Rendering ===
 function getAbilityIcon(abilityType) {
     const icons = {
-        torpedo: "??",
-        exocet: "??",
-        apache: "??",
-        tomahawk: "??",
-        scan: "??",
-        reveal: "???",
-        relocate: "??"
+        torpedo: "\u{1F4A5}",      // ?? explosion
+        exocet: "\u{1F680}",       // ?? rocket
+        apache: "\u{1F681}",       // ?? helicopter
+        tomahawk: "\u2604\uFE0F",  // ?? comet/meteor
+        scan: "\u{1F50D}",         // ?? magnifying glass
+        reveal: "\u{1F441}\uFE0F", // ??? eye
+        relocate: "\u21C4"         // ? arrows
     };
-    return icons[abilityType] || "?";
+    return icons[abilityType] || "\u2753";
 }
 
 function getAbilityDisplayName(abilityType) {
@@ -342,6 +343,24 @@ function createShipCard(ship, isYours) {
         card.classList.add("sunk");
     }
 
+    // Mark as placed if ship has valid position
+    const isPlaced = ship.pos && ship.pos.row !== undefined && ship.pos.col !== undefined &&
+                     !(ship.pos.row === -1 && ship.pos.col === -1);
+    if (isPlaced) {
+        card.classList.add("placed");
+    }
+
+    // Mark as selected during setup
+    if (isYours && selectedVehicle && selectedVehicle.type === 'ship' && selectedVehicle.id === ship.id) {
+        card.classList.add("selected");
+    }
+
+    // Make clickable during setup for unplaced ships
+    if (isYours && lastPhase === "setup" && !isPlaced) {
+        card.classList.add("selectable");
+        card.addEventListener("click", () => selectVehicle('ship', ship.id));
+    }
+
     // Ship name
     const nameEl = document.createElement("div");
     nameEl.className = "ship-name";
@@ -368,7 +387,10 @@ function createShipCard(ship, isYours) {
     return card;
 }
 
-function createPlaneCard(plane, isYours) {
+// Plane colors array - matches CSS plane-color-N classes
+const PLANE_COLORS = ['#f59e0b', '#ec4899', '#8b5cf6', '#22c55e', '#06b6d4', '#ef4444'];
+
+function createPlaneCard(plane, isYours, planeIndex = 0) {
     const card = document.createElement("div");
     card.className = "plane-card";
     card.dataset.planeId = plane.id;
@@ -377,20 +399,40 @@ function createPlaneCard(plane, isYours) {
         card.classList.add("destroyed");
     }
 
+    // Mark as placed if plane has valid position
+    const isPlaced = plane.pos && plane.pos.row !== undefined && plane.pos.col !== undefined &&
+                     !(plane.pos.row === -1 && plane.pos.col === -1);
+    if (isPlaced) {
+        card.classList.add("placed");
+    }
+
+    // Mark as selected during setup
+    if (isYours && selectedVehicle && selectedVehicle.type === 'plane' && selectedVehicle.id === plane.id) {
+        card.classList.add("selected");
+    }
+
+    // Make clickable during setup for unplaced planes
+    if (isYours && lastPhase === "setup" && !isPlaced) {
+        card.classList.add("selectable");
+        card.addEventListener("click", () => selectVehicle('plane', plane.id));
+    }
+
     // Plane name
     const nameEl = document.createElement("div");
     nameEl.className = "plane-name";
     nameEl.textContent = plane.name;
     card.appendChild(nameEl);
 
-    // Plane icon/indicator
+    // Plane icon/indicator with color
+    const planeColor = PLANE_COLORS[planeIndex % PLANE_COLORS.length];
     const iconEl = document.createElement("div");
     iconEl.className = "plane-icon";
-    iconEl.textContent = "?";
+    iconEl.textContent = "\u2708";
+    iconEl.style.color = planeColor;
     card.appendChild(iconEl);
 
     // Position indicator (if placed)
-    if (plane.pos && plane.pos.row !== undefined && plane.pos.col !== undefined) {
+    if (isPlaced) {
         const posEl = document.createElement("div");
         posEl.className = "plane-position";
         const rowLabel = String.fromCharCode(65 + plane.pos.row);
@@ -436,12 +478,12 @@ function renderFleetPanel(container, ships, planes, isYours) {
         }
     }
 
-    // Render planes
+    // Render planes with color index
     if (hasPlanes) {
-        for (const plane of planes) {
-            const card = createPlaneCard(plane, isYours);
+        planes.forEach((plane, planeIndex) => {
+            const card = createPlaneCard(plane, isYours, planeIndex);
             container.appendChild(card);
-        }
+        });
     }
 }
 
@@ -471,50 +513,107 @@ function handleAbilityClick(shipId, abilityType) {
     showMessage(`Selected ${getAbilityDisplayName(abilityType)} ability`, "info");
 }
 
+function selectVehicle(type, id) {
+    selectedVehicle = { type, id };
+    // Re-render fleet panels to show selection
+    if (lastSetupInfo && lastSetupInfo.fleetview) {
+        updateFleetPanels(lastSetupInfo.fleetview);
+    }
+    showMessage(`Selected ${type} for placement`, "info");
+}
+
+function selectNextUnplacedVehicle(fleetView) {
+    // First check for unplaced ships
+    for (const ship of fleetView.yourships || []) {
+        const isPlaced = ship.pos && ship.pos.row !== undefined && ship.pos.col !== undefined &&
+                         !(ship.pos.row === -1 && ship.pos.col === -1);
+        if (!isPlaced && !placedShipIds.has(ship.id)) {
+            selectVehicle('ship', ship.id);
+            return;
+        }
+    }
+    // Then check for unplaced planes
+    for (const plane of fleetView.yourplanes || []) {
+        const isPlaced = plane.pos && plane.pos.row !== undefined && plane.pos.col !== undefined &&
+                         !(plane.pos.row === -1 && plane.pos.col === -1);
+        if (!isPlaced && !placedPlaneIds.has(plane.id)) {
+            selectVehicle('plane', plane.id);
+            return;
+        }
+    }
+    // All placed
+    selectedVehicle = null;
+}
+
 // === Click Handlers ===
 function handleOwnGridClick(row, col) {
-    const shipIdStr = shipSelect.value;
-    if (!shipIdStr || !lastSetupInfo) return;
+    if (!selectedVehicle || !lastSetupInfo) return;
 
-    const message = {
-        gameid: lastSetupInfo.gameid,
-        userid: lastSetupInfo.you,
-        sessionaction: {
-            type: "placeship",
-            data: {
-                position: { row, col },
-                rotation: rotation,
-                shipid: Number(shipIdStr),
+    if (selectedVehicle.type === 'ship') {
+        const message = {
+            gameid: lastSetupInfo.gameid,
+            userid: lastSetupInfo.you,
+            sessionaction: {
+                type: "placeship",
+                data: {
+                    position: { row, col },
+                    rotation: rotation,
+                    shipid: selectedVehicle.id,
+                },
             },
-        },
-    };
-
-    sendMessage(message);
+        };
+        sendMessage(message);
+    } else if (selectedVehicle.type === 'plane') {
+        const message = {
+            gameid: lastSetupInfo.gameid,
+            userid: lastSetupInfo.you,
+            sessionaction: {
+                type: "placeplane",
+                data: {
+                    position: { row, col },
+                    planeid: selectedVehicle.id,
+                },
+            },
+        };
+        sendMessage(message);
+    }
 }
 
 function handleOwnGridHover(row, col) {
     hoveredCell = { row, col };
-    
-    const shipIdStr = shipSelect.value;
-    if (!shipIdStr || !lastSetupInfo) return;
-    
+
     // Only show preview during setup phase
+    if (!selectedVehicle || !lastSetupInfo) return;
     if (lastPhase !== "setup") return;
 
-    const message = {
-        gameid: lastSetupInfo.gameid,
-        userid: lastSetupInfo.you,
-        sessionaction: {
-            type: "checkplacement",
-            data: {
-                position: { row, col },
-                rotation: rotation,
-                shipid: Number(shipIdStr),
+    if (selectedVehicle.type === 'ship') {
+        const message = {
+            gameid: lastSetupInfo.gameid,
+            userid: lastSetupInfo.you,
+            sessionaction: {
+                type: "checkplacement",
+                data: {
+                    position: { row, col },
+                    rotation: rotation,
+                    shipid: selectedVehicle.id,
+                },
             },
-        },
-    };
-
-    sendMessage(message);
+        };
+        sendMessage(message);
+    } else if (selectedVehicle.type === 'plane') {
+        const message = {
+            gameid: lastSetupInfo.gameid,
+            userid: lastSetupInfo.you,
+            sessionaction: {
+                type: "checkplaneplacement",
+                data: {
+                    position: { row, col },
+                    planeid: selectedVehicle.id,
+                },
+            },
+        };
+        sendMessage(message);
+    }
 }
 
 function clearPreview() {
@@ -550,20 +649,6 @@ function sendMessage(msg) {
     if (socket && socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify(msg));
         logLine("Sent: " + JSON.stringify(msg));
-    }
-}
-
-function selectNextShip(currentShipId) {
-    placedShipIds.add(currentShipId);
-    
-    // Find next unplaced ship
-    const options = Array.from(shipSelect.options);
-    for (const opt of options) {
-        const id = Number(opt.value);
-        if (!placedShipIds.has(id)) {
-            shipSelect.value = opt.value;
-            return;
-        }
     }
 }
 
@@ -727,6 +812,8 @@ function handleRematchStart() {
     hideGameOver();
     updateRematchButton();
     placedShipIds.clear();
+    placedPlaneIds.clear();
+    selectedVehicle = null;
     rotation = 0;
     lastPhase = null;
 
@@ -756,24 +843,17 @@ function applySetupInfo(setupInfo) {
     opponentSpan.textContent = setupInfo.opponent || "—";
     updatePhaseDisplay(lastPhase);
 
-    // Populate ship selector from fleetview
-    shipSelect.innerHTML = "";
-    for (const ship of setupInfo.fleetview?.yourships || []) {
-        const opt = document.createElement("option");
-        opt.value = String(ship.id);
-        opt.textContent = ship.name;
-        shipSelect.appendChild(opt);
-    }
-
     // Build grids
     buildGrids(setupInfo.boardrows, setupInfo.boardcols);
 
     // Render initial fleet panels from setupinfo
     if (setupInfo.fleetview) {
         updateFleetPanels(setupInfo.fleetview);
+        // Auto-select first unplaced vehicle
+        selectNextUnplacedVehicle(setupInfo.fleetview);
     }
 
-    showMessage("Game started! Place your ships.", "success");
+    showMessage("Game started! Click a ship to select it, then click on your grid to place it.", "success");
 }
 
 function applySnapshot(snapshot) {
@@ -799,10 +879,14 @@ function applySnapshot(snapshot) {
 
     // Clear all state classes from grids (but not preview classes)
     for (const cell of ownGrid.children) {
-        cell.classList.remove("ship", "hit", "miss");
+        cell.classList.remove("ship", "hit", "miss", "plane", 
+            "plane-color-0", "plane-color-1", "plane-color-2", 
+            "plane-color-3", "plane-color-4", "plane-color-5");
     }
     for (const cell of oppGrid.children) {
-        cell.classList.remove("ship", "hit", "miss");
+        cell.classList.remove("ship", "hit", "miss", "plane",
+            "plane-color-0", "plane-color-1", "plane-color-2", 
+            "plane-color-3", "plane-color-4", "plane-color-5");
     }
 
     const cols = lastSetupInfo?.boardcols || 10;
@@ -820,6 +904,24 @@ function applySnapshot(snapshot) {
         const cell = ownGrid.children[idx];
         if (cell && state) cell.classList.add(state);
     }
+
+    // Apply planes on own grid (overlay on ship cells)
+    const yourPlanes = snapshot.fleetview?.yourplanes || [];
+    yourPlanes.forEach((plane, planeIndex) => {
+        if (!plane.pos || plane.pos.row === -1 || plane.isdestroyed) return;
+
+        const r = plane.pos.row;
+        const c = plane.pos.col;
+
+        if (typeof r !== "number" || typeof c !== "number") return;
+
+        const idx = r * cols + c;
+        const cell = ownGrid.children[idx];
+        if (cell) {
+            cell.classList.add("plane");
+            cell.classList.add(`plane-color-${planeIndex % 6}`);
+        }
+    });
 
     // Apply opponent grid state
     const oppGridData = snapshot.userview?.boardview?.opponentgrid || [];
@@ -849,11 +951,17 @@ function applyActionResult(result) {
         case "placeshipresult":
             applyPlaceShipResult(result);
             break;
+        case "placeplaneresult":
+            applyPlacePlaneResult(result);
+            break;
         case "readyresult":
             applyReadyResult(result);
             break;
         case "checkplacementresult":
             applyCheckPlacementResult(result);
+            break;
+        case "checkplaneplacementresult":
+            applyCheckPlanePlacementResult(result);
             break;
     }
 }
@@ -895,9 +1003,13 @@ function applyFireResult(result) {
 
 function applyPlaceShipResult(result) {
     if (result.success) {
-        // Select the next ship automatically
-        const currentShipId = Number(shipSelect.value);
-        selectNextShip(currentShipId);
+        // Mark this ship as placed and select next unplaced vehicle
+        if (selectedVehicle && selectedVehicle.type === 'ship') {
+            placedShipIds.add(selectedVehicle.id);
+        }
+        if (lastSetupInfo && lastSetupInfo.fleetview) {
+            selectNextUnplacedVehicle(lastSetupInfo.fleetview);
+        }
     } else {
         const errorMessages = {
             wrongphase: "Ships can only be placed during setup",
@@ -905,6 +1017,25 @@ function applyPlaceShipResult(result) {
             shipnotfound: "Ship not found",
         };
         showMessage(errorMessages[result.error] || "Unable to place ship", "error");
+    }
+}
+
+function applyPlacePlaneResult(result) {
+    if (result.success) {
+        // Mark this plane as placed and select next unplaced vehicle
+        if (selectedVehicle && selectedVehicle.type === 'plane') {
+            placedPlaneIds.add(selectedVehicle.id);
+        }
+        if (lastSetupInfo && lastSetupInfo.fleetview) {
+            selectNextUnplacedVehicle(lastSetupInfo.fleetview);
+        }
+    } else {
+        const errorMessages = {
+            wrongphase: "Planes can only be placed during setup",
+            invalidplacement: "Invalid placement - planes must be placed on a carrier",
+            vehiclenotfound: "Plane not found",
+        };
+        showMessage(errorMessages[result.error] || "Unable to place plane", "error");
     }
 }
 
@@ -923,30 +1054,53 @@ function applyReadyResult(result) {
 
 function applyCheckPlacementResult(result) {
     if (!result.success) return;
-    
+
     const data = result.data;
     if (!data) return;
-    
+
     const cols = lastSetupInfo?.boardcols || 10;
     const previewClass = data.valid ? "preview-valid" : "preview-invalid";
-    
+
     // Clear any existing preview
     clearPreview();
-    
+
     // Apply preview overlay to the specified coords
     for (const coord of data.coords || []) {
         const r = coord.row;
         const c = coord.col;
-        
+
         if (typeof r !== "number" || typeof c !== "number") continue;
-        
+
         // Only show preview for in-bounds cells
         if (r < 0 || c < 0) continue;
-        
+
         const idx = r * cols + c;
         const cell = ownGrid.children[idx];
         if (cell) {
             cell.classList.add(previewClass);
         }
+    }
+}
+
+function applyCheckPlanePlacementResult(result) {
+    if (!result.success) return;
+
+    const data = result.data;
+    if (!data) return;
+
+    const cols = lastSetupInfo?.boardcols || 10;
+    const previewClass = data.valid ? "preview-valid" : "preview-invalid";
+
+    // Clear any existing preview
+    clearPreview();
+
+    // Apply preview overlay to the single position for plane placement
+    const pos = data.position;
+    if (!pos || typeof pos.row !== "number" || typeof pos.col !== "number") return;
+
+    const idx = pos.row * cols + pos.col;
+    const cell = ownGrid.children[idx];
+    if (cell) {
+        cell.classList.add(previewClass);
     }
 }

@@ -581,6 +581,31 @@ kbd {
     transform: translate(-50%, -50%);
 }
 
+/* Plane on grid - displayed as overlay on ship cells */
+.cell.plane::before {
+    content: '\2708';  /* Unicode airplane symbol */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6), 0 0 1px rgba(0, 0, 0, 0.8);
+    z-index: 2;
+}
+
+/* Plane colors - cycles through for multiple planes */
+.cell.plane-color-0::before { color: #f59e0b; } /* Amber */
+.cell.plane-color-1::before { color: #ec4899; } /* Pink */
+.cell.plane-color-2::before { color: #8b5cf6; } /* Purple */
+.cell.plane-color-3::before { color: #22c55e; } /* Green */
+.cell.plane-color-4::before { color: #06b6d4; } /* Cyan */
+.cell.plane-color-5::before { color: #ef4444; } /* Red */
+
+/* Default plane color if no color class */
+.cell.plane:not([class*="plane-color-"])::before {
+    color: #f59e0b;
+}
+
 /* Ship placement preview - valid (ghostly/transparent) */
 .cell.preview-valid {
     background: linear-gradient(135deg, rgba(148, 163, 184, 0.6) 0%, rgba(100, 116, 139, 0.6) 100%);
@@ -753,6 +778,35 @@ kbd {
 
 .ship-card.sunk .ship-name {
     text-decoration: line-through;
+}
+
+/* Ship card selection states during setup */
+.ship-card.selectable {
+    cursor: pointer;
+    border-color: var(--accent-warning);
+}
+
+.ship-card.selectable:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent-primary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.ship-card.selected {
+    border-color: var(--accent-primary);
+    background: rgba(59, 130, 246, 0.15);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.ship-card.placed {
+    opacity: 0.6;
+    border-color: var(--accent-success);
+}
+
+.ship-card.placed .ship-name::after {
+    content: " ?";
+    color: var(--accent-success);
 }
 
 .ship-name {
@@ -929,6 +983,35 @@ kbd {
     text-decoration: line-through;
 }
 
+/* Plane card selection states during setup */
+.plane-card.selectable {
+    cursor: pointer;
+    border-color: var(--accent-warning);
+}
+
+.plane-card.selectable:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent-primary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.plane-card.selected {
+    border-color: var(--accent-primary);
+    background: rgba(59, 130, 246, 0.15);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.plane-card.placed {
+    opacity: 0.6;
+    border-color: var(--accent-success);
+}
+
+.plane-card.placed .plane-name::after {
+    content: " ?";
+    color: var(--accent-success);
+}
+
 .plane-name {
     font-size: 0.75rem;
     font-weight: 600;
@@ -941,6 +1024,7 @@ kbd {
     font-size: 1.5rem;
     text-align: center;
     margin-bottom: 0.3rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .plane-position {
