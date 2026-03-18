@@ -58,12 +58,7 @@ ValidatePlacementResult NavalBattleEngine::validatePlacement(Player p, int ID, c
     const Fleet& fleet = getFleetForPlayer(p);
     
     // Find the ship
-    const Ship* targetShip = nullptr;
-    for (const Ship& s : fleet.getShips())
-        if (s.getId() == ID){
-            targetShip = &s;
-			break;
-		}
+	const Ship* targetShip = fleet.getShipById(ID);
     
     if (targetShip == nullptr) {
         r.valid = false;
