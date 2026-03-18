@@ -68,15 +68,12 @@ ValidatePlacementResult NavalBattleEngine::validatePlacement(Player p, int ID, c
     
     // Collect coords of other placed ships
     std::unordered_set<coord> occupied;
-    for (const Ship& s : fleet.getShips()) {
+    for (const Ship& s : fleet.getShips())
         if (s.getId() == ID)
             continue;
-        if (s.isPlaced()) {
-            for (const coord& c : s.getCoords()) {
+        else if (s.isPlaced()) 
+            for (const coord& c : s.getCoords()) 
                 occupied.insert(c.applyTransform(s.getPos(), s.getRotation()));
-            }
-        }
-    }
     
     // Calculate placement coords and check validity
     for (const coord& c : targetShip->getCoords()) {
