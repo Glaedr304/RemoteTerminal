@@ -98,6 +98,11 @@ private:
     bool isValidCoord(coord c) const;
     bool isValidCoord(const std::set<coord>& coords) const;
 
+	ActivateAbilityResultError playerMayActivateAbility(Player p, int shipId, const VehicleAbilityType& vehicleAbilityType) const;
+	FireError playerMayFire(Player p, coord target) const;
+	bool playerMayAct(Player p) const; //check if the player is allowed to perform any turn action in the current game state
+
+
     Phase _phase;
     Player _currentPlayer;
     std::pair<int, int> _boardDimensions;
@@ -120,6 +125,8 @@ private:
     PlayerData& getDataForPlayer(Player p);
 
     const PlayerData& getDataForPlayer(Player p) const;
+
+	ActivateAbilityResultError toActivateAbilityResultError(Fleet::AbilityAvailabilityError e) const;
 };
 
 } // namespace NavalBattle

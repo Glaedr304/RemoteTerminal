@@ -74,6 +74,27 @@ bool Fleet::useShipAbility(VehicleId id, VehicleAbilityType abilityType) {
 	return s->useAbility(abilityType);
 }
 
+Fleet::AbilityAvailabilityError Fleet::abilityAvailable(VehicleId id, VehicleAbilityType ability) const {
+	const Ship* s = getShipById(id);
+	if (s != nullptr) {
+		if (s->isSunk())
+			return AbilityAvailabilityError::vehicleDestroyed;
+		if (!s->hasAbility(ability))
+			return AbilityAvailabilityError::vehicleHasNoSuchAbility;
+		return AbilityAvailabilityError::none;
+	}
+	const Plane* p = getPlaneById(id);
+	if (p != nullptr) {
+		if (p->isDestroyed())
+			return AbilityAvailabilityError::vehicleDestroyed;
+		if (!p->hasAbility(ability))
+			return AbilityAvailabilityError::vehicleHasNoSuchAbility;
+		
+		return AbilityAvailabilityError::none;
+	}
+	return AbilityAvailabilityError::invalidID;
+}
+
 const Ship* Fleet::getShipById(VehicleId id) const {
 	return const_cast<Fleet*>(this)->getShipById(id);
 }

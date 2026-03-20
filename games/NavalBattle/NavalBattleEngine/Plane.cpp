@@ -65,6 +65,13 @@ bool Plane::isPlaced() const {
 	return !_pos.isUnspecified();
 }
 
+bool NavalBattle::Plane::hasAbility(const VehicleAbilityType& abilityType) const {
+	for (const VehicleAbility& a : _abilities)
+		if (a.getType() == abilityType && a.canUse())
+			return true;
+	return false;
+}
+
 const std::vector<VehicleAbility>& Plane::getAbilities() const {
 	return _abilities;
 }

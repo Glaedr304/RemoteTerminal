@@ -31,6 +31,13 @@ public:
 		hitFleetError error;
 	};
 
+	enum class AbilityAvailabilityError {
+		none,
+		invalidID,
+		vehicleHasNoSuchAbility,
+		vehicleDestroyed
+	};
+
 	void addShip(const Ship& ship);
 
 	void placeShip(VehicleId id, coord pos, int rotation);
@@ -40,6 +47,8 @@ public:
 	void placePlane(VehicleId id, coord pos);
 
 	bool useShipAbility(VehicleId id, VehicleAbilityType ability);
+
+	AbilityAvailabilityError abilityAvailable(VehicleId id, VehicleAbilityType ability) const;
 
 	const Ship* getShipById(VehicleId id) const;
 

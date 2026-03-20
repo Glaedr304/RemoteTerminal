@@ -172,32 +172,14 @@ ValidatePlanePlacementResult NavalBattleEngine::validatePlanePlacement(Player p,
 ActivateAbilityResult NavalBattleEngine::activateAbility(Player p, int shipId, const VehicleAbilityAction& VehicleAbilityAction) {
     ActivateAbilityResult answer;
 
-    if (_currentPlayer != p) {
+    ActivateAbilityResultError e;
+    
+    e = playerMayActivateAbility(p, shipId, VehicleAbilityAction.type);
+	if (e != ActivateAbilityResultError::none) {
         answer.success = false;
-        answer.error = ActivateAbilityResultError::notYourTurn;
+        answer.error = e;
         return answer;
-    }
-
-    auto& f = getDataForPlayer(p).fleet;
-	const Ship* s = static_cast<const Fleet&>(f).getShipById(shipId);
-
-    if (s == nullptr) {
-        answer.success = false;
-        answer.error = ActivateAbilityResultError::notYourShip;
-        return answer;
-    }
-
-    if (s->isSunk()) {
-        answer.success = false;
-        answer.error = ActivateAbilityResultError::shipSunk;
-        return answer;
-    }
-
-    if (!s->hasAbility(VehicleAbilityAction.type)) {
-        answer.success = false;
-        answer.error = ActivateAbilityResultError::noSuchAbility;
-        return answer;
-    }
+    }    
 
     switch (VehicleAbilityAction.type) {
     case VehicleAbilityType::Torpedo: {
@@ -232,7 +214,7 @@ ActivateAbilityResult NavalBattleEngine::activateAbility(Player p, int shipId, c
 
     if (answer.success) {
         _currentPlayer = opponent(p);
-        f.useShipAbility(shipId, VehicleAbilityAction.type);
+        getDataForPlayer(p).fleet.useShipAbility(shipId, VehicleAbilityAction.type);
     }
     return answer;
 }
@@ -264,10 +246,10 @@ ActivateAbilityResult NavalBattleEngine::handleTorpedoAction(Player p, TorpedoDa
         //downwards
         if (currentPos.d == 0)
             incrementPos = [&currentPos]() {currentPos.d++; };
-    //upwards
+        //upwards
         else if (currentPos.d == boardRows() - 1)
             incrementPos = [&currentPos]() {currentPos.d--; };
-    //invalid
+        //invalid
         else {
             answer.success = false;
 			answer.error = ActivateAbilityResultError::outOfBounds;
@@ -277,10 +259,10 @@ ActivateAbilityResult NavalBattleEngine::handleTorpedoAction(Player p, TorpedoDa
         //rightwards
         if (currentPos.o == 0)
             incrementPos = [&currentPos]() {currentPos.o++; };
-    //leftwards
+        //leftwards
         else if (currentPos.o == boardCols() - 1)
             incrementPos = [&currentPos]() {currentPos.o--; };
-    //invalid
+        //invalid
         else {
             answer.success = false;
             answer.error = ActivateAbilityResultError::outOfBounds;
@@ -685,6 +667,33 @@ bool NavalBattleEngine::isValidCoord(const std::set<coord>& coords) const{
     return true;
 }
 
+ActivateAbilityResultError NavalBattle::NavalBattleEngine::playerMayActivateAbility(Player p, int shipId, const VehicleAbilityType& vehicleAbilityType) const {
+	if (!playerMayAct(p))
+        return ActivateAbilityResultError::notYourTurn;
+
+    Fleet::AbilityAvailabilityError e = getDataForPlayer(p).fleet.abilityAvailable(shipId, vehicleAbilityType);
+    if (e != Fleet::AbilityAvailabilityError::none)
+        return toActivateAbilityResultError(e);
+
+    return ActivateAbilityResultError::none;
+}
+
+FireError NavalBattle::NavalBattleEngine::playerMayFire(Player p, coord target) const {
+	if (!playerMayAct(p))
+        return FireError::notYourTurn;
+	if (!isValidCoord(target))
+        return FireError::outOfBounds;
+	return FireError::none;
+}
+
+bool NavalBattleEngine::playerMayAct(Player p) const {
+    if (_currentPlayer != p)
+        return false;
+    if (_phase != Phase::playing)
+        return false;
+    return true;
+}
+
 std::set<coord>& NavalBattleEngine::getHitsForPlayer(Player p) {
 	return getDataForPlayer(p).hits;
 }
@@ -799,4 +808,18 @@ NavalBattleEngine::PlayerData& NavalBattleEngine::getDataForPlayer(Player p) {
 
 const NavalBattleEngine::PlayerData& NavalBattleEngine::getDataForPlayer(Player p) const {
     return const_cast<NavalBattleEngine*>(this)->getDataForPlayer(p);
+}
+
+ActivateAbilityResultError NavalBattle::NavalBattleEngine::toActivateAbilityResultError(Fleet::AbilityAvailabilityError e) const {
+    switch (e) {
+    case Fleet::AbilityAvailabilityError::none:
+        return ActivateAbilityResultError::none;
+    case Fleet::AbilityAvailabilityError::invalidID:
+        return ActivateAbilityResultError::notYourShip;
+    case Fleet::AbilityAvailabilityError::vehicleHasNoSuchAbility:
+        return ActivateAbilityResultError::noSuchAbility;
+    case Fleet::AbilityAvailabilityError::vehicleDestroyed:
+        return ActivateAbilityResultError::shipSunk;
+    }
+	return ActivateAbilityResultError::noSuchAbility; //default case should never be hit
 }
