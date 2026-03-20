@@ -270,6 +270,7 @@ ActivateAbilityResult NavalBattleEngine::handleTorpedoAction(Player p, TorpedoDa
     //invalid
         else {
             answer.success = false;
+			answer.error = ActivateAbilityResultError::outOfBounds;
             return answer;
         }
     else
@@ -282,6 +283,7 @@ ActivateAbilityResult NavalBattleEngine::handleTorpedoAction(Player p, TorpedoDa
     //invalid
         else {
             answer.success = false;
+            answer.error = ActivateAbilityResultError::outOfBounds;
             return answer;
         };
 
