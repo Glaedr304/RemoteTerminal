@@ -67,6 +67,21 @@ void Fleet::placePlane(VehicleId id, coord pos) {
 	}
 }
 
+void Fleet::placeVehicle(VehicleId id, coord pos, int rotation /*=0*/) {
+	Ship* s = getShipById(id);
+	if (s) {
+		s->setPos(pos);
+		s->setRotation(rotation);
+		hitmapUpToDate = false;
+		return;
+	}
+	Plane* p = getPlaneById(id);
+	if (p) {
+		p->setPos(pos);
+		hitmapUpToDate = false;
+	}
+}
+
 bool Fleet::useShipAbility(VehicleId id, VehicleAbilityType abilityType) {
 	Ship* s = getShipById(id);
 	if (s == nullptr)

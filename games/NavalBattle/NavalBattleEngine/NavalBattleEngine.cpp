@@ -375,10 +375,7 @@ ActivateAbilityResult NavalBattleEngine::handleRelocateAction(Player p, Relocate
         return answer;
     }
 
-    //ID has already been validated so we should not have to check for nullptr
-    const Fleet& fleet = getDataForPlayer(p).fleet;
-    const Ship* s = fleet.getShipById(d.shipId);
-    getDataForPlayer(p).fleet.placeShip(d.shipId, d.target, s->getRotation());
+	getDataForPlayer(p).fleet.placeVehicle(d.shipId, d.target);
     answer.success = true;
 
     return answer;

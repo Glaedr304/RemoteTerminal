@@ -46,6 +46,8 @@ public:
 
 	void placePlane(VehicleId id, coord pos);
 
+	void placeVehicle(VehicleId id, coord pos, int rotation = 0);
+
 	bool useShipAbility(VehicleId id, VehicleAbilityType ability);
 
 	AbilityAvailabilityError abilityAvailable(VehicleId id, VehicleAbilityType ability) const;
