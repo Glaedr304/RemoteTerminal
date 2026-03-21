@@ -125,9 +125,9 @@ Json::Value toJson(const PlaceShipResultData& f);
 
 Json::Value toJson(const PlacePlaneResultData& f);
 
-Json::Value toJson(const CheckPlacementResultData& f);
+Json::Value toJson(const TransientSquareState& s);
 
-Json::Value toJson(const CheckPlanePlacementResultData& f);
+Json::Value toJson(const TransientOverlayData& t);
 
 Json::Value toJson(const FireAntiAircraftResultData& f);
 

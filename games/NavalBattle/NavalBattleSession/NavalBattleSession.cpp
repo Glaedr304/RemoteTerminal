@@ -369,14 +369,15 @@ SessionActionResult NavalBattleSession::handleReady(Player p) {
 SessionActionResult NavalBattleSession::handleCheckPlacement(Player p, const SessionAction& a) {
 	SessionActionResult answer;
 	answer.success = true;
-	answer.type = SessionActionResultType::CheckPlacementResult;
+	answer.type = SessionActionResultType::TransientOverlayResult;
 
 	PlaceShipData psd = std::get<PlaceShipData>(a.data);
 	auto r = _engine.validatePlacement(p, psd.shipId, psd.position, psd.rotation);
 
-	CheckPlacementResultData data;
-	data.valid = r.valid;
-	data.coords = r.coords;
+	TransientOverlayData data;
+	auto state = r.valid ? TransientSquareState::validPlacement : TransientSquareState::invalidPlacement;
+	for (const auto& c : r.coords)
+		data.overlay[c].insert(state);
 	answer.data = data;
 
 	return answer;
@@ -385,14 +386,15 @@ SessionActionResult NavalBattleSession::handleCheckPlacement(Player p, const Ses
 SessionActionResult NavalBattleSession::handleCheckPlanePlacement(Player p, const SessionAction& a) {
 	SessionActionResult answer;
 	answer.success = true;
-	answer.type = SessionActionResultType::CheckPlanePlacementResult;
+	answer.type = SessionActionResultType::TransientOverlayResult;
 
 	PlacePlaneData ppd = std::get<PlacePlaneData>(a.data);
 	auto r = _engine.validatePlanePlacement(p, ppd.planeId, ppd.position);
 
-	CheckPlanePlacementResultData data;
-	data.valid = r.valid;
-	data.position = r.position;
+	TransientOverlayData data;
+	auto state = r.valid ? TransientSquareState::validPlacement : TransientSquareState::invalidPlacement;
+	if (r.position != coord::unspecified)
+		data.overlay[r.position].insert(state);\
 	answer.data = data;
 
 	return answer;

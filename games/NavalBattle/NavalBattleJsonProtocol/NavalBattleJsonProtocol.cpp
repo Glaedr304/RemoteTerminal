@@ -521,12 +521,8 @@ Json::Value toJson(const SessionActionResultType& r) {
 			answer = "fireantiaircraft";
 			break;
 		}
-		case SessionActionResultType::CheckPlacementResult: {
-			answer = "checkplacementresult";
-			break;
-		}
-		case SessionActionResultType::CheckPlanePlacementResult: {
-			answer = "checkplaneplacementresult";
+		case SessionActionResultType::TransientOverlayResult: {
+			answer = "transientoverlayresult";
 			break;
 		}
 		case SessionActionResultType::RematchResult: {
@@ -661,10 +657,8 @@ Json::Value toJson(const SessionActionResultData& s) {
 		answer = toJson(std::get<PlaceShipResultData>(s));
 	else if (std::holds_alternative<PlacePlaneResultData>(s))
 		answer = toJson(std::get<PlacePlaneResultData>(s));
-	else if (std::holds_alternative<CheckPlacementResultData>(s))
-		answer = toJson(std::get<CheckPlacementResultData>(s));
-	else if (std::holds_alternative<CheckPlanePlacementResultData>(s))
-		answer = toJson(std::get<CheckPlanePlacementResultData>(s));
+	else if (std::holds_alternative<TransientOverlayData>(s))
+		answer = toJson(std::get<TransientOverlayData>(s));
 	else if (std::holds_alternative<RematchResultData>(s))
 		answer = toJson(std::get<RematchResultData>(s));
 	else if (std::holds_alternative<ActivateAbilityResult>(s))
@@ -742,22 +736,32 @@ Json::Value toJson(const PlacePlaneResultData& p) {
 	return Json::Value(Json::nullValue);
 }
 
+Json::Value toJson(const TransientSquareState& s) {
+	switch (s) {
+		case TransientSquareState::invalidPlacement: return "invalidplacement";
+		case TransientSquareState::validPlacement: return "validplacement";
+		case TransientSquareState::targetedSquare: return "targetedsquare";
+	}
+	return "unknown";
+}
+
+Json::Value toJson(const TransientOverlayData& t) {
+	Json::Value answer(Json::objectValue);
+	Json::Value overlayObj(Json::objectValue);
+
+	for (const auto& [c, states] : t.overlay) {
+		Json::Value statesArray(Json::arrayValue);
+		for (const auto& state : states)
+			statesArray.append(toJson(state));
+		overlayObj[std::to_string(c.d) + "," + std::to_string(c.o)] = statesArray;
+	}
+
+	answer["overlay"] = overlayObj;
+	return answer;
+}
+
 Json::Value toJson(const RematchResultData& r) {
 	return Json::Value(Json::nullValue);
-}
-
-Json::Value toJson(const CheckPlacementResultData& c) {
-	Json::Value answer(Json::objectValue);
-	answer["valid"] = c.valid;
-	answer["coords"] = toJson(c.coords);
-	return answer;
-}
-
-Json::Value toJson(const CheckPlanePlacementResultData& c) {
-	Json::Value answer(Json::objectValue);
-	answer["valid"] = c.valid;
-	answer["position"] = toJson(c.position);
-	return answer;
 }
 
 Json::Value toJson(const FireAntiAircraftResultData& f) {

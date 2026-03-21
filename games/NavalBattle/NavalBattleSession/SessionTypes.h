@@ -6,8 +6,16 @@
 #include "Action.h"
 #include <string>
 #include <variant>
+#include <unordered_map>
+#include <unordered_set>
 
 namespace NavalBattle {
+
+enum class TransientSquareState {
+    invalidPlacement,
+    validPlacement,
+    targetedSquare
+};
 
 enum class SessionActionResultError {
     //session-level errors
@@ -35,8 +43,7 @@ enum class SessionActionResultType {
     ReadyResult,
     PlaceShipResult,
     PlacePlaneResult,
-    CheckPlacementResult,
-    CheckPlanePlacementResult,
+    TransientOverlayResult,
     RematchResult,
     ActivateAbilityResult
 };
@@ -67,21 +74,15 @@ struct FireAntiAircraftResultData {
     int hitId = 0;
 };
 
-struct CheckPlacementResultData {
-    bool valid = false;
-    std::set<coord> coords;
-};
-
-struct CheckPlanePlacementResultData {
-    bool valid = false;
-    coord position = coord::unspecified;
+struct TransientOverlayData {
+    std::unordered_map<coord, std::unordered_set<TransientSquareState>> overlay;
 };
 
 struct RematchResultData {
     // no data needed
 };
 
-using SessionActionResultData = std::variant<PlaceShipResultData, PlacePlaneResultData, ReadyResultData, FireResultData, FireAntiAircraftResultData, CheckPlacementResultData, CheckPlanePlacementResultData, RematchResultData, ActivateAbilityResult>;
+using SessionActionResultData = std::variant<PlaceShipResultData, PlacePlaneResultData, ReadyResultData, FireResultData, FireAntiAircraftResultData, TransientOverlayData, RematchResultData, ActivateAbilityResult>;
 
 struct SessionActionResult {
     bool success = false;
@@ -185,3 +186,10 @@ struct ActionRequest {
 };
 
 } // namespace NavalBattle
+
+template<>
+struct std::hash<NavalBattle::TransientSquareState> {
+    std::size_t operator()(const NavalBattle::TransientSquareState& state) const noexcept {
+        return std::hash<int>()(static_cast<int>(state));
+    }
+};
