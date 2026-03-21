@@ -1164,11 +1164,8 @@ function applyActionResult(result) {
         case "readyresult":
             applyReadyResult(result);
             break;
-        case "checkplacementresult":
-            applyCheckPlacementResult(result);
-            break;
-        case "checkplaneplacementresult":
-            applyCheckPlanePlacementResult(result);
+        case "transientoverlayresult":
+            applyTransientOverlayResult(result);
             break;
         case "activateabilityresult":
             applyActivateAbilityResult(result);
@@ -1262,56 +1259,45 @@ function applyReadyResult(result) {
     }
 }
 
-function applyCheckPlacementResult(result) {
+function applyTransientOverlayResult(result) {
     if (!result.success) return;
 
     const data = result.data;
-    if (!data) return;
+    if (!data || !data.overlay) return;
 
     const cols = lastSetupInfo?.boardcols || 10;
-    const previewClass = data.valid ? "preview-valid" : "preview-invalid";
 
     // Clear any existing preview
     clearPreview();
 
-    // Apply preview overlay to the specified coords
-    for (const coord of data.coords || []) {
-        const r = coord.row;
-        const c = coord.col;
+    // Process the overlay map
+    for (const coordKey in data.overlay) {
+        // Parse coordinate key "row,col"
+        const [rowStr, colStr] = coordKey.split(",");
+        const r = parseInt(rowStr, 10);
+        const c = parseInt(colStr, 10);
 
-        if (typeof r !== "number" || typeof c !== "number") continue;
+        if (typeof r !== "number" || typeof c !== "number" || isNaN(r) || isNaN(c)) continue;
+
+        const states = data.overlay[coordKey];
+        if (!Array.isArray(states) || states.length === 0) continue;
 
         // Only show preview for in-bounds cells
         if (r < 0 || c < 0) continue;
 
         const idx = r * cols + c;
         const cell = ownGrid.children[idx];
-        if (cell) {
-            cell.classList.add(previewClass);
+        if (!cell) continue;
+
+        // Apply CSS classes based on the states
+        // Priority: invalidPlacement > validPlacement > targetedSquare
+        if (states.includes("invalidplacement")) {
+            cell.classList.add("preview-invalid");
+        } else if (states.includes("validplacement")) {
+            cell.classList.add("preview-valid");
+        } else if (states.includes("targetedsquare")) {
+            cell.classList.add("preview-valid");
         }
-    }
-}
-
-function applyCheckPlanePlacementResult(result) {
-    if (!result.success) return;
-
-    const data = result.data;
-    if (!data) return;
-
-    const cols = lastSetupInfo?.boardcols || 10;
-    const previewClass = data.valid ? "preview-valid" : "preview-invalid";
-
-    // Clear any existing preview
-    clearPreview();
-
-    // Apply preview overlay to the single position for plane placement
-    const pos = data.position;
-    if (!pos || typeof pos.row !== "number" || typeof pos.col !== "number") return;
-
-    const idx = pos.row * cols + pos.col;
-    const cell = ownGrid.children[idx];
-    if (cell) {
-        cell.classList.add(previewClass);
     }
 }
 
