@@ -110,9 +110,9 @@ private:
 	int _nextVehicleId = 0;
 
     FleetBlueprint const& getBaseFleetBlueprint();
-        FleetBlueprint const& getAdvancedFleetBlueprint();
-        FleetBlueprint const& getBlueprintForMode(GameMode mode);
-        static std::pair<int, int> getBoardDimensionsForMode(GameMode mode);
+    FleetBlueprint const& getAdvancedFleetBlueprint();
+    FleetBlueprint const& getBlueprintForMode(GameMode mode);
+    static std::pair<int, int> getBoardDimensionsForMode(GameMode mode);
 
     enum class FleetStatusBits {
         outOfBounds = 0,
