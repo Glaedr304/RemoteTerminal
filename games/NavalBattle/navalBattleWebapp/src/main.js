@@ -225,6 +225,8 @@ function buildGrids(rows, cols) {
             cell.dataset.col = c;
 
             cell.addEventListener("click", () => handleOppGridClick(r, c));
+            cell.addEventListener("mouseenter", () => handleOppGridHover(r, c));
+            cell.addEventListener("mouseleave", () => clearAbilityPreview());
             oppGrid.appendChild(cell);
         }
     }
@@ -802,15 +804,98 @@ function handleOwnGridHover(row, col) {
 }
 
 function clearPreview() {
-    // Clear preview overlay classes from all cells
+    // Clear preview overlay classes from all cells in both grids
+    const previewClasses = [
+        "preview-valid", "preview-invalid", "preview-targeted",
+        "torpedoup", "torpedodown", "torpedoleft", "torpedoright"
+    ];
+
     for (const cell of ownGrid.children) {
-        cell.classList.remove("preview-valid", "preview-invalid");
+        cell.classList.remove(...previewClasses);
+    }
+    for (const cell of oppGrid.children) {
+        cell.classList.remove(...previewClasses);
+    }
+}
+
+function clearAbilityPreview() {
+    // Clear ability previews from opponent grid
+    const previewClasses = [
+        "preview-valid", "preview-invalid", "preview-targeted",
+        "torpedoup", "torpedodown", "torpedoleft", "torpedoright"
+    ];
+
+    for (const cell of oppGrid.children) {
+        cell.classList.remove(...previewClasses);
     }
 }
 
 function clearPreviewAndHover() {
     hoveredCell = null;
     clearPreview();
+}
+
+function handleOppGridHover(row, col) {
+    // Only show preview if we're in ability mode targeting opponent grid
+    if (!activeAbility || !lastSetupInfo) return;
+
+    const config = ABILITY_CONFIG[activeAbility.type];
+    if (config.targetType !== "opponent") return;
+
+    const { vehicleId, type, firingPattern } = activeAbility;
+
+    // Construct ability data based on type
+    let abilityData;
+    switch (type) {
+        case "torpedo":
+            abilityData = {
+                firingpattern: firingPattern,
+                startpoint: { row, col }
+            };
+            break;
+        case "exocet":
+            abilityData = { target: { row, col } };
+            break;
+        case "apache":
+            abilityData = {
+                firingpattern: firingPattern,
+                target: { row, col }
+            };
+            break;
+        case "tomahawk":
+            abilityData = {
+                firingpattern: firingPattern,
+                target: { row, col }
+            };
+            break;
+        case "scan":
+            abilityData = { target: { row, col } };
+            break;
+        case "reveal":
+            abilityData = {
+                firingpattern: firingPattern,
+                target: { row, col }
+            };
+            break;
+        default:
+            return;
+    }
+
+    const message = {
+        gameid: lastSetupInfo.gameid,
+        userid: lastSetupInfo.you,
+        sessionaction: {
+            type: "checkability",
+            data: {
+                abilitydata: {
+                    type: type,
+                    data: abilityData
+                }
+            }
+        }
+    };
+
+    sendMessage(message);
 }
 
 function handleOppGridClick(row, col) {
@@ -1270,6 +1355,17 @@ function applyTransientOverlayResult(result) {
     // Clear any existing preview
     clearPreview();
 
+    // Determine which grid to apply overlays to based on context
+    // If we're in ability mode targeting opponent, use oppGrid
+    // Otherwise use ownGrid (for ship/plane placement)
+    let targetGrid = ownGrid;
+    if (activeAbility) {
+        const config = ABILITY_CONFIG[activeAbility.type];
+        if (config.targetType === "opponent") {
+            targetGrid = oppGrid;
+        }
+    }
+
     // Process the overlay map
     for (const coordKey in data.overlay) {
         // Parse coordinate key "row,col"
@@ -1286,17 +1382,25 @@ function applyTransientOverlayResult(result) {
         if (r < 0 || c < 0) continue;
 
         const idx = r * cols + c;
-        const cell = ownGrid.children[idx];
+        const cell = targetGrid.children[idx];
         if (!cell) continue;
 
         // Apply CSS classes based on the states
-        // Priority: invalidPlacement > validPlacement > targetedSquare
+        // Priority: invalidPlacement > torpedo directions > validPlacement > targetedSquare
         if (states.includes("invalidplacement")) {
             cell.classList.add("preview-invalid");
+        } else if (states.includes("torpedoup")) {
+            cell.classList.add("torpedoup");
+        } else if (states.includes("torpedodown")) {
+            cell.classList.add("torpedodown");
+        } else if (states.includes("torpedoleft")) {
+            cell.classList.add("torpedoleft");
+        } else if (states.includes("torpedoright")) {
+            cell.classList.add("torpedoright");
         } else if (states.includes("validplacement")) {
             cell.classList.add("preview-valid");
         } else if (states.includes("targetedsquare")) {
-            cell.classList.add("preview-valid");
+            cell.classList.add("preview-targeted");
         }
     }
 }
