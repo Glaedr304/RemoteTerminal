@@ -247,16 +247,20 @@ ActivateAbilityResultData NavalBattleEngine::executeTorpedoPlan(Player p, Torped
     coord currentPos = plan.startPoint;
     std::function<void()> incrementPos;
 
-    if (plan.firingPattern == TorpedoData::FiringPattern::vertical)        
-        if (currentPos.d == 0) //downwards
-            incrementPos = [&currentPos]() {currentPos.d++; };        
-        else //upwards
+	switch (plan.direction) {
+        case TorpedoPlan::TorpedoDirection::up:
             incrementPos = [&currentPos]() {currentPos.d--; };
-    else       
-        if (currentPos.o == 0) //rightwards
-            incrementPos = [&currentPos]() {currentPos.o++; };       
-        else //leftwards
+            break;
+        case TorpedoPlan::TorpedoDirection::down:
+            incrementPos = [&currentPos]() {currentPos.d++; };
+            break;
+        case TorpedoPlan::TorpedoDirection::left:
             incrementPos = [&currentPos]() {currentPos.o--; };
+            break;
+        case TorpedoPlan::TorpedoDirection::right:
+            incrementPos = [&currentPos]() {currentPos.o++; };
+            break;
+    }
 
     bool isHit = false;
     do {
@@ -365,20 +369,21 @@ ActivateAbilityResultData NavalBattleEngine::executeRevealPlan(Player p, RevealP
 ValidateAbilityResult NavalBattleEngine::validateTorpedoData(TorpedoData d) const {
     ValidateAbilityResult answer;
     TorpedoPlan plan;
-	plan.firingPattern = d.firingPattern;
+
 	plan.startPoint = d.startPoint;
 
     if (d.firingPattern == TorpedoData::FiringPattern::vertical) {
         if (d.startPoint.d != 0 && d.startPoint.d != boardRows() - 1)
             answer.error = ActivateAbilityResultError::outOfBounds;
+		plan.direction = (d.startPoint.d == 0) ? TorpedoPlan::TorpedoDirection::down : TorpedoPlan::TorpedoDirection::up;
     }
     else if (d.firingPattern == TorpedoData::FiringPattern::horizontal) {
         if (d.startPoint.o != 0 && d.startPoint.o != boardCols() - 1)
             answer.error = ActivateAbilityResultError::outOfBounds;
+		plan.direction = (d.startPoint.o == 0) ? TorpedoPlan::TorpedoDirection::right : TorpedoPlan::TorpedoDirection::left;
     }
-    else {
+    else 
 		answer.error = ActivateAbilityResultError::noSuchAbility;
-    }
 
 	answer.plan = plan;
 	return answer;

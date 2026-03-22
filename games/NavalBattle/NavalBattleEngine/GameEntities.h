@@ -218,8 +218,14 @@ struct ActivateAbilityResult {
 //be used with a ValidateAbilityResult which 
 //encapsulates whether the plan is valid
 struct TorpedoPlan {
+	enum class TorpedoDirection {
+		left,
+		right,
+		up,
+		down
+	};
 	coord startPoint = coord::unspecified;
-	TorpedoData::FiringPattern firingPattern;
+	TorpedoDirection direction;
 };
 
 struct BulkFirePlan {
