@@ -419,22 +419,27 @@ SessionActionResult NavalBattleSession::handleCheckAbility(Player p, const Sessi
 	std::visit([&data, state](auto&& arg) {
 		using T = std::decay_t<decltype(arg)>;
 		if constexpr (std::is_same_v<T, TorpedoPlan>) {
-			TransientSquareState torpedoState;
-			switch (arg.direction) {
-				case TorpedoPlan::TorpedoDirection::up:
-					torpedoState = TransientSquareState::torpedoUp;
-					break;
-				case TorpedoPlan::TorpedoDirection::down:
-					torpedoState = TransientSquareState::torpedoDown;
-					break;
-				case TorpedoPlan::TorpedoDirection::left:
-					torpedoState = TransientSquareState::torpedoLeft;
-					break;
-				case TorpedoPlan::TorpedoDirection::right:
-					torpedoState = TransientSquareState::torpedoRight;
-					break;
+			// Only show torpedo direction if valid, otherwise show invalidPlacement
+			if (state == TransientSquareState::targetedSquare) {
+				TransientSquareState torpedoDirection;
+				switch (arg.direction) {
+					case TorpedoPlan::TorpedoDirection::up:
+						torpedoDirection = TransientSquareState::torpedoUp;
+						break;
+					case TorpedoPlan::TorpedoDirection::down:
+						torpedoDirection = TransientSquareState::torpedoDown;
+						break;
+					case TorpedoPlan::TorpedoDirection::left:
+						torpedoDirection = TransientSquareState::torpedoLeft;
+						break;
+					case TorpedoPlan::TorpedoDirection::right:
+						torpedoDirection = TransientSquareState::torpedoRight;
+						break;
+				}
+				data.overlay[arg.startPoint].insert(torpedoDirection);
 			}
-			data.overlay[arg.startPoint].insert(torpedoState);
+			else
+				data.overlay[arg.startPoint].insert(state);
 		}
 		else if constexpr (std::is_same_v<T, BulkFirePlan>) {
 			for (const coord& c : arg.targets)
