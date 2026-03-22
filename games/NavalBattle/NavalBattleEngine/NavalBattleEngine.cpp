@@ -669,13 +669,13 @@ GridView NavalBattleEngine::ownGrid(Player p) const {
 GridView NavalBattleEngine::opponentGrid(Player p) const {
     std::map<coord, SquareState> occupied;
     //layer from bottom to top so only top is visible
+    for (const auto& s : getDataForPlayer(p).scansWithHits)
+        for (const auto& c : s)
+            occupied[c] = SquareState::scannedPositive;
     for (const auto& c : getDataForPlayer(p).revealedMisses)
         occupied[c] = SquareState::revealedMiss;
     for (const auto& c : getDataForPlayer(p).revealedHits)
         occupied[c] = SquareState::revealedHit;
-    for (const auto& s : getDataForPlayer(p).scansWithHits)
-        for (const auto& c : s)
-            occupied[c] = SquareState::scannedPositive;
     for (const auto& c : getMissesForPlayer(p))
         occupied[c] = SquareState::miss;
     for (const auto& c : getHitsForPlayer(p))
