@@ -659,6 +659,8 @@ GridView NavalBattleEngine::ownGrid(Player p) const {
         if(s.isPlaced())
             for (const coord& c : s.getCoords())
                 occupied[c.applyTransform(s.getPos(), s.getRotation())] = SquareState::ship;
+    for (const auto& c : getDataForPlayer(opponent(p)).revealedHits)
+        occupied[c] = SquareState::revealedHit;
     for (const auto& c : getMissesForPlayer(opponent(p)))
         occupied[c] = SquareState::miss;
     for (const auto& c : getHitsForPlayer(opponent(p)))
