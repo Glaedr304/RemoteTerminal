@@ -247,19 +247,15 @@ ActivateAbilityResultData NavalBattleEngine::executeTorpedoPlan(Player p, Torped
     coord currentPos = plan.startPoint;
     std::function<void()> incrementPos;
 
-    if (plan.firingPattern == TorpedoData::FiringPattern::vertical)
-        //downwards
-        if (currentPos.d == 0)
-            incrementPos = [&currentPos]() {currentPos.d++; };
-        //upwards
-        else
+    if (plan.firingPattern == TorpedoData::FiringPattern::vertical)        
+        if (currentPos.d == 0) //downwards
+            incrementPos = [&currentPos]() {currentPos.d++; };        
+        else //upwards
             incrementPos = [&currentPos]() {currentPos.d--; };
-    else
-        //rightwards
-        if (currentPos.o == 0)
-            incrementPos = [&currentPos]() {currentPos.o++; };
-        //leftwards
-        else
+    else       
+        if (currentPos.o == 0) //rightwards
+            incrementPos = [&currentPos]() {currentPos.o++; };       
+        else //leftwards
             incrementPos = [&currentPos]() {currentPos.o--; };
 
     bool isHit = false;
