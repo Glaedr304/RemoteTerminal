@@ -36,7 +36,7 @@ PlaceShipResult NavalBattleEngine::placeShip( Player p, int ID, coord pos, int r
     }
 
     // Validate the placement
-    auto validation = validatePlacement(p, ID, pos, rotation);
+    auto validation = validateShipPlacement(p, ID, pos, rotation);
     
     if (!validation.valid) {
         r.success = false;
@@ -51,8 +51,8 @@ PlaceShipResult NavalBattleEngine::placeShip( Player p, int ID, coord pos, int r
     return r;
 }
 
-ValidatePlacementResult NavalBattleEngine::validatePlacement(Player p, int ID, coord pos, int rotation) const {
-    ValidatePlacementResult r;
+ValidateShipPlacementResult NavalBattleEngine::validateShipPlacement(Player p, int ID, coord pos, int rotation) const {
+    ValidateShipPlacementResult r;
     r.valid = true;
 
     const Fleet& fleet = getFleetForPlayer(p);

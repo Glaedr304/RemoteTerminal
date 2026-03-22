@@ -64,7 +64,7 @@ struct PlacePlaneResult {
 	PlacePlaneError error;
 };
 
-struct ValidatePlacementResult {
+struct ValidateShipPlacementResult {
 	bool valid;
 	PlaceShipError error;
 	std::set<coord> coords;

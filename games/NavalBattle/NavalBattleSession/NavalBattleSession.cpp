@@ -372,7 +372,7 @@ SessionActionResult NavalBattleSession::handleCheckPlacement(Player p, const Ses
 	answer.type = SessionActionResultType::TransientOverlayResult;
 
 	PlaceShipData psd = std::get<PlaceShipData>(a.data);
-	auto r = _engine.validatePlacement(p, psd.shipId, psd.position, psd.rotation);
+	auto r = _engine.validateShipPlacement(p, psd.shipId, psd.position, psd.rotation);
 
 	TransientOverlayData data;
 	auto state = r.valid ? TransientSquareState::validPlacement : TransientSquareState::invalidPlacement;

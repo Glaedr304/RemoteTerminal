@@ -18,7 +18,7 @@ class NavalBattleEngine {
 
         PlaceShipResult placeShip(Player p, int ID, coord pos, int rotation);
 
-        ValidatePlacementResult validatePlacement(Player p, int ID, coord pos, int rotation) const;
+        ValidateShipPlacementResult validateShipPlacement(Player p, int ID, coord pos, int rotation) const;
 
         PlacePlaneResult placePlane(Player p, int ID, coord pos);
 
