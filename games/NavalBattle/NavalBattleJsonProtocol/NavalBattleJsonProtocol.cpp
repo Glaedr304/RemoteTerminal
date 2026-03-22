@@ -47,6 +47,8 @@ SessionAction sessionActionFromJson(const Json::Value& v) {
 		d = placeShipDataFromJson(actionDataJson); // Uses same data format as PlaceShip
 	else if (t == SessionActionType::CheckPlanePlacement)
 		d = placePlaneDataFromJson(actionDataJson); // Uses same data format as PlacePlane
+	else if (t == SessionActionType::CheckAbility)
+		d = checkAbilityDataFromJson(actionDataJson);
 	else if (t == SessionActionType::Rematch)
 		d = rematchDataFromJson(actionDataJson);
 	else if (t == SessionActionType::ActivateAbility)
@@ -374,6 +376,83 @@ VehicleAbilityAction vehicleAbilityActionFromJson(const Json::Value& v) {
 	return VehicleAbilityAction{type, TorpedoData{TorpedoData::FiringPattern::vertical, coord::unspecified}};
 }
 
+Json::Value toJson(const VehicleAbilityActionData& d) {
+	if (std::holds_alternative<TorpedoData>(d)) {
+		Json::Value answer(Json::objectValue);
+		answer["type"] = "torpedo";
+		answer["data"] = toJson(std::get<TorpedoData>(d));
+		return answer;
+	}
+	else if (std::holds_alternative<ExocetData>(d)) {
+		Json::Value answer(Json::objectValue);
+		answer["type"] = "exocet";
+		answer["data"] = toJson(std::get<ExocetData>(d));
+		return answer;
+	}
+	else if (std::holds_alternative<ApacheData>(d)) {
+		Json::Value answer(Json::objectValue);
+		answer["type"] = "apache";
+		answer["data"] = toJson(std::get<ApacheData>(d));
+		return answer;
+	}
+	else if (std::holds_alternative<TomahawkData>(d)) {
+		Json::Value answer(Json::objectValue);
+		answer["type"] = "tomahawk";
+		answer["data"] = toJson(std::get<TomahawkData>(d));
+		return answer;
+	}
+	else if (std::holds_alternative<RelocateData>(d)) {
+		Json::Value answer(Json::objectValue);
+		answer["type"] = "relocate";
+		answer["data"] = toJson(std::get<RelocateData>(d));
+		return answer;
+	}
+	else if (std::holds_alternative<ScanData>(d)) {
+		Json::Value answer(Json::objectValue);
+		answer["type"] = "scan";
+		answer["data"] = toJson(std::get<ScanData>(d));
+		return answer;
+	}
+	else if (std::holds_alternative<RevealData>(d)) {
+		Json::Value answer(Json::objectValue);
+		answer["type"] = "reveal";
+		answer["data"] = toJson(std::get<RevealData>(d));
+		return answer;
+	}
+	return Json::nullValue;
+}
+
+Json::Value toJson(const CheckAbilityData& d) {
+	Json::Value answer(Json::objectValue);
+	answer["abilitydata"] = toJson(d.abilityData);
+	return answer;
+}
+
+CheckAbilityData checkAbilityDataFromJson(const Json::Value& v) {
+	Json::Value dataJson = v["abilitydata"];
+	std::string type = dataJson["type"].asString();
+	Json::Value abilityDataContent = dataJson["data"];
+
+	VehicleAbilityActionData abilityData = TorpedoData{TorpedoData::FiringPattern::vertical, coord::unspecified};
+
+	if (type == "torpedo")
+		abilityData = torpedoDataFromJson(abilityDataContent);
+	else if (type == "exocet")
+		abilityData = exocetDataFromJson(abilityDataContent);
+	else if (type == "apache")
+		abilityData = apacheDataFromJson(abilityDataContent);
+	else if (type == "tomahawk")
+		abilityData = tomahawkDataFromJson(abilityDataContent);
+	else if (type == "relocate")
+		abilityData = relocateDataFromJson(abilityDataContent);
+	else if (type == "scan")
+		abilityData = scanDataFromJson(abilityDataContent);
+	else if (type == "reveal")
+		abilityData = revealDataFromJson(abilityDataContent);
+
+	return CheckAbilityData{abilityData};
+}
+
 Json::Value toJson(const PlaceShipData& d) {
 	Json::Value answer(Json::objectValue);
 	answer["position"] = toJson(d.position);
@@ -433,6 +512,10 @@ Json::Value toJson(const SessionActionType& t) {
 			answer = "checkplaneplacement";
 			break;
 		}
+		case SessionActionType::CheckAbility: {
+			answer = "checkability";
+			break;
+		}
 		case SessionActionType::Rematch: {
 			answer = "rematch";
 			break;
@@ -463,6 +546,8 @@ SessionActionType sessionActionTypeFromJson(const Json::Value& v) {
 		answer = SessionActionType::CheckPlacement;
 	else if (s == "checkplaneplacement")
 		answer = SessionActionType::CheckPlanePlacement;
+	else if (s == "checkability")
+		answer = SessionActionType::CheckAbility;
 	else if (s == "rematch")
 		answer = SessionActionType::Rematch;
 	else if (s == "activateability")
@@ -486,6 +571,8 @@ Json::Value toJson(const SessionActionData& d) {
 		return toJson(std::get<RematchData>(d));
 	if (std::holds_alternative<ActivateAbilityData>(d))
 		return toJson(std::get<ActivateAbilityData>(d));
+	if (std::holds_alternative<CheckAbilityData>(d))
+		return toJson(std::get<CheckAbilityData>(d));
 	return Json::nullValue;
 }
 
@@ -741,6 +828,10 @@ Json::Value toJson(const TransientSquareState& s) {
 		case TransientSquareState::invalidPlacement: return "invalidplacement";
 		case TransientSquareState::validPlacement: return "validplacement";
 		case TransientSquareState::targetedSquare: return "targetedsquare";
+		case TransientSquareState::torpedoUp: return "torpedoup";
+		case TransientSquareState::torpedoDown: return "torpedodown";
+		case TransientSquareState::torpedoLeft: return "torpedoleft";
+		case TransientSquareState::torpedoRight: return "torpedoright";
 	}
 	return "unknown";
 }

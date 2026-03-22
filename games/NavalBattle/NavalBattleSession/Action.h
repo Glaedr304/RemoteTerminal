@@ -14,6 +14,7 @@ enum class SessionActionType {
     FireAntiAircraft,
     CheckPlacement,
     CheckPlanePlacement,
+    CheckAbility,
     Rematch,
     ActivateAbility
 };
@@ -46,8 +47,12 @@ struct ActivateAbilityData {
     VehicleAbilityAction abilityAction;
 };
 
+struct CheckAbilityData {
+    VehicleAbilityActionData abilityData;
+};
+
 // Note: CheckPlacement uses PlaceShipData directly, not in the variant
-using SessionActionData = std::variant<PlaceShipData, PlacePlaneData, ReadyData, FireData, FireAntiAircraftData, RematchData, ActivateAbilityData>;
+using SessionActionData = std::variant<PlaceShipData, PlacePlaneData, ReadyData, FireData, FireAntiAircraftData, RematchData, ActivateAbilityData, CheckAbilityData>;
 
 struct SessionAction {
     SessionActionType type;

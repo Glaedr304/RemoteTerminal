@@ -14,7 +14,11 @@ namespace NavalBattle {
 enum class TransientSquareState {
     invalidPlacement,
     validPlacement,
-    targetedSquare
+    targetedSquare,
+    torpedoUp,
+    torpedoDown,
+    torpedoLeft,
+    torpedoRight
 };
 
 enum class SessionActionResultError {

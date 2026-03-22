@@ -43,6 +43,9 @@ FireAntiAircraftData fireAntiAircraftDataFromJson(const Json::Value& v);
 Json::Value toJson(const ActivateAbilityData& d);
 ActivateAbilityData activateAbilityDataFromJson(const Json::Value& v);
 
+Json::Value toJson(const CheckAbilityData& d);
+CheckAbilityData checkAbilityDataFromJson(const Json::Value& v);
+
 Json::Value toJson(const VehicleAbilityType& t);
 VehicleAbilityType vehicleAbilityTypeFromJson(const Json::Value& v);
 
@@ -87,6 +90,8 @@ RevealData revealDataFromJson(const Json::Value& v);
 
 Json::Value toJson(const VehicleAbilityAction& a);
 VehicleAbilityAction vehicleAbilityActionFromJson(const Json::Value& v);
+
+Json::Value toJson(const VehicleAbilityActionData& d);
 
 Json::Value toJson(const SessionActionType& t);
 SessionActionType sessionActionTypeFromJson(const Json::Value& v);

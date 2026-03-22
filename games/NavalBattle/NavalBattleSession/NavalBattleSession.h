@@ -36,6 +36,7 @@ private:
     SessionActionResult handleReady(Player p);
     SessionActionResult handleCheckPlacement(Player p, const SessionAction& a);
     SessionActionResult handleCheckPlanePlacement(Player p, const SessionAction& a);
+    SessionActionResult handleCheckAbility(Player p, const SessionAction& a);
     SessionActionResult handleRematch(Player p);
     SessionActionResult handleActivateAbility(Player p, const SessionAction& a);
     AddressedMessageBundle processRematchRequest(const UserId& user, Player p, const SessionActionResult& result);

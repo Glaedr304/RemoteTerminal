@@ -66,6 +66,11 @@ AddressedMessageBundle NavalBattleSession::handleAction(const UserId& user, cons
 			s = handleCheckPlanePlacement(p, action);
 			return a.addMessage(ToUser(user), s);
 		}
+		case SessionActionType::CheckAbility: {
+			// Only return the action result with preview data, no snapshot
+			s = handleCheckAbility(p, action);
+			return a.addMessage(ToUser(user), s);
+		}
 		case SessionActionType::Rematch: {
 			s = handleRematch(p);
 			return processRematchRequest(user, p, s);
@@ -395,6 +400,60 @@ SessionActionResult NavalBattleSession::handleCheckPlanePlacement(Player p, cons
 	auto state = r.valid ? TransientSquareState::validPlacement : TransientSquareState::invalidPlacement;
 	if (r.position != coord::unspecified)
 		data.overlay[r.position].insert(state);\
+	answer.data = data;
+
+	return answer;
+}
+
+SessionActionResult NavalBattleSession::handleCheckAbility(Player p, const SessionAction& a) {
+	SessionActionResult answer;
+	answer.success = true;
+	answer.type = SessionActionResultType::TransientOverlayResult;
+
+	CheckAbilityData cad = std::get<CheckAbilityData>(a.data);
+	auto r = _engine.validateAbility(cad.abilityData);
+
+	TransientOverlayData data;
+	auto state = (r.error == ActivateAbilityResultError::none) ? TransientSquareState::targetedSquare : TransientSquareState::invalidPlacement;
+
+	std::visit([&data, state](auto&& arg) {
+		using T = std::decay_t<decltype(arg)>;
+		if constexpr (std::is_same_v<T, TorpedoPlan>) {
+			TransientSquareState torpedoState;
+			switch (arg.direction) {
+				case TorpedoPlan::TorpedoDirection::up:
+					torpedoState = TransientSquareState::torpedoUp;
+					break;
+				case TorpedoPlan::TorpedoDirection::down:
+					torpedoState = TransientSquareState::torpedoDown;
+					break;
+				case TorpedoPlan::TorpedoDirection::left:
+					torpedoState = TransientSquareState::torpedoLeft;
+					break;
+				case TorpedoPlan::TorpedoDirection::right:
+					torpedoState = TransientSquareState::torpedoRight;
+					break;
+			}
+			data.overlay[arg.startPoint].insert(torpedoState);
+		}
+		else if constexpr (std::is_same_v<T, BulkFirePlan>) {
+			for (const coord& c : arg.targets)
+				data.overlay[c].insert(state);
+		}
+		else if constexpr (std::is_same_v<T, RelocatePlan>) {
+			if (arg.target != coord::unspecified)
+				data.overlay[arg.target].insert(state);
+		}
+		else if constexpr (std::is_same_v<T, ScanPlan>) {
+			for (const coord& c : arg.targets)
+				data.overlay[c].insert(state);
+		}
+		else if constexpr (std::is_same_v<T, RevealPlan>) {
+			for (const coord& c : arg.targets)
+				data.overlay[c].insert(state);
+		}
+		}, r.plan);
+
 	answer.data = data;
 
 	return answer;
