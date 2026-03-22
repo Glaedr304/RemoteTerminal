@@ -4,6 +4,9 @@
 
 using namespace NavalBattle;
 
+template<class T>
+inline constexpr bool always_false = false;
+
 NavalBattleEngine::NavalBattleEngine(GameMode mode) :
     _currentPlayer(Player::none),
     _phase(Phase::setup),
@@ -98,6 +101,30 @@ ValidateShipPlacementResult NavalBattleEngine::validateShipPlacement(Player p, i
     return r;
 }
 
+ValidateAbilityResult NavalBattleEngine::validateAbility(VehicleAbilityActionData data) const {
+    ValidateAbilityResult answer;
+    std::visit([this, &answer](auto&& arg) {
+        using T = std::decay_t<decltype(arg)>;
+        if constexpr (std::is_same_v<T, TorpedoData>)
+            answer = validateTorpedoData(arg);
+        else if constexpr (std::is_same_v<T, ExocetData>)
+            answer = validateExocetData(arg);
+        else if constexpr (std::is_same_v<T, ApacheData>)
+            answer = validateApacheData(arg);
+        else if constexpr (std::is_same_v<T, TomahawkData>)
+            answer = validateTomahawkData(arg);
+        else if constexpr (std::is_same_v<T, RelocateData>)
+            answer = validateRelocateData(arg);
+        else if constexpr (std::is_same_v<T, ScanData>)
+            answer = validateScanData(arg);
+        else if constexpr (std::is_same_v<T, RevealData>)
+            answer = validateRevealData(arg);
+        else
+            static_assert(always_false<T>, "non-exhaustive visitor!");
+    }, data);
+	return answer;
+}
+
 PlacePlaneResult NavalBattleEngine::placePlane(Player p, int ID, coord pos) {
     PlacePlaneResult r;
     r.success = true;
@@ -175,47 +202,26 @@ ActivateAbilityResult NavalBattleEngine::activateAbility(Player p, int shipId, c
     ActivateAbilityResultError e;
     
     e = playerMayActivateAbility(p, shipId, VehicleAbilityAction.type);
-	if (e != ActivateAbilityResultError::none) {
+    if (e != ActivateAbilityResultError::none) {
         answer.success = false;
         answer.error = e;
         return answer;
-    }    
-
-    switch (VehicleAbilityAction.type) {
-    case VehicleAbilityType::Torpedo: {
-        answer = handleTorpedoAction(p, std::get<TorpedoData>(VehicleAbilityAction.data));
-        break;
-    }
-    case VehicleAbilityType::Exocet: {
-        answer = handleExocetAction(p, std::get<ExocetData>(VehicleAbilityAction.data));
-        break;
-    }
-    case VehicleAbilityType::Apache: {
-        answer = handleApacheAction(p, std::get<ApacheData>(VehicleAbilityAction.data));
-        break;
-    }
-    case VehicleAbilityType::Tomahawk: {
-        answer = handleTomahawkAction(p, std::get<TomahawkData>(VehicleAbilityAction.data));
-        break;
-    }
-    case VehicleAbilityType::relocate: {
-        answer = handleRelocateAction(p, std::get<RelocateData>(VehicleAbilityAction.data));
-        break;
-    }
-    case VehicleAbilityType::scan: {
-        answer = handleScanAction(p, std::get<ScanData>(VehicleAbilityAction.data));
-        break;
-    }
-    case VehicleAbilityType::reveal: {
-        answer = handleRevealAction(p, std::get<RevealData>(VehicleAbilityAction.data));
-        break;
-    }
     }
 
-    if (answer.success) {
-        _currentPlayer = opponent(p);
-        getDataForPlayer(p).fleet.useShipAbility(shipId, VehicleAbilityAction.type);
+	ValidateAbilityResult validation = validateAbility(VehicleAbilityAction.data);
+    if (validation.error != ActivateAbilityResultError::none) {
+        answer.success = false;
+        answer.error = validation.error;
+        return answer;
     }
+
+    answer.success = true;
+
+	answer.data = executeAbilityPlan(p, validation.plan);
+    
+    getDataForPlayer(p).fleet.useShipAbility(shipId, VehicleAbilityAction.type);
+    _currentPlayer = opponent(p);
+    
     return answer;
 }
 
@@ -234,40 +240,27 @@ FireResult NavalBattleEngine::fireAntiAircraft(Player p, coord target) {
 }
 
 
-ActivateAbilityResult NavalBattleEngine::handleTorpedoAction(Player p, TorpedoData d) {
-    ActivateAbilityResult answer;
-    BulkFireResultData data;
+ActivateAbilityResultData NavalBattleEngine::executeTorpedoPlan(Player p, TorpedoPlan plan) {
+    TorpedoResultData answer;
+    TorpedoResultData data;
 
-    coord currentPos = d.startPoint;
-
+    coord currentPos = plan.startPoint;
     std::function<void()> incrementPos;
 
-    if (d.firingPattern == TorpedoData::FiringPattern::vertical)
+    if (plan.firingPattern == TorpedoData::FiringPattern::vertical)
         //downwards
         if (currentPos.d == 0)
             incrementPos = [&currentPos]() {currentPos.d++; };
         //upwards
-        else if (currentPos.d == boardRows() - 1)
+        else
             incrementPos = [&currentPos]() {currentPos.d--; };
-        //invalid
-        else {
-            answer.success = false;
-			answer.error = ActivateAbilityResultError::outOfBounds;
-            return answer;
-        }
     else
         //rightwards
         if (currentPos.o == 0)
             incrementPos = [&currentPos]() {currentPos.o++; };
         //leftwards
-        else if (currentPos.o == boardCols() - 1)
+        else
             incrementPos = [&currentPos]() {currentPos.o--; };
-        //invalid
-        else {
-            answer.success = false;
-            answer.error = ActivateAbilityResultError::outOfBounds;
-            return answer;
-        };
 
     bool isHit = false;
     do {
@@ -282,58 +275,130 @@ ActivateAbilityResult NavalBattleEngine::handleTorpedoAction(Player p, TorpedoDa
         incrementPos();
     } while (isValidCoord(currentPos));
 
-    //not sure if this actually works
-    answer.success = true;
-    data.isHit = isHit;
-    answer.data = data;
-
+    answer.isHit = isHit;
     return answer;
 }
 
-ActivateAbilityResult NavalBattleEngine::bulkFire(Player p, const std::set<coord>& targets) {
-    ActivateAbilityResult answer;
-    BulkFireResultData data;
+ValidateAbilityResult NavalBattleEngine::validateBulkFireData(std::set<coord> targets) const {
+	ValidateAbilityResult answer;
+    BulkFirePlan plan;
 
-    if (_currentPlayer != p) {
-        answer.success = false;
-        answer.error = ActivateAbilityResultError::notYourTurn;
-        return answer;
-    }
+	for (coord c : targets)
+        if (isValidCoord(c))
+			plan.targets.insert(c);
+        else
+            answer.error = ActivateAbilityResultError::outOfBounds;
 
-    if (!isValidCoord(targets)) {
-        answer.success = false;
-        answer.error = ActivateAbilityResultError::outOfBounds;
-        return answer;
-    }
+	answer.plan = plan;
+	return answer;
+}
 
-    for (const coord& c : targets) {
+ActivateAbilityResultData NavalBattle::NavalBattleEngine::executeAbilityPlan(Player p, const AbilityPlan& plan) {
+    return std::visit([this, p](auto&& arg) {
+        using T = std::decay_t<decltype(arg)>;
+        if constexpr (std::is_same_v<T, TorpedoPlan>)
+            return executeTorpedoPlan(p, arg);
+        else if constexpr (std::is_same_v<T, BulkFirePlan>)
+            return executeBulkFirePlan(p, arg);
+        else if constexpr (std::is_same_v<T, RelocatePlan>)
+            return executeRelocatePlan(p, arg);
+        else if constexpr (std::is_same_v<T, ScanPlan>)
+            return executeScanPlan(p, arg);
+        else if constexpr (std::is_same_v<T, RevealPlan>)
+            return executeRevealPlan(p, arg);
+        else
+            static_assert(always_false<T>, "Non-exhaustive visitor!");
+		}, plan);
+}
+
+ActivateAbilityResultData NavalBattleEngine::executeBulkFirePlan(Player p, BulkFirePlan plan) {
+    BulkFireResultData answer;
+
+    for (const coord& c : plan.targets) {
         Fleet::hitFleetResult r = hitCoord(opponent(p), c);
         if (r.success)
-            data.isHit = true;
+            answer.isHit = true;
         else if (r.error != Fleet::hitFleetError::coordAlreadyHit) //not a true miss if this coord was hit before
             getMissesForPlayer(p).insert(c);
     }
-
-    answer.success = true;
-    answer.data = data;
+    
     return answer;
 }
 
-ActivateAbilityResult NavalBattleEngine::handleExocetAction(Player p, ExocetData data) {
-    ActivateAbilityResult answer;
-    BulkFireResultData resultData;
+ActivateAbilityResultData NavalBattleEngine::executeRelocatePlan(Player p, RelocatePlan plan) {
+    RelocateResultData answer;
 
+	getDataForPlayer(p).fleet.placeVehicle(plan.shipId, plan.target);
+
+    return answer;
+}
+
+ActivateAbilityResultData NavalBattleEngine::executeScanPlan(Player p, ScanPlan plan) {
+    ScanResultData answer;
+    answer.isFound = false;
+
+    for (const coord& c : plan.targets)
+        if (getDataForPlayer(opponent(p)).fleet.wouldBeHit(c)) {
+            getDataForPlayer(p).scansWithHits.insert(plan.targets);
+
+            answer.isFound = true;
+            return answer;
+        }
+
+    //scan is clear
+    //this is the same as guessing/ missing all scanned squares 
+    getDataForPlayer(p).revealedMisses.insert(plan.targets.begin(), plan.targets.end());
+
+    return answer;
+}
+
+ActivateAbilityResultData NavalBattleEngine::executeRevealPlan(Player p, RevealPlan plan) {
+    RevealResultData answer;
+
+    for (const coord& c : plan.targets)
+        if (checkCoord(opponent(p), c)) { // c would be a hit
+            getDataForPlayer(p).revealedHits.insert(c);
+            answer.hitsRevealed.insert(c);
+        }
+        else
+            getDataForPlayer(p).revealedMisses.insert(c);
+
+    return answer;
+}
+
+ValidateAbilityResult NavalBattleEngine::validateTorpedoData(TorpedoData d) const {
+    ValidateAbilityResult answer;
+    TorpedoPlan plan;
+	plan.firingPattern = d.firingPattern;
+	plan.startPoint = d.startPoint;
+
+    if (d.firingPattern == TorpedoData::FiringPattern::vertical) {
+        if (d.startPoint.d != 0 && d.startPoint.d != boardRows() - 1)
+            answer.error = ActivateAbilityResultError::outOfBounds;
+    }
+    else if (d.firingPattern == TorpedoData::FiringPattern::horizontal) {
+        if (d.startPoint.o != 0 && d.startPoint.o != boardCols() - 1)
+            answer.error = ActivateAbilityResultError::outOfBounds;
+    }
+    else {
+		answer.error = ActivateAbilityResultError::noSuchAbility;
+    }
+
+	answer.plan = plan;
+	return answer;
+}
+
+ValidateAbilityResult NavalBattleEngine::validateExocetData(ExocetData data) const {
     std::set<coord> targets;
     for (int d = data.target.d - 1; d <= data.target.d + 1; d++)
         for (int o = data.target.o - 1; o <= data.target.o + 1; o++)
             targets.insert(coord({ d,o }));
 
-    return bulkFire(p, targets);
+	return validateBulkFireData(targets);
 }
 
-ActivateAbilityResult NavalBattleEngine::handleApacheAction(Player p, ApacheData d) {
+ValidateAbilityResult NavalBattleEngine::validateApacheData(ApacheData d) const {
     std::set<coord> targets;
-
     targets.insert(d.target);
     if (d.firingPattern == ApacheData::FiringPattern::vertical) {
         targets.insert(d.target + coord({ -1, 0 }));
@@ -343,13 +408,11 @@ ActivateAbilityResult NavalBattleEngine::handleApacheAction(Player p, ApacheData
         targets.insert(d.target + coord({ 0, -1 }));
         targets.insert(d.target + coord({ 0, 1 }));
     }
-
-    return bulkFire(p, targets);
+    return validateBulkFireData(targets);
 }
 
-ActivateAbilityResult NavalBattleEngine::handleTomahawkAction(Player p, TomahawkData d) {
+ValidateAbilityResult NavalBattleEngine::validateTomahawkData(TomahawkData d) const {
     std::set<coord> targets;
-
     targets.insert(d.target);
     if (d.firingPattern == TomahawkData::FiringPattern::plus)
         for (int i = -1; i < 2; i += 2) {//i is -1 and 1
@@ -360,67 +423,63 @@ ActivateAbilityResult NavalBattleEngine::handleTomahawkAction(Player p, Tomahawk
         for (int i = -1; i < 2; i += 2) //i is -1 and 1
             for (int j = -1; j < 2; j += 2) //j is -1 and 1
                 targets.insert(d.target + coord({ i, j }));
-
-    return bulkFire(p, targets);
+    return validateBulkFireData(targets);
 }
 
-ActivateAbilityResult NavalBattleEngine::handleRelocateAction(Player p, RelocateData d) {
-    ActivateAbilityResult answer;
-    RelocateResultData data;
-    answer.data = data;
+ValidateAbilityResult NavalBattleEngine::validateRelocateData(RelocateData d) const {
+    ValidateAbilityResult answer;
+    RelocatePlan plan;
 
-    if (!isValidCoord(d.target)) {
-        answer.success = false;
+	plan.target = d.target;
+	plan.shipId = d.shipId;
+
+    if (!isValidCoord(d.target))
         answer.error = ActivateAbilityResultError::outOfBounds;
-        return answer;
+    
+    const Fleet& fleet = getFleetForPlayer(Player::one); //obviously this is wrong
+    const Ship* ship = fleet.getShipById(d.shipId);
+	if (ship != nullptr) {
+        if (!ship->isPlaced() || ship->isSunk())
+            answer.error = ActivateAbilityResultError::shipSunk;
+        else if (!ship->hasAbility(VehicleAbilityType::relocate))
+            answer.error = ActivateAbilityResultError::noSuchAbility;
     }
-
-	getDataForPlayer(p).fleet.placeVehicle(d.shipId, d.target);
-    answer.success = true;
-
-    return answer;
+    else {
+		const Plane* plane = fleet.getPlaneById(d.shipId);
+        if(plane != nullptr) {
+            if (!plane->isPlaced() || plane->isDestroyed())
+                answer.error = ActivateAbilityResultError::shipSunk;
+            else if (!plane->hasAbility(VehicleAbilityType::relocate))
+                answer.error = ActivateAbilityResultError::noSuchAbility;
+        }
+        else {
+            answer.error = ActivateAbilityResultError::notYourShip;
+			return answer;
+        }
+    }
+    answer.plan = plan;
+	return answer;
 }
 
-ActivateAbilityResult NavalBattleEngine::handleScanAction(Player p, ScanData data) {
-    ActivateAbilityResult answer;
-    ScanResultData resultData;
-
-    answer.success = true;
-
-    //generate all squares in the scan pattern
+ValidateAbilityResult NavalBattle::NavalBattleEngine::validateScanData(ScanData data) const {
+    ValidateAbilityResult answer;
+	ScanPlan plan;
     std::set<coord> scannedSquares;
     for (int d = data.target.d - 1; d <= data.target.d + 1; d++)
-        for (int o = data.target.o - 1; o <= data.target.o + 1; o++)
-            scannedSquares.insert(coord({ d,o }));
-
-    if (!isValidCoord(scannedSquares)) {
-        answer.success = false;
-		answer.error = ActivateAbilityResultError::outOfBounds;
-        return answer;
-    }
-
-    for (const coord& c : scannedSquares)
-        if (getDataForPlayer(opponent(p)).fleet.wouldBeHit(c)) {
-            getDataForPlayer(p).scansWithHits.insert(scannedSquares);
-
-            resultData.isFound = true;
-            answer.data = resultData;
-            return answer;
+        for (int o = data.target.o - 1; o <= data.target.o + 1; o++) {
+			coord c = coord({ d,o });
+            if (isValidCoord(c))
+                plan.targets.insert(c);
+            else
+                answer.error = ActivateAbilityResultError::outOfBounds;
         }
-
-    //scan is clear
-    //this is the same as guessing/ missing all scanned squares 
-    getDataForPlayer(p).revealedMisses.insert(scannedSquares.begin(), scannedSquares.end());
-
-    resultData.isFound = false;
-    answer.data = resultData;
-    return answer;
+	answer.plan = plan;
+	return answer;
 }
 
-ActivateAbilityResult NavalBattleEngine::handleRevealAction(Player p, RevealData d) {
-    ActivateAbilityResult answer;
-    RevealResultData data;
-
+ValidateAbilityResult NavalBattleEngine::validateRevealData(RevealData d) const {
+    ValidateAbilityResult answer;
+    RevealPlan plan;
     std::set<coord> squaresToReveal;
     if (d.firingPattern == RevealData::FiringPattern::square) {
         squaresToReveal.insert(coord({ d.target.d - 1, d.target.o - 1 }));
@@ -435,28 +494,15 @@ ActivateAbilityResult NavalBattleEngine::handleRevealAction(Player p, RevealData
         squaresToReveal.insert(coord({ d.target.d + 1, d.target.o }));
     }
     else {
-        answer.success = false;
         answer.error = ActivateAbilityResultError::noSuchAbility;
         return answer;
     }
-
-    if (!isValidCoord(squaresToReveal)) {
-        answer.success = false;
-        answer.error = ActivateAbilityResultError::outOfBounds;
-        return answer;
-    }
-
-	answer.success = true;
-
     for (const coord& c : squaresToReveal)
-        if (checkCoord(opponent(p), c)) { // c would be a hit
-            getDataForPlayer(p).revealedHits.insert(c);
-            data.hitsRevealed.insert(c);
-        }
+        if (isValidCoord(c))
+            plan.targets.insert(c);
         else
-            getDataForPlayer(p).revealedMisses.insert(c);
-
-    answer.data = data;
+            answer.error = ActivateAbilityResultError::outOfBounds;
+    answer.plan = plan;
     return answer;
 }
 

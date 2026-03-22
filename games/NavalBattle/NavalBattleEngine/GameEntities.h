@@ -152,6 +152,10 @@ struct RevealData {
 	coord target;
 };
 
+struct BulkFireData {
+	std::set<coord> targets;
+};
+
 using VehicleAbilityActionData = std::variant<
 	TorpedoData,
 	ExocetData,
@@ -206,6 +210,46 @@ struct ActivateAbilityResult {
 	bool success = false;
 	ActivateAbilityResultError error = ActivateAbilityResultError::none;
 	ActivateAbilityResultData data;
+};
+
+
+//plans: these are internal, execution ready actions
+//however, they may or may not be valid and so should
+//be used with a ValidateAbilityResult which 
+//encapsulates whether the plan is valid
+struct TorpedoPlan {
+	coord startPoint = coord::unspecified;
+	TorpedoData::FiringPattern firingPattern;
+};
+
+struct BulkFirePlan {
+	std::set<coord> targets;
+};
+
+struct RelocatePlan {
+	int shipId;
+	coord target = coord::unspecified;
+};
+
+struct ScanPlan {
+	std::set<coord> targets;
+};
+
+struct RevealPlan {
+	std::set<coord> targets;
+};
+
+using AbilityPlan = std::variant<
+	TorpedoPlan,
+	BulkFirePlan,
+	RelocatePlan,
+	ScanPlan,
+	RevealPlan
+>;
+
+struct ValidateAbilityResult {
+	ActivateAbilityResultError error = ActivateAbilityResultError::none;
+	AbilityPlan plan;
 };
 
 using VehicleId = int;

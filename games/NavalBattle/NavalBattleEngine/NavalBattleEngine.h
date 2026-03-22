@@ -35,6 +35,8 @@ class NavalBattleEngine {
 
         ActivateAbilityResult activateAbility(Player p, int shipId, const VehicleAbilityAction& activateAbilityAction);
 
+		ValidateAbilityResult validateAbility(VehicleAbilityActionData data) const;
+
         // --- Queries ---
         Phase phase() const;
         Player getWinner() const;
@@ -66,15 +68,24 @@ private:
     GridView opponentGrid(Player p) const;
 
     // --- Ability Handlers ---
-    ActivateAbilityResult handleTorpedoAction(Player p, TorpedoData d);
-    ActivateAbilityResult handleExocetAction(Player p, ExocetData d);
-    ActivateAbilityResult handleApacheAction(Player p, ApacheData d);
-    ActivateAbilityResult handleTomahawkAction(Player p, TomahawkData d);
-    ActivateAbilityResult handleRelocateAction(Player p, RelocateData d);
-    ActivateAbilityResult handleScanAction(Player p, ScanData d);
-    ActivateAbilityResult handleRevealAction(Player p, RevealData d);
+    ActivateAbilityResultData executeAbilityPlan(Player p, const AbilityPlan& plan);
+    ActivateAbilityResultData executeTorpedoPlan(Player p, TorpedoPlan plan);
+    ActivateAbilityResultData executeRelocatePlan(Player p, RelocatePlan plan);
+    ActivateAbilityResultData executeScanPlan(Player p, ScanPlan plan);
+    ActivateAbilityResultData executeRevealPlan(Player p, RevealPlan plan);
+    ActivateAbilityResultData executeBulkFirePlan(Player p, BulkFirePlan plan);
 
-    ActivateAbilityResult bulkFire(Player p, const std::set<coord>& targets);
+	ValidateAbilityResult validateTorpedoData(TorpedoData d) const;
+	ValidateAbilityResult validateExocetData(ExocetData data) const;
+	ValidateAbilityResult validateApacheData(ApacheData d) const;
+	ValidateAbilityResult validateTomahawkData(TomahawkData d) const;
+	ValidateAbilityResult validateRelocateData(RelocateData d) const;
+	ValidateAbilityResult validateScanData(ScanData data) const;
+	ValidateAbilityResult validateRevealData(RevealData d) const;
+
+	ValidateAbilityResult validateBulkFireData(std::set<coord> targets) const;
+
+
 
 	Fleet createFleetFromBlueprint(const FleetBlueprint& blueprint);
 
