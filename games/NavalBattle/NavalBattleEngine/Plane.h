@@ -42,6 +42,8 @@ namespace NavalBattle
 		std::string getName() const;
 		coord getPos() const;
 		void setPos(coord pos);
+		bool isOnShip() const;
+		void isOnShip(bool isOnShip);
 		HitPlaneResult hit(coord where);
 		bool isPlaced() const;
 		bool isOnCarrier() const;

@@ -35,8 +35,15 @@ coord Plane::getPos() const {
 }
 
 void Plane::setPos(coord pos) {
-	_isOnCarrier = false;
 	_pos = pos;
+}
+
+bool Plane::isOnShip() const {
+	return _isOnCarrier;
+}
+
+void Plane::isOnShip(bool isOnShip) {
+	_isOnCarrier = isOnShip;
 }
 
 Plane::HitPlaneResult Plane::hit(coord where) {
