@@ -155,6 +155,7 @@ Json::Value toJson(const Plane& p) {
 	answer["id"] = p.getId();
 	answer["pos"] = toJson(p.getPos());
 	answer["isdestroyed"] = p.isDestroyed();
+	answer["isoncarrier"] = p.isOnCarrier();
 
 	Json::Value abilities(Json::arrayValue);
 	for (const VehicleAbility& a : p.getAbilities())

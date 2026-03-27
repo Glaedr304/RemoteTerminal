@@ -44,6 +44,7 @@ namespace NavalBattle
 		void setPos(coord pos);
 		HitPlaneResult hit(coord where);
 		bool isPlaced() const;
+		bool isOnCarrier() const;
 
 		bool hasAbility(const VehicleAbilityType& abilityType) const;
 

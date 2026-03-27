@@ -65,6 +65,10 @@ bool Plane::isPlaced() const {
 	return !_pos.isUnspecified();
 }
 
+bool Plane::isOnCarrier() const {
+	return _isOnCarrier;
+}
+
 bool NavalBattle::Plane::hasAbility(const VehicleAbilityType& abilityType) const {
 	for (const VehicleAbility& a : _abilities)
 		if (a.getType() == abilityType && a.canUse())
