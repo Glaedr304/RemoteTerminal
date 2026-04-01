@@ -102,26 +102,26 @@ ValidateShipPlacementResult NavalBattleEngine::validateShipPlacement(Player p, i
 }
 
 ValidateAbilityResult NavalBattleEngine::validateAbility(VehicleAbilityActionData data) const {
-    ValidateAbilityResult answer;
+	ValidateAbilityResult answer;
     std::visit([this, &answer](auto&& arg) {
-        using T = std::decay_t<decltype(arg)>;
-        if constexpr (std::is_same_v<T, TorpedoData>)
-            answer = validateTorpedoData(arg);
-        else if constexpr (std::is_same_v<T, ExocetData>)
-            answer = validateExocetData(arg);
-        else if constexpr (std::is_same_v<T, ApacheData>)
-            answer = validateApacheData(arg);
-        else if constexpr (std::is_same_v<T, TomahawkData>)
-            answer = validateTomahawkData(arg);
-        else if constexpr (std::is_same_v<T, RelocateData>)
+		using T = std::decay_t<decltype(arg)>;
+		if constexpr (std::is_same_v<T, TorpedoData>)
+			answer = validateTorpedoData(arg);
+		else if constexpr (std::is_same_v<T, ExocetData>)
+			answer = validateExocetData(arg);
+		else if constexpr (std::is_same_v<T, ApacheData>)
+			answer = validateApacheData(arg);
+		else if constexpr (std::is_same_v<T, TomahawkData>)
+			answer = validateTomahawkData(arg);
+		else if constexpr (std::is_same_v<T, RelocateData>)
             answer = validateRelocateData(arg);
-        else if constexpr (std::is_same_v<T, ScanData>)
-            answer = validateScanData(arg);
-        else if constexpr (std::is_same_v<T, RevealData>)
-            answer = validateRevealData(arg);
-        else
-            static_assert(always_false<T>, "non-exhaustive visitor!");
-    }, data);
+		else if constexpr (std::is_same_v<T, ScanData>)
+			answer = validateScanData(arg);
+		else if constexpr (std::is_same_v<T, RevealData>)
+			answer = validateRevealData(arg);
+		else
+			static_assert(always_false<T>, "non-exhaustive visitor!");
+	}, data);
 	return answer;
 }
 
@@ -201,12 +201,12 @@ ActivateAbilityResult NavalBattleEngine::activateAbility(Player p, int shipId, c
 
     ActivateAbilityResultError e;
     
-    e = playerMayActivateAbility(p, shipId, VehicleAbilityAction.type);
-    if (e != ActivateAbilityResultError::none) {
-        answer.success = false;
-        answer.error = e;
-        return answer;
-    }
+	e = playerMayActivateAbility(p, shipId, VehicleAbilityAction.type);
+	if (e != ActivateAbilityResultError::none) {
+		answer.success = false;
+		answer.error = e;
+		return answer;
+	}
 
 	ValidateAbilityResult validation = validateAbility(VehicleAbilityAction.data);
     if (validation.error != ActivateAbilityResultError::none) {
@@ -328,7 +328,9 @@ ActivateAbilityResultData NavalBattleEngine::executeBulkFirePlan(Player p, BulkF
 ActivateAbilityResultData NavalBattleEngine::executeRelocatePlan(Player p, RelocatePlan plan) {
     RelocateResultData answer;
 
-	getDataForPlayer(p).fleet.placeVehicle(plan.shipId, plan.target);
+    Fleet& f = getDataForPlayer(p).fleet;
+	f.placeVehicle(plan.shipId, plan.target);
+    f.vehicleIsOnShip(plan.shipId, plan.willBeOnShip);
 
     return answer;
 }
@@ -428,37 +430,39 @@ ValidateAbilityResult NavalBattleEngine::validateTomahawkData(TomahawkData d) co
 }
 
 ValidateAbilityResult NavalBattleEngine::validateRelocateData(RelocateData d) const {
-    ValidateAbilityResult answer;
-    RelocatePlan plan;
+	ValidateAbilityResult answer;
+	RelocatePlan plan;
 
 	plan.target = d.target;
 	plan.shipId = d.shipId;
+	plan.willBeOnShip = false;
 
-    if (!isValidCoord(d.target))
-        answer.error = ActivateAbilityResultError::outOfBounds;
-    
-    const Fleet& fleet = getFleetForPlayer(Player::one); //obviously this is wrong
-    const Ship* ship = fleet.getShipById(d.shipId);
+	if (!isValidCoord(d.target))
+		answer.error = ActivateAbilityResultError::outOfBounds;
+
+	Player vehicleOwner = getPlayerWithVehicleId(d.shipId);
+	const Fleet& fleet = getFleetForPlayer(vehicleOwner);
+	const Ship* ship = fleet.getShipById(d.shipId);
 	if (ship != nullptr) {
-        if (!ship->isPlaced() || ship->isSunk())
-            answer.error = ActivateAbilityResultError::shipSunk;
-        else if (!ship->hasAbility(VehicleAbilityType::relocate))
-            answer.error = ActivateAbilityResultError::noSuchAbility;
-    }
-    else {
+		if (!ship->isPlaced() || ship->isSunk())
+			answer.error = ActivateAbilityResultError::shipSunk;
+		else if (!ship->hasAbility(VehicleAbilityType::relocate))
+			answer.error = ActivateAbilityResultError::noSuchAbility;
+	}
+	else {
 		const Plane* plane = fleet.getPlaneById(d.shipId);
-        if(plane != nullptr) {
-            if (!plane->isPlaced() || plane->isDestroyed())
-                answer.error = ActivateAbilityResultError::shipSunk;
-            else if (!plane->hasAbility(VehicleAbilityType::relocate))
-                answer.error = ActivateAbilityResultError::noSuchAbility;
-        }
-        else {
-            answer.error = ActivateAbilityResultError::notYourShip;
+		if(plane != nullptr) {
+			if (!plane->isPlaced() || plane->isDestroyed())
+				answer.error = ActivateAbilityResultError::shipSunk;
+			else if (!plane->hasAbility(VehicleAbilityType::relocate))
+				answer.error = ActivateAbilityResultError::noSuchAbility;
+		}
+		else {
+			answer.error = ActivateAbilityResultError::notYourShip;
 			return answer;
-        }
-    }
-    answer.plan = plan;
+		}
+	}
+	answer.plan = plan;
 	return answer;
 }
 
@@ -652,36 +656,47 @@ BoardView NavalBattleEngine::boardViewForPlayer(Player p) const{
 }
 
 GridView NavalBattleEngine::ownGrid(Player p) const {
-    std::map<coord, SquareState> occupied;
-    //layer from bottom to top so only top is visible
+    GridView occupied;
     const Fleet& f = getFleetForPlayer(p);
+
+    // Add ships
     for (const Ship& s : f.getShips())
         if(s.isPlaced())
             for (const coord& c : s.getCoords())
-                occupied[c.applyTransform(s.getPos(), s.getRotation())] = SquareState::ship;
+                occupied[c.applyTransform(s.getPos(), s.getRotation())].insert(SquareState::ship);
+
+    // Add planes that are on carrier
+    for (const Plane& plane : f.getPlanes())
+        if (plane.isPlaced() && plane.isOnCarrier())
+            occupied[plane.getPos()].insert(SquareState::plane);
+
     for (const auto& c : getDataForPlayer(opponent(p)).revealedHits)
-        occupied[c] = SquareState::revealedHit;
+        occupied[c].insert(SquareState::revealedHit);
     for (const auto& c : getMissesForPlayer(opponent(p)))
-        occupied[c] = SquareState::miss;
+        occupied[c].insert(SquareState::miss);
     for (const auto& c : getHitsForPlayer(opponent(p)))
-        occupied[c] = SquareState::hit;
-    return GridView(occupied);
+        occupied[c].insert(SquareState::hit);
+    return occupied;
 }
 
 GridView NavalBattleEngine::opponentGrid(Player p) const {
-    std::map<coord, SquareState> occupied;
-    //layer from bottom to top so only top is visible
+    std::map<coord, std::set<SquareState>> occupied;
+
+    for (const Plane& plane : getFleetForPlayer(p).getPlanes())
+        if (plane.isPlaced() && !plane.isOnCarrier())
+            occupied[plane.getPos()].insert(SquareState::plane);
+
     for (const auto& s : getDataForPlayer(p).scansWithHits)
         for (const auto& c : s)
-            occupied[c] = SquareState::scannedPositive;
+            occupied[c].insert(SquareState::scannedPositive);
     for (const auto& c : getDataForPlayer(p).revealedMisses)
-        occupied[c] = SquareState::revealedMiss;
+        occupied[c].insert(SquareState::revealedMiss);
     for (const auto& c : getDataForPlayer(p).revealedHits)
-        occupied[c] = SquareState::revealedHit;
+        occupied[c].insert(SquareState::revealedHit);
     for (const auto& c : getMissesForPlayer(p))
-        occupied[c] = SquareState::miss;
+        occupied[c].insert(SquareState::miss);
     for (const auto& c : getHitsForPlayer(p))
-        occupied[c] = SquareState::hit;
+        occupied[c].insert(SquareState::hit);
     return GridView(occupied);
 }
 
@@ -699,6 +714,16 @@ Fleet NavalBattleEngine::createFleetFromBlueprint(const FleetBlueprint& blueprin
 
 VehicleId NavalBattleEngine::getNextVehicleId() {
     return _nextVehicleId++;
+}
+
+Player NavalBattleEngine::getPlayerWithVehicleId(VehicleId id) const {
+	const Fleet& p1Fleet = getFleetForPlayer(Player::one);
+    if (p1Fleet.getShipById(id) != nullptr || p1Fleet.getPlaneById(id) != nullptr)
+		return Player::one;
+    const Fleet& p2Fleet = getFleetForPlayer(Player::two);
+	if (p2Fleet.getShipById(id) != nullptr || p2Fleet.getPlaneById(id) != nullptr)
+		return Player::two;
+	return Player::none;
 }
 
 bool NavalBattleEngine::isValidCoord(coord c) const {

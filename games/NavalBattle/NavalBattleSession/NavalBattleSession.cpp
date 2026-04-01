@@ -382,7 +382,7 @@ SessionActionResult NavalBattleSession::handleCheckPlacement(Player p, const Ses
 	TransientOverlayData data;
 	auto state = r.valid ? TransientSquareState::validPlacement : TransientSquareState::invalidPlacement;
 	for (const auto& c : r.coords)
-		data.overlay[c].insert(state);
+		data.overlay[{c, _playerToUserMap[p]}].insert(state);
 	answer.data = data;
 
 	return answer;
@@ -399,7 +399,7 @@ SessionActionResult NavalBattleSession::handleCheckPlanePlacement(Player p, cons
 	TransientOverlayData data;
 	auto state = r.valid ? TransientSquareState::validPlacement : TransientSquareState::invalidPlacement;
 	if (r.position != coord::unspecified)
-		data.overlay[r.position].insert(state);\
+		data.overlay[{r.position, _playerToUserMap[p]}].insert(state);
 	answer.data = data;
 
 	return answer;
@@ -416,7 +416,7 @@ SessionActionResult NavalBattleSession::handleCheckAbility(Player p, const Sessi
 	TransientOverlayData data;
 	auto state = (r.error == ActivateAbilityResultError::none) ? TransientSquareState::targetedSquare : TransientSquareState::invalidPlacement;
 
-	std::visit([&data, state](auto&& arg) {
+	std::visit([&data, state, p, this](auto&& arg) {
 		using T = std::decay_t<decltype(arg)>;
 		if constexpr (std::is_same_v<T, TorpedoPlan>) {
 			// Only show torpedo direction if valid, otherwise show invalidPlacement
@@ -436,26 +436,27 @@ SessionActionResult NavalBattleSession::handleCheckAbility(Player p, const Sessi
 						torpedoDirection = TransientSquareState::torpedoRight;
 						break;
 				}
-				data.overlay[arg.startPoint].insert(torpedoDirection);
+				data.overlay[{arg.startPoint, _playerToUserMap[opponent(p)]}].insert(torpedoDirection);
 			}
 			else
-				data.overlay[arg.startPoint].insert(state);
+				data.overlay[{arg.startPoint, _playerToUserMap[opponent(p)]}].insert(state);
 		}
 		else if constexpr (std::is_same_v<T, BulkFirePlan>) {
 			for (const coord& c : arg.targets)
-				data.overlay[c].insert(state);
+				data.overlay[{c, _playerToUserMap[opponent(p)]}].insert(state);
 		}
 		else if constexpr (std::is_same_v<T, RelocatePlan>) {
+			Player targetPlayer = arg.willBeOnShip ? p : opponent(p);
 			if (arg.target != coord::unspecified)
-				data.overlay[arg.target].insert(state);
+				data.overlay[{arg.target, _playerToUserMap[targetPlayer]}].insert(state);
 		}
 		else if constexpr (std::is_same_v<T, ScanPlan>) {
 			for (const coord& c : arg.targets)
-				data.overlay[c].insert(state);
+				data.overlay[{c, _playerToUserMap[opponent(p)]}].insert(state);
 		}
 		else if constexpr (std::is_same_v<T, RevealPlan>) {
 			for (const coord& c : arg.targets)
-				data.overlay[c].insert(state);
+				data.overlay[{c, _playerToUserMap[opponent(p)]}].insert(state);
 		}
 		}, r.plan);
 

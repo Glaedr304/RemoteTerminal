@@ -65,7 +65,7 @@ const ABILITY_CONFIG = {
     tomahawk: { needsTarget: true, needsFiringPattern: true, patterns: ["plus", "x"], targetType: "opponent" },
     scan: { needsTarget: true, needsFiringPattern: false, targetType: "opponent" },
     reveal: { needsTarget: true, needsFiringPattern: true, patterns: ["square", "diamond"], targetType: "opponent" },
-    relocate: { needsTarget: true, needsFiringPattern: false, targetType: "own", needsShipId: true }
+    relocate: { needsTarget: true, needsFiringPattern: false, targetType: "dynamic", needsShipId: true }
 };
 
 // === Utility Functions ===
@@ -578,12 +578,50 @@ function showFiringPatternSelector(vehicleId, abilityType, patterns) {
     document.body.appendChild(selector);
 }
 
+function isVehicleAPlane(vehicleId) {
+    if (!lastSetupInfo || !lastSetupInfo.fleetview) return false;
+
+    // Check in your planes
+    if (lastSetupInfo.fleetview.yourplanes) {
+        for (const plane of lastSetupInfo.fleetview.yourplanes) {
+            if (plane.id === vehicleId) return true;
+        }
+    }
+
+    // Check in opponent planes (just in case)
+    if (lastSetupInfo.fleetview.opponentplanes) {
+        for (const plane of lastSetupInfo.fleetview.opponentplanes) {
+            if (plane.id === vehicleId) return true;
+        }
+    }
+
+    return false;
+}
+
 function activateAbilityMode(vehicleId, abilityType, firingPattern) {
     activeAbility = { vehicleId, type: abilityType, firingPattern };
     selectedVehicle = null; // Clear placement selection
 
     const config = ABILITY_CONFIG[abilityType];
-    const targetGrid = config.targetType === "opponent" ? "opponent's grid" : "your grid";
+    let targetGrid;
+
+    // For relocate, determine target grid based on vehicle type
+    if (config.targetType === "dynamic") {
+        const isPlane = isVehicleAPlane(vehicleId);
+        if (isPlane) {
+            // Planes relocate to opponent grid only
+            targetGrid = "opponent's grid";
+            activeAbility.targetType = "opponent";
+        } else {
+            // Ships relocate to own grid only
+            targetGrid = "your grid";
+            activeAbility.targetType = "own";
+        }
+    } else {
+        targetGrid = config.targetType === "opponent" ? "opponent's grid" : "your grid";
+        activeAbility.targetType = config.targetType;
+    }
+
     showMessage(`${getAbilityDisplayName(abilityType)} active - Click on ${targetGrid} to target`, "info");
 
     // Add visual indicator to the grids
@@ -601,11 +639,11 @@ function updateAbilityModeUI() {
     const oppGridWrapper = oppGrid.closest(".grid-wrapper");
 
     if (activeAbility) {
-        const config = ABILITY_CONFIG[activeAbility.type];
-        if (config.targetType === "opponent") {
+        const targetType = activeAbility.targetType;
+        if (targetType === "opponent") {
             oppGridWrapper?.classList.add("ability-target");
             ownGridWrapper?.classList.remove("ability-target");
-        } else {
+        } else if (targetType === "own") {
             ownGridWrapper?.classList.add("ability-target");
             oppGridWrapper?.classList.remove("ability-target");
         }
@@ -724,10 +762,10 @@ function selectNextUnplacedVehicle(fleetView) {
 
 // === Click Handlers ===
 function handleOwnGridClick(row, col) {
-    // Check if we're in ability mode targeting own grid (e.g., relocate)
+    // Check if we're in ability mode targeting own grid
     if (activeAbility) {
-        const config = ABILITY_CONFIG[activeAbility.type];
-        if (config.targetType === "own") {
+        const targetType = activeAbility.targetType;
+        if (targetType === "own") {
             executeAbility(row, col);
             return;
         }
@@ -768,6 +806,39 @@ function handleOwnGridClick(row, col) {
 
 function handleOwnGridHover(row, col) {
     hoveredCell = { row, col };
+
+    // Check if we're in ability mode targeting own grid
+    if (activeAbility && lastSetupInfo) {
+        const targetType = activeAbility.targetType;
+        if (targetType === "own") {
+            const { vehicleId, type } = activeAbility;
+
+            // For relocate on own grid, show preview
+            if (type === "relocate") {
+                const abilityData = {
+                    shipid: vehicleId,
+                    target: { row, col }
+                };
+
+                const message = {
+                    gameid: lastSetupInfo.gameid,
+                    userid: lastSetupInfo.you,
+                    sessionaction: {
+                        type: "checkability",
+                        data: {
+                            abilitydata: {
+                                type: type,
+                                data: abilityData
+                            }
+                        }
+                    }
+                };
+
+                sendMessage(message);
+            }
+            return;
+        }
+    }
 
     // Only show preview during setup phase
     if (!selectedVehicle || !lastSetupInfo) return;
@@ -839,8 +910,8 @@ function handleOppGridHover(row, col) {
     // Only show preview if we're in ability mode targeting opponent grid
     if (!activeAbility || !lastSetupInfo) return;
 
-    const config = ABILITY_CONFIG[activeAbility.type];
-    if (config.targetType !== "opponent") return;
+    const targetType = activeAbility.targetType;
+    if (targetType !== "opponent") return;
 
     const { vehicleId, type, firingPattern } = activeAbility;
 
@@ -877,6 +948,12 @@ function handleOppGridHover(row, col) {
                 target: { row, col }
             };
             break;
+        case "relocate":
+            abilityData = {
+                shipid: vehicleId,
+                target: { row, col }
+            };
+            break;
         default:
             return;
     }
@@ -903,8 +980,8 @@ function handleOppGridClick(row, col) {
 
     // Check if we're in ability mode targeting opponent grid
     if (activeAbility) {
-        const config = ABILITY_CONFIG[activeAbility.type];
-        if (config.targetType === "opponent") {
+        const targetType = activeAbility.targetType;
+        if (targetType === "opponent") {
             executeAbility(row, col);
             return;
         }
@@ -1156,7 +1233,9 @@ function applySnapshot(snapshot) {
     if (currentPhase === "finished" && lastPhase !== "finished") {
         // Determine if we won by checking if we have any unhit ships left
         const ownGridData = snapshot.userview?.boardview?.owngrid || [];
-        const hasShipsLeft = ownGridData.some(entry => entry.state === "ship");
+        const hasShipsLeft = ownGridData.some(entry => 
+            entry.states && Array.isArray(entry.states) && entry.states.includes("ship")
+        );
         showGameOver(hasShipsLeft);
     }
 
@@ -1188,45 +1267,39 @@ function applySnapshot(snapshot) {
     for (const entry of ownGridData) {
         const r = entry.coord?.row;
         const c = entry.coord?.col;
-        const state = entry.state;
+        const states = entry.states; // Now 'states' is an array
 
         if (typeof r !== "number" || typeof c !== "number") continue;
 
         const idx = r * cols + c;
         const cell = ownGrid.children[idx];
-        if (cell && state) cell.classList.add(state);
-    }
 
-    // Apply planes on own grid (overlay on ship cells)
-    const yourPlanes = snapshot.fleetview?.yourplanes || [];
-    yourPlanes.forEach((plane, planeIndex) => {
-        if (!plane.pos || plane.pos.row === -1 || plane.isdestroyed) return;
-
-        const r = plane.pos.row;
-        const c = plane.pos.col;
-
-        if (typeof r !== "number" || typeof c !== "number") return;
-
-        const idx = r * cols + c;
-        const cell = ownGrid.children[idx];
-        if (cell) {
-            cell.classList.add("plane");
-            cell.classList.add(`plane-color-${planeIndex % 6}`);
+        // Apply all states from the array
+        if (cell && states && Array.isArray(states)) {
+            for (const state of states) {
+                cell.classList.add(state);
+            }
         }
-    });
+    }
 
     // Apply opponent grid state
     const oppGridData = snapshot.userview?.boardview?.opponentgrid || [];
     for (const entry of oppGridData) {
         const r = entry.coord?.row;
         const c = entry.coord?.col;
-        const state = entry.state;
+        const states = entry.states; // Now 'states' is an array
 
         if (typeof r !== "number" || typeof c !== "number") continue;
 
         const idx = r * cols + c;
         const cell = oppGrid.children[idx];
-        if (cell && state) cell.classList.add(state);
+
+        // Apply all states from the array
+        if (cell && states && Array.isArray(states)) {
+            for (const state of states) {
+                cell.classList.add(state);
+            }
+        }
     }
 
     // Update fleet panels from snapshot
@@ -1351,27 +1424,20 @@ function applyTransientOverlayResult(result) {
     if (!data || !data.overlay) return;
 
     const cols = lastSetupInfo?.boardcols || 10;
+    const myUserId = lastSetupInfo?.you;
 
     // Clear any existing preview
     clearPreview();
 
-    // Determine which grid to apply overlays to based on context
-    // If we're in ability mode targeting opponent, use oppGrid
-    // Otherwise use ownGrid (for ship/plane placement)
-    let targetGrid = ownGrid;
-    if (activeAbility) {
-        const config = ABILITY_CONFIG[activeAbility.type];
-        if (config.targetType === "opponent") {
-            targetGrid = oppGrid;
-        }
-    }
-
     // Process the overlay map
     for (const coordKey in data.overlay) {
-        // Parse coordinate key "row,col"
-        const [rowStr, colStr] = coordKey.split(",");
-        const r = parseInt(rowStr, 10);
-        const c = parseInt(colStr, 10);
+        // Parse coordinate key "row,col,userId"
+        const parts = coordKey.split(",");
+        if (parts.length !== 3) continue;
+
+        const r = parseInt(parts[0], 10);
+        const c = parseInt(parts[1], 10);
+        const userId = parts[2];
 
         if (typeof r !== "number" || typeof c !== "number" || isNaN(r) || isNaN(c)) continue;
 
@@ -1380,6 +1446,9 @@ function applyTransientOverlayResult(result) {
 
         // Only show preview for in-bounds cells
         if (r < 0 || c < 0) continue;
+
+        // Determine which grid to apply to based on userId
+        const targetGrid = (userId === myUserId) ? ownGrid : oppGrid;
 
         const idx = r * cols + c;
         const cell = targetGrid.children[idx];

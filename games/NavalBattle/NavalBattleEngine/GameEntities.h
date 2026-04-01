@@ -92,10 +92,11 @@ enum class SquareState {
 	hit,
 	revealedMiss,
 	revealedHit,
-	scannedPositive
+	scannedPositive,
+	plane
 };
 
-using GridView = std::map<coord, SquareState>;
+using GridView = std::map<coord, std::set<SquareState>>;
 using SquareView = GridView::value_type;
 
 struct BoardView {
@@ -235,6 +236,7 @@ struct BulkFirePlan {
 struct RelocatePlan {
 	int shipId;
 	coord target = coord::unspecified;
+	bool willBeOnShip = false;
 };
 
 struct ScanPlan {

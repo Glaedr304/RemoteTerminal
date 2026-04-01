@@ -82,6 +82,12 @@ void Fleet::placeVehicle(VehicleId id, coord pos, int rotation /*=0*/) {
 	}
 }
 
+void NavalBattle::Fleet::vehicleIsOnShip(VehicleId id, bool state) {
+	Plane* p = getPlaneById(id);
+	if (p)
+		p->isOnShip(state);
+}
+
 bool Fleet::useShipAbility(VehicleId id, VehicleAbilityType abilityType) {
 	Ship* s = getShipById(id);
 	if (s == nullptr)

@@ -48,6 +48,8 @@ public:
 
 	void placeVehicle(VehicleId id, coord pos, int rotation = 0);
 
+	void vehicleIsOnShip(VehicleId id, bool state);
+
 	bool useShipAbility(VehicleId id, VehicleAbilityType ability);
 
 	AbilityAvailabilityError abilityAvailable(VehicleId id, VehicleAbilityType ability) const;

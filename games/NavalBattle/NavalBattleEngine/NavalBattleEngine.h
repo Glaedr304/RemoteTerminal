@@ -33,7 +33,7 @@ class NavalBattleEngine {
 
         FireResult fireAntiAircraft(Player p, coord target);
 
-        ActivateAbilityResult activateAbility(Player p, int shipId, const VehicleAbilityAction& activateAbilityAction);
+		ActivateAbilityResult activateAbility(Player p, int shipId, const VehicleAbilityAction& activateAbilityAction);
 
 		ValidateAbilityResult validateAbility(VehicleAbilityActionData data) const;
 
@@ -105,6 +105,8 @@ private:
     PlayerData _p1Data;
     PlayerData _p2Data;
     PlayerData _pNoneData;
+
+	Player getPlayerWithVehicleId(VehicleId id) const;
 
     bool isValidCoord(coord c) const;
     bool isValidCoord(const std::set<coord>& coords) const;

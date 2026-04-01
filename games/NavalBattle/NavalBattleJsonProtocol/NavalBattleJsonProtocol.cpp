@@ -153,7 +153,6 @@ Json::Value toJson(const Plane& p) {
 	Json::Value answer(Json::objectValue);
 	answer["name"] = toJson(p.getName());
 	answer["id"] = p.getId();
-	answer["pos"] = toJson(p.getPos());
 	answer["isdestroyed"] = p.isDestroyed();
 	answer["isoncarrier"] = p.isOnCarrier();
 
@@ -720,6 +719,10 @@ Json::Value toJson(const SquareState& s) {
 			answer = "scannedpositive";
 			break;
 		}
+		case SquareState::plane: {
+			answer = "plane";
+			break;
+		}
 	}
 	return answer;
 }
@@ -728,7 +731,13 @@ Json::Value toJson(const SquareView& s) {
 	Json::Value answer;
 
 	answer["coord"] = toJson(s.first);
-	answer["state"] = toJson(s.second);
+
+	// Convert set of SquareStates to JSON array
+	Json::Value statesArray(Json::arrayValue);
+	for (const SquareState& state : s.second)
+		statesArray.append(toJson(state));
+	
+	answer["states"] = statesArray;
 
 	return answer;
 }
@@ -845,7 +854,7 @@ Json::Value toJson(const TransientOverlayData& t) {
 		Json::Value statesArray(Json::arrayValue);
 		for (const auto& state : states)
 			statesArray.append(toJson(state));
-		overlayObj[std::to_string(c.d) + "," + std::to_string(c.o)] = statesArray;
+		overlayObj[std::to_string(c.first.d) + "," + std::to_string(c.first.o) + "," + c.second] = statesArray;
 	}
 
 	answer["overlay"] = overlayObj;
