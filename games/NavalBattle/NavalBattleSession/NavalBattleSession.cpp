@@ -416,6 +416,9 @@ SessionActionResult NavalBattleSession::handleCheckAbility(Player p, const Sessi
 	TransientOverlayData data;
 	auto state = (r.error == ActivateAbilityResultError::none) ? TransientSquareState::targetedSquare : TransientSquareState::invalidPlacement;
 
+	//this may not be the most correct place to associate
+	//the overlay coords with the UserId, but it does work
+	//what would be better? should the engine own this logic?
 	std::visit([&data, state, p, this](auto&& arg) {
 		using T = std::decay_t<decltype(arg)>;
 		if constexpr (std::is_same_v<T, TorpedoPlan>) {
