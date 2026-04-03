@@ -25,6 +25,7 @@ namespace NavalBattle
 		enum class HitPlaneError {
 			notOnPlane,
 			isDestroyed,
+			wrongDomain,
 			none
 		};
 
@@ -44,7 +45,8 @@ namespace NavalBattle
 		void setPos(coord pos);
 		bool isOnShip() const;
 		void isOnShip(bool isOnShip);
-		HitPlaneResult hit(coord where);
+		HitPlaneResult hitInAir(coord where);
+		HitPlaneResult hitOnShip(coord where);
 		bool isPlaced() const;
 		bool isOnCarrier() const;
 

@@ -46,7 +46,7 @@ void Plane::isOnShip(bool isOnShip) {
 	_isOnCarrier = isOnShip;
 }
 
-Plane::HitPlaneResult Plane::hit(coord where) {
+Plane::HitPlaneResult Plane::hitInAir(coord where) {
 	HitPlaneResult answer;
 
 	if (_isDestroyed) {
@@ -54,7 +54,11 @@ Plane::HitPlaneResult Plane::hit(coord where) {
 		answer.error = HitPlaneError::isDestroyed;
 		return answer;
 	}
-
+	if (isOnCarrier()) {
+		answer.success = false;
+		answer.error = HitPlaneError::wrongDomain;
+		return answer;
+	}
 	if (where != _pos) {
 		answer.success = false;
 		answer.error = HitPlaneError::notOnPlane;
@@ -65,6 +69,29 @@ Plane::HitPlaneResult Plane::hit(coord where) {
 	answer.success = true;
 	answer.destroyed = true;
 
+	return answer;
+}
+
+Plane::HitPlaneResult Plane::hitOnShip(coord where) {
+	HitPlaneResult answer;
+	if (_isDestroyed) {
+		answer.success = false;
+		answer.error = HitPlaneError::isDestroyed;
+		return answer;
+	}
+	if (!isOnCarrier()) {
+		answer.success = false;
+		answer.error = HitPlaneError::wrongDomain;
+		return answer;
+	}
+	if (where != _pos) {
+		answer.success = false;
+		answer.error = HitPlaneError::notOnPlane;
+		return answer;
+	}
+	_isDestroyed = true;
+	answer.success = true;
+	answer.destroyed = true;
 	return answer;
 }
 

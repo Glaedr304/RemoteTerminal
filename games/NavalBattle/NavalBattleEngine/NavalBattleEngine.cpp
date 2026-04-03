@@ -243,7 +243,7 @@ FireResult NavalBattleEngine::fireAntiAircraft(Player p, coord target) {
     answer.success = true;
 
     // Try to hit a plane at this coordinate
-    Fleet::hitFleetPlanesResult r = getFleetForPlayer(opponent(p)).hitFleetPlanes(target);    
+    Fleet::hitFleetPlanesResult r = getFleetForPlayer(opponent(p)).hitFleetPlanesInAir(target);    
 
     if (r.success) {
         answer.isHit = true;

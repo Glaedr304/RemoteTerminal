@@ -78,7 +78,9 @@ public:
 
 	hitFleetShipsResult hitFleetShips(coord c);
 
-	hitFleetPlanesResult hitFleetPlanes(coord c);
+	hitFleetPlanesResult hitFleetPlanesInAir(coord c);
+
+	hitFleetPlanesResult hitFleetPlanesOnShip(coord c);
 
 	bool wouldBeHit(const coord& c);
 

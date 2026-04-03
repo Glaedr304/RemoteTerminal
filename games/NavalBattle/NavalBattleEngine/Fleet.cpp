@@ -150,6 +150,7 @@ Fleet::hitFleetShipsResult Fleet::hitFleetShips(coord c) {
 		answer.success = true;
 		answer.hitID = (*r).second->getId();
 		answer.sunk = result.sunk;
+		hitFleetPlanesOnShip(c);
 	}
 	else {
 		if (result.error == Ship::hitShipError::alreadyHit) {
@@ -165,7 +166,7 @@ Fleet::hitFleetShipsResult Fleet::hitFleetShips(coord c) {
 	return answer;
 }
 
-Fleet::hitFleetPlanesResult Fleet::hitFleetPlanes(coord c) {
+Fleet::hitFleetPlanesResult Fleet::hitFleetPlanesInAir(coord c) {
 	hitFleetPlanesResult answer;
 
 	answer.destroyed = false;
@@ -176,10 +177,33 @@ Fleet::hitFleetPlanesResult Fleet::hitFleetPlanes(coord c) {
 	for (Plane& plane : planes) {
 		if (!plane.isPlaced())
 			continue;
-		if (plane.isOnCarrier())
+
+		Plane::HitPlaneResult result = plane.hitInAir(c);
+		if (result.success) {
+			answer.success = true;
+			answer.hitID = plane.getId();
+			answer.destroyed = result.destroyed;
+		}
+		// do not break in case there are overlapping planes, we want to hit all of them
+		// this can happen if a second plane is where a plane was destroyed
+	}
+
+	return answer;
+}
+
+Fleet::hitFleetPlanesResult Fleet::hitFleetPlanesOnShip(coord c) {
+	hitFleetPlanesResult answer;
+
+	answer.destroyed = false;
+	answer.error = hitFleetPlanesError::noPlaneAtCoord;
+	answer.success = false;
+	answer.hitID = -1;
+
+	for (Plane& plane : planes) {
+		if (!plane.isPlaced())
 			continue;
 
-		Plane::HitPlaneResult result = plane.hit(c);
+		Plane::HitPlaneResult result = plane.hitOnShip(c);
 		if (result.success) {
 			answer.success = true;
 			answer.hitID = plane.getId();
