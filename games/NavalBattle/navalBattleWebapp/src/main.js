@@ -65,7 +65,7 @@ const ABILITY_CONFIG = {
     apache: { needsTarget: true, needsFiringPattern: true, patterns: ["vertical", "horizontal"], targetType: "opponent" },
     tomahawk: { needsTarget: true, needsFiringPattern: true, patterns: ["plus", "x"], targetType: "opponent" },
     scan: { needsTarget: true, needsFiringPattern: false, targetType: "opponent" },
-    reveal: { needsTarget: true, needsFiringPattern: true, patterns: ["square", "diamond"], targetType: "opponent" },
+    reveal: { needsTarget: false, needsFiringPattern: true, patterns: ["square", "diamond"] },
     relocate: { needsTarget: true, needsFiringPattern: false, targetType: "dynamic", needsShipId: true }
 };
 
@@ -549,7 +549,10 @@ function handleAbilityClick(vehicleId, abilityType) {
 
     // If ability needs a firing pattern, prompt user to select one first
     if (config.needsFiringPattern) {
-        showFiringPatternSelector(vehicleId, abilityType, config.patterns);
+        const onPatternSelected = config.needsTarget
+            ? (pattern) => activateAbilityMode(vehicleId, abilityType, pattern)
+            : (pattern) => executeImmediateAbility(vehicleId, abilityType, pattern);
+        showFiringPatternSelector(vehicleId, abilityType, config.patterns, onPatternSelected);
         return;
     }
 
@@ -557,7 +560,7 @@ function handleAbilityClick(vehicleId, abilityType) {
     activateAbilityMode(vehicleId, abilityType, null);
 }
 
-function showFiringPatternSelector(vehicleId, abilityType, patterns) {
+function showFiringPatternSelector(vehicleId, abilityType, patterns, onPatternSelected) {
     // Create a simple pattern selector UI
     const selector = document.createElement("div");
     selector.className = "pattern-selector-overlay";
@@ -579,7 +582,7 @@ function showFiringPatternSelector(vehicleId, abilityType, patterns) {
         btn.textContent = pattern.charAt(0).toUpperCase() + pattern.slice(1);
         btn.addEventListener("click", () => {
             document.getElementById("patternSelector")?.remove();
-            activateAbilityMode(vehicleId, abilityType, pattern);
+            onPatternSelected(pattern);
         });
         buttonsDiv.appendChild(btn);
     }
@@ -615,6 +618,28 @@ function isVehicleAPlane(vehicleId) {
     }
 
     return false;
+}
+
+function executeImmediateAbility(vehicleId, abilityType, firingPattern) {
+    if (!lastSetupInfo) return;
+
+    const message = {
+        gameid: lastSetupInfo.gameid,
+        userid: lastSetupInfo.you,
+        sessionaction: {
+            type: "activateability",
+            data: {
+                vehicleid: vehicleId,
+                abilityaction: {
+                    type: abilityType,
+                    data: { firingpattern: firingPattern }
+                }
+            }
+        }
+    };
+
+    logLine(`Sending activateability: ${abilityType} (${firingPattern})`);
+    socket.send(JSON.stringify(message));
 }
 
 function activateAbilityMode(vehicleId, abilityType, firingPattern) {
@@ -765,12 +790,6 @@ function executeAbility(row, col) {
         case "scan":
             abilityData = { target: { row, col } };
             break;
-        case "reveal":
-            abilityData = {
-                firingpattern: firingPattern,
-                target: { row, col }
-            };
-            break;
         case "relocate":
             // For relocate, we need to specify which ship to move
             // For now, we'll need another selection step - this is complex
@@ -912,6 +931,7 @@ function handleOwnGridHover(row, col) {
                     sessionaction: {
                         type: "checkability",
                         data: {
+                            vehicleid: vehicleId,
                             abilitydata: {
                                 type: type,
                                 data: abilityData
@@ -1028,12 +1048,6 @@ function handleOppGridHover(row, col) {
         case "scan":
             abilityData = { target: { row, col } };
             break;
-        case "reveal":
-            abilityData = {
-                firingpattern: firingPattern,
-                target: { row, col }
-            };
-            break;
         case "relocate":
             abilityData = {
                 shipid: vehicleId,
@@ -1050,6 +1064,7 @@ function handleOppGridHover(row, col) {
         sessionaction: {
             type: "checkability",
             data: {
+                vehicleid: vehicleId,
                 abilitydata: {
                     type: type,
                     data: abilityData
