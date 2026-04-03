@@ -134,14 +134,14 @@ const std::vector<Plane>& Fleet::getPlanes() const {
 
 Fleet::Fleet() {}
 
-Fleet::hitFleetResult Fleet::hitFleet(coord c) {
-	hitFleetResult answer;
+Fleet::hitFleetShipsResult Fleet::hitFleetShips(coord c) {
+	hitFleetShipsResult answer;
 
 	auto m = getHitmap();
 	auto r = m.find(c);
 	if (r == m.end()) {
 		answer.success = false;
-		answer.error = hitFleetError::coordNotInFleet;
+		answer.error = hitFleetShipsError::coordNotInFleet;
 		return answer;
 	}
 
@@ -154,14 +154,41 @@ Fleet::hitFleetResult Fleet::hitFleet(coord c) {
 	else {
 		if (result.error == Ship::hitShipError::alreadyHit) {
 			answer.success = false;
-			answer.error = hitFleetError::coordAlreadyHit;
+			answer.error = hitFleetShipsError::coordAlreadyHit;
 		}
 		if (result.error == Ship::hitShipError::notOnShip) {
 			answer.success = false;
-			answer.error = hitFleetError::coordNotInFleet;
+			answer.error = hitFleetShipsError::coordNotInFleet;
 		}
 	}
-	
+
+	return answer;
+}
+
+Fleet::hitFleetPlanesResult Fleet::hitFleetPlanes(coord c) {
+	hitFleetPlanesResult answer;
+
+	answer.destroyed = false;
+	answer.error = hitFleetPlanesError::noPlaneAtCoord;
+	answer.success = false;
+	answer.hitID = -1;
+
+	for (Plane& plane : planes) {
+		if (!plane.isPlaced())
+			continue;
+		if (plane.isOnCarrier())
+			continue;
+
+		Plane::HitPlaneResult result = plane.hit(c);
+		if (result.success) {
+			answer.success = true;
+			answer.hitID = plane.getId();
+			answer.destroyed = result.destroyed;
+		}
+		// do not break in case there are overlapping planes, we want to hit all of them
+		// this can happen if a second plane is where a plane was destroyed
+	}
+
 	return answer;
 }
 

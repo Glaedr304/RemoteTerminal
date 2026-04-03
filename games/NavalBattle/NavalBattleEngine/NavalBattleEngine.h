@@ -42,7 +42,7 @@ class NavalBattleEngine {
         Player getWinner() const;
         Player currentTurn() const;
         std::string nameForId(int id) const;
-        Fleet::hitFleetResult hitCoord(Player p, coord target);
+        Fleet::hitFleetShipsResult hitCoord(Player p, coord target);
 
 
         void clearScansWithSquareForPlayer(Player p, coord c);

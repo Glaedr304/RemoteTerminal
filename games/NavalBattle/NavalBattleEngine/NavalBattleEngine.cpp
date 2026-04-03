@@ -228,14 +228,34 @@ ActivateAbilityResult NavalBattleEngine::activateAbility(Player p, int shipId, c
 FireResult NavalBattleEngine::fireAntiAircraft(Player p, coord target) {
     FireResult answer;
 
-    if (phase() != Phase::playing) {
+    if (_currentPlayer != p) {
         answer.success = false;
         answer.error = FireError::notYourTurn;
         return answer;
     }
 
-    //to be implemented
+    if (!isValidCoord(target)) {
+        answer.success = false;
+        answer.error = FireError::outOfBounds;
+        return answer;
+    }
 
+    answer.success = true;
+
+    // Try to hit a plane at this coordinate
+    Fleet::hitFleetPlanesResult r = getFleetForPlayer(opponent(p)).hitFleetPlanes(target);    
+
+    if (r.success) {
+        answer.isHit = true;
+        answer.isSink = r.destroyed;
+        answer.hitId = r.hitID;
+    }
+    else {
+        answer.isHit = false;
+    }
+    if (answer.success)
+        _currentPlayer = opponent(p);
+    
     return answer;
 }
 
@@ -315,10 +335,10 @@ ActivateAbilityResultData NavalBattleEngine::executeBulkFirePlan(Player p, BulkF
     BulkFireResultData answer;
 
     for (const coord& c : plan.targets) {
-        Fleet::hitFleetResult r = hitCoord(opponent(p), c);
+        Fleet::hitFleetShipsResult r = hitCoord(opponent(p), c);
         if (r.success)
             answer.isHit = true;
-        else if (r.error != Fleet::hitFleetError::coordAlreadyHit) //not a true miss if this coord was hit before
+        else if (r.error != Fleet::hitFleetShipsError::coordAlreadyHit) //not a true miss if this coord was hit before
             getMissesForPlayer(p).insert(c);
     }
     
@@ -557,7 +577,7 @@ FireResult NavalBattleEngine::fire(Player p, coord target) {
         return answer;
     }
 
-	Fleet::hitFleetResult r = hitCoord(opponent(p), target);
+	Fleet::hitFleetShipsResult r = hitCoord(opponent(p), target);
 
     answer.success = true;
     if (r.success) {
@@ -567,7 +587,7 @@ FireResult NavalBattleEngine::fire(Player p, coord target) {
         answer.hitId = r.hitID;
     }
     else {
-        if(r.error != Fleet::hitFleetError::coordAlreadyHit) //not a true miss if this coord was hit before
+        if(r.error != Fleet::hitFleetShipsError::coordAlreadyHit) //not a true miss if this coord was hit before
             getMissesForPlayer(p).insert(target);
         answer.isHit = false;
     }
@@ -612,9 +632,9 @@ std::string NavalBattleEngine::nameForId(int id) const {
     return "";
 }
 
-Fleet::hitFleetResult NavalBattleEngine::hitCoord(Player p, coord target) {
+Fleet::hitFleetShipsResult NavalBattleEngine::hitCoord(Player p, coord target) {
     auto& f = getDataForPlayer(p).fleet;
-    auto r = f.hitFleet(target);
+    auto r = f.hitFleetShips(target);
     if (r.success) {
         clearScansWithSquareForPlayer(opponent(p), target);
         getDataForPlayer(opponent(p)).hits.insert(target);

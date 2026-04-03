@@ -57,7 +57,7 @@ Plane::HitPlaneResult Plane::hit(coord where) {
 
 	if (where != _pos) {
 		answer.success = false;
-		answer.error = HitPlaneError::notOnShip;
+		answer.error = HitPlaneError::notOnPlane;
 		return answer;
 	}
 

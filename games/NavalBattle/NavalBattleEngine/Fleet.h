@@ -19,16 +19,27 @@ private:
 	Plane* getPlaneById(VehicleId id);
 
 public:
-	enum class hitFleetError {
+	enum class hitFleetShipsError {
 		coordNotInFleet,
 		coordAlreadyHit
 	};
 
-	struct hitFleetResult {
+	struct hitFleetShipsResult {
 		bool success;
 		int hitID;
 		bool sunk;
-		hitFleetError error;
+		hitFleetShipsError error;
+	};
+
+	enum class hitFleetPlanesError {
+		noPlaneAtCoord
+	};
+
+	struct hitFleetPlanesResult {
+		bool success;
+		int hitID;
+		bool destroyed;
+		hitFleetPlanesError error;
 	};
 
 	enum class AbilityAvailabilityError {
@@ -65,8 +76,10 @@ public:
 	Fleet(std::vector<Ship> ships);
 	Fleet();
 
-	hitFleetResult hitFleet(coord c);
-	
+	hitFleetShipsResult hitFleetShips(coord c);
+
+	hitFleetPlanesResult hitFleetPlanes(coord c);
+
 	bool wouldBeHit(const coord& c);
 
 	bool isDefeated() const;

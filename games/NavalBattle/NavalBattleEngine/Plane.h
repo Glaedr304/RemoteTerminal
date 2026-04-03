@@ -23,7 +23,7 @@ namespace NavalBattle
 
 	public:
 		enum class HitPlaneError {
-			notOnShip,
+			notOnPlane,
 			isDestroyed,
 			none
 		};
