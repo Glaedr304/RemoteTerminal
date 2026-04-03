@@ -150,7 +150,6 @@ struct RevealData {
 		diamond
 	};
 	FiringPattern firingPattern;
-	coord target;
 };
 
 struct BulkFireData {
@@ -261,6 +260,10 @@ struct ValidateAbilityResult {
 };
 
 using VehicleId = int;
+
+struct AbilityContext {
+	VehicleId vehicleId = -1;
+};
 
 struct ShipBlueprint {
 	std::set<coord> coords;

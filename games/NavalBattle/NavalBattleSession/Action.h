@@ -48,6 +48,7 @@ struct ActivateAbilityData {
 };
 
 struct CheckAbilityData {
+    int vehicleId;
     VehicleAbilityActionData abilityData;
 };
 

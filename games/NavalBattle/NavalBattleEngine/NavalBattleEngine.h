@@ -35,7 +35,7 @@ class NavalBattleEngine {
 
 		ActivateAbilityResult activateAbility(Player p, int shipId, const VehicleAbilityAction& activateAbilityAction);
 
-		ValidateAbilityResult validateAbility(VehicleAbilityActionData data) const;
+		ValidateAbilityResult validateAbility(VehicleAbilityActionData data, const AbilityContext& ctx) const;
 
         // --- Queries ---
         Phase phase() const;
@@ -83,7 +83,7 @@ private:
 	ValidateAbilityResult validateTomahawkData(TomahawkData d) const;
 	ValidateAbilityResult validateRelocateData(RelocateData d) const;
 	ValidateAbilityResult validateScanData(ScanData data) const;
-	ValidateAbilityResult validateRevealData(RevealData d) const;
+	ValidateAbilityResult validateRevealData(RevealData d, const AbilityContext& ctx) const;
 
 	ValidateAbilityResult validateBulkFireData(std::set<coord> targets) const;
 

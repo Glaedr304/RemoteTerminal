@@ -415,7 +415,8 @@ SessionActionResult NavalBattleSession::handleCheckAbility(Player p, const Sessi
 	answer.type = SessionActionResultType::TransientOverlayResult;
 
 	CheckAbilityData cad = std::get<CheckAbilityData>(a.data);
-	auto r = _engine.validateAbility(cad.abilityData);
+	AbilityContext ctx{ cad.vehicleId };
+	auto r = _engine.validateAbility(cad.abilityData, ctx);
 
 	TransientOverlayData data;
 	auto state = (r.error == ActivateAbilityResultError::none) ? TransientSquareState::targetedSquare : TransientSquareState::invalidPlacement;

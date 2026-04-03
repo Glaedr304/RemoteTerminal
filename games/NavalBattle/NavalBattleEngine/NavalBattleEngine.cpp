@@ -101,9 +101,9 @@ ValidateShipPlacementResult NavalBattleEngine::validateShipPlacement(Player p, i
     return r;
 }
 
-ValidateAbilityResult NavalBattleEngine::validateAbility(VehicleAbilityActionData data) const {
+ValidateAbilityResult NavalBattleEngine::validateAbility(VehicleAbilityActionData data, const AbilityContext& ctx) const {
 	ValidateAbilityResult answer;
-    std::visit([this, &answer](auto&& arg) {
+	std::visit([this, &answer, &ctx](auto&& arg) {
 		using T = std::decay_t<decltype(arg)>;
 		if constexpr (std::is_same_v<T, TorpedoData>)
 			answer = validateTorpedoData(arg);
@@ -114,11 +114,11 @@ ValidateAbilityResult NavalBattleEngine::validateAbility(VehicleAbilityActionDat
 		else if constexpr (std::is_same_v<T, TomahawkData>)
 			answer = validateTomahawkData(arg);
 		else if constexpr (std::is_same_v<T, RelocateData>)
-            answer = validateRelocateData(arg);
+			answer = validateRelocateData(arg);
 		else if constexpr (std::is_same_v<T, ScanData>)
 			answer = validateScanData(arg);
 		else if constexpr (std::is_same_v<T, RevealData>)
-			answer = validateRevealData(arg);
+			answer = validateRevealData(arg, ctx);
 		else
 			static_assert(always_false<T>, "non-exhaustive visitor!");
 	}, data);
@@ -208,21 +208,22 @@ ActivateAbilityResult NavalBattleEngine::activateAbility(Player p, int shipId, c
 		return answer;
 	}
 
-	ValidateAbilityResult validation = validateAbility(VehicleAbilityAction.data);
-    if (validation.error != ActivateAbilityResultError::none) {
-        answer.success = false;
-        answer.error = validation.error;
-        return answer;
-    }
+	AbilityContext ctx{ shipId };
+	ValidateAbilityResult validation = validateAbility(VehicleAbilityAction.data, ctx);
+	if (validation.error != ActivateAbilityResultError::none) {
+		answer.success = false;
+		answer.error = validation.error;
+		return answer;
+	}
 
-    answer.success = true;
+	answer.success = true;
 
 	answer.data = executeAbilityPlan(p, validation.plan);
-    
-    getDataForPlayer(p).fleet.useShipAbility(shipId, VehicleAbilityAction.type);
-    _currentPlayer = opponent(p);
-    
-    return answer;
+
+	getDataForPlayer(p).fleet.useShipAbility(shipId, VehicleAbilityAction.type);
+	_currentPlayer = opponent(p);
+
+	return answer;
 }
 
 FireResult NavalBattleEngine::fireAntiAircraft(Player p, coord target) {
@@ -502,21 +503,30 @@ ValidateAbilityResult NavalBattle::NavalBattleEngine::validateScanData(ScanData 
 	return answer;
 }
 
-ValidateAbilityResult NavalBattleEngine::validateRevealData(RevealData d) const {
+ValidateAbilityResult NavalBattleEngine::validateRevealData(RevealData d, const AbilityContext& ctx) const {
     ValidateAbilityResult answer;
     RevealPlan plan;
+
+    coord vehiclePos = coord::unspecified;
+    Player owner = getPlayerWithVehicleId(ctx.vehicleId);
+    const Fleet& fleet = getFleetForPlayer(owner);
+    if (const Ship* ship = fleet.getShipById(ctx.vehicleId))
+        vehiclePos = ship->getPos();
+    else if (const Plane* plane = fleet.getPlaneById(ctx.vehicleId))
+        vehiclePos = plane->getPos();
+
     std::set<coord> squaresToReveal;
     if (d.firingPattern == RevealData::FiringPattern::square) {
-        squaresToReveal.insert(coord({ d.target.d - 1, d.target.o - 1 }));
-        squaresToReveal.insert(coord({ d.target.d - 1, d.target.o + 1 }));
-        squaresToReveal.insert(coord({ d.target.d + 1, d.target.o - 1 }));
-        squaresToReveal.insert(coord({ d.target.d + 1, d.target.o + 1 }));
+        squaresToReveal.insert(coord({ vehiclePos.d - 1, vehiclePos.o - 1 }));
+        squaresToReveal.insert(coord({ vehiclePos.d - 1, vehiclePos.o + 1 }));
+        squaresToReveal.insert(coord({ vehiclePos.d + 1, vehiclePos.o - 1 }));
+        squaresToReveal.insert(coord({ vehiclePos.d + 1, vehiclePos.o + 1 }));
     }
     else if (d.firingPattern == RevealData::FiringPattern::diamond) {
-        squaresToReveal.insert(coord({ d.target.d - 1, d.target.o }));
-        squaresToReveal.insert(coord({ d.target.d, d.target.o - 1 }));
-        squaresToReveal.insert(coord({ d.target.d, d.target.o + 1 }));
-        squaresToReveal.insert(coord({ d.target.d + 1, d.target.o }));
+        squaresToReveal.insert(coord({ vehiclePos.d - 1, vehiclePos.o }));
+        squaresToReveal.insert(coord({ vehiclePos.d, vehiclePos.o - 1 }));
+        squaresToReveal.insert(coord({ vehiclePos.d, vehiclePos.o + 1 }));
+        squaresToReveal.insert(coord({ vehiclePos.d + 1, vehiclePos.o }));
     }
     else {
         answer.error = ActivateAbilityResultError::noSuchAbility;

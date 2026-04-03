@@ -267,7 +267,6 @@ Json::Value toJson(const ScanData& d) {
 Json::Value toJson(const RevealData& d) {
 	Json::Value answer(Json::objectValue);
 	answer["firingpattern"] = toJson(d.firingPattern);
-	answer["target"] = toJson(d.target);
 	return answer;
 }
 
@@ -347,8 +346,7 @@ ScanData scanDataFromJson(const Json::Value& v) {
 
 RevealData revealDataFromJson(const Json::Value& v) {
 	return RevealData{
-		revealFiringPatternFromJson(v["firingpattern"]),
-		coordFromJson(v["target"])
+		revealFiringPatternFromJson(v["firingpattern"])
 	};
 }
 
@@ -424,11 +422,13 @@ Json::Value toJson(const VehicleAbilityActionData& d) {
 
 Json::Value toJson(const CheckAbilityData& d) {
 	Json::Value answer(Json::objectValue);
+	answer["vehicleid"] = d.vehicleId;
 	answer["abilitydata"] = toJson(d.abilityData);
 	return answer;
 }
 
 CheckAbilityData checkAbilityDataFromJson(const Json::Value& v) {
+	int vehicleId = v["vehicleid"].asInt();
 	Json::Value dataJson = v["abilitydata"];
 	std::string type = dataJson["type"].asString();
 	Json::Value abilityDataContent = dataJson["data"];
@@ -450,7 +450,7 @@ CheckAbilityData checkAbilityDataFromJson(const Json::Value& v) {
 	else if (type == "reveal")
 		abilityData = revealDataFromJson(abilityDataContent);
 
-	return CheckAbilityData{abilityData};
+	return CheckAbilityData{vehicleId, abilityData};
 }
 
 Json::Value toJson(const PlaceShipData& d) {
