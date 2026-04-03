@@ -966,6 +966,7 @@ Json::Value toJson(const StartupInfo& s) {
 	answer["fleetview"] = toJson(s.fleetView);
 	answer["boardrows"] = s.boardRows;
 	answer["boardcols"] = s.boardCols;
+	answer["hasantiaircraft"] = s.hasAntiAircraftGun;
 	return answer;
 }
 
@@ -977,6 +978,7 @@ Json::Value toJson(const UserSnapshot& u) {
 	answer["fleetview"] = toJson(u.fleetView);
 	answer["youready"] = u.youReady;
 	answer["opponentready"] = u.opponentReady;
+	answer["hasantiaircraft"] = u.hasAntiAircraftGun;
 	return answer;
 }
 

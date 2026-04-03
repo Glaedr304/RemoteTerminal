@@ -54,6 +54,8 @@ class NavalBattleEngine {
         const std::set<coord>& getHitsForPlayer(Player p) const;
         const std::set<coord>& getMissesForPlayer(Player p) const;
 
+		bool playerHasAntiAircraftGun(Player p) const;
+
         BoardView boardViewForPlayer(Player p) const;
 
 
@@ -89,18 +91,23 @@ private:
 
 	Fleet createFleetFromBlueprint(const FleetBlueprint& blueprint);
 
+    
+
 	VehicleId getNextVehicleId();
 
     struct PlayerData {
         PlayerData(const Fleet& fleet) : fleet(fleet) {}
         bool isReady = false;
         Fleet fleet;
+		bool hasAntiAircraftGun = false;
         std::set<coord> hits;
         std::set<coord> misses;
         std::set<coord> revealedHits;
         std::set<coord> revealedMisses;
         std::set<std::set<coord>> scansWithHits;
     };
+
+	PlayerData createPlayerDataForGameMode(GameMode mode);
 
     PlayerData _p1Data;
     PlayerData _p2Data;
@@ -122,9 +129,9 @@ private:
 
 	int _nextVehicleId = 0;
 
-    FleetBlueprint const& getBaseFleetBlueprint();
-    FleetBlueprint const& getAdvancedFleetBlueprint();
-    FleetBlueprint const& getBlueprintForMode(GameMode mode);
+    FleetBlueprint const& getBaseFleetBlueprint() const;
+    FleetBlueprint const& getAdvancedFleetBlueprint() const;
+    FleetBlueprint const& getBlueprintForMode(GameMode mode) const;
     static std::pair<int, int> getBoardDimensionsForMode(GameMode mode);
 
     enum class FleetStatusBits {

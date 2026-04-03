@@ -1159,6 +1159,42 @@ kbd {
     gap: 0.25rem;
 }
 
+/* === Anti-Aircraft Button === */
+.aa-gun-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-family: var(--font-family);
+    background: var(--bg-primary);
+    border: 1px solid var(--accent-danger);
+    border-radius: var(--border-radius-sm);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.aa-gun-btn:hover {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: var(--accent-danger);
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
+}
+
+.aa-gun-btn.active {
+    background: rgba(239, 68, 68, 0.3);
+    border-color: var(--accent-danger);
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.4);
+}
+
+.aa-icon {
+    font-size: 1rem;
+}
+
 /* === Pattern Selector Overlay === */
 .pattern-selector-overlay {
     position: fixed;

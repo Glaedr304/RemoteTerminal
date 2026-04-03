@@ -56,6 +56,7 @@ let rematchRequested = false;
 let opponentWantsRematch = false;
 let selectedVehicle = null; // { type: 'ship' | 'plane', id: number }
 let activeAbility = null; // { vehicleId: number, type: string, firingPattern: string | null }
+let antiAircraftMode = false; // true when player is selecting a target for anti-aircraft fire
 
 // Ability configuration - what additional options each ability needs
 const ABILITY_CONFIG = {
@@ -499,10 +500,28 @@ function renderFleetPanel(container, ships, planes, isYours) {
             container.appendChild(card);
         });
     }
+
+    // Render anti-aircraft button below fleet if player has it
+    if (isYours && lastSetupInfo?.hasantiaircraft) {
+        const aaBtn = document.createElement("button");
+        aaBtn.className = "aa-gun-btn";
+        aaBtn.id = "antiAircraftBtn";
+        if (antiAircraftMode) {
+            aaBtn.classList.add("active");
+        }
+        aaBtn.innerHTML = `<span class="aa-icon">\u{1F6E1}\uFE0F</span> Anti-Aircraft`;
+        aaBtn.addEventListener("click", () => handleAntiAircraftClick());
+        container.appendChild(aaBtn);
+    }
 }
 
 function updateFleetPanels(fleetView) {
     if (!fleetView) return;
+
+    // Keep lastSetupInfo.fleetview in sync for re-renders
+    if (lastSetupInfo) {
+        lastSetupInfo.fleetview = fleetView;
+    }
 
     // Render your fleet (ships and planes)
     renderFleetPanel(
@@ -601,6 +620,7 @@ function isVehicleAPlane(vehicleId) {
 function activateAbilityMode(vehicleId, abilityType, firingPattern) {
     activeAbility = { vehicleId, type: abilityType, firingPattern };
     selectedVehicle = null; // Clear placement selection
+    cancelAntiAircraftMode(); // Cancel anti-aircraft mode if active
 
     const config = ABILITY_CONFIG[abilityType];
     let targetGrid;
@@ -631,6 +651,66 @@ function activateAbilityMode(vehicleId, abilityType, firingPattern) {
 function cancelAbilityMode() {
     activeAbility = null;
     updateAbilityModeUI();
+}
+
+function handleAntiAircraftClick() {
+    // Toggle anti-aircraft mode
+    if (antiAircraftMode) {
+        cancelAntiAircraftMode();
+        return;
+    }
+
+    // Cancel any active ability first
+    cancelAbilityMode();
+
+    antiAircraftMode = true;
+    showMessage("Anti-Aircraft active - Click on your grid to target enemy planes", "info");
+    updateAntiAircraftModeUI();
+
+    // Re-render fleet panels to show active state
+    if (lastSetupInfo && lastSetupInfo.fleetview) {
+        updateFleetPanels(lastSetupInfo.fleetview);
+    }
+}
+
+function cancelAntiAircraftMode() {
+    antiAircraftMode = false;
+    updateAntiAircraftModeUI();
+
+    // Re-render fleet panels to clear active state
+    if (lastSetupInfo && lastSetupInfo.fleetview) {
+        updateFleetPanels(lastSetupInfo.fleetview);
+    }
+}
+
+function updateAntiAircraftModeUI() {
+    const ownGridWrapper = ownGrid.closest(".grid-wrapper");
+
+    if (antiAircraftMode) {
+        ownGridWrapper?.classList.add("ability-target");
+    } else {
+        ownGridWrapper?.classList.remove("ability-target");
+    }
+}
+
+function executeAntiAircraft(row, col) {
+    if (!lastSetupInfo) return;
+
+    const message = {
+        gameid: lastSetupInfo.gameid,
+        userid: lastSetupInfo.you,
+        sessionaction: {
+            type: "fireantiaircraft",
+            data: {
+                target: { row, col },
+            },
+        },
+    };
+
+    logLine(`Sending fireantiaircraft at (${row}, ${col})`);
+    sendMessage(message);
+
+    cancelAntiAircraftMode();
 }
 
 function updateAbilityModeUI() {
@@ -762,6 +842,12 @@ function selectNextUnplacedVehicle(fleetView) {
 
 // === Click Handlers ===
 function handleOwnGridClick(row, col) {
+    // Check if we're in anti-aircraft mode
+    if (antiAircraftMode) {
+        executeAntiAircraft(row, col);
+        return;
+    }
+
     // Check if we're in ability mode targeting own grid
     if (activeAbility) {
         const targetType = activeAbility.targetType;
@@ -1037,6 +1123,10 @@ document.addEventListener("keydown", (e) => {
             cancelAbilityMode();
             showMessage("Ability cancelled", "info");
         }
+        if (antiAircraftMode) {
+            cancelAntiAircraftMode();
+            showMessage("Anti-Aircraft cancelled", "info");
+        }
         // Also close pattern selector if open
         document.getElementById("patternSelector")?.remove();
     }
@@ -1181,6 +1271,8 @@ function handleRematchStart() {
     placedShipIds.clear();
     placedPlaneIds.clear();
     selectedVehicle = null;
+    activeAbility = null;
+    antiAircraftMode = false;
     rotation = 0;
     lastPhase = null;
 
@@ -1304,6 +1396,10 @@ function applySnapshot(snapshot) {
 
     // Update fleet panels from snapshot
     if (snapshot.fleetview) {
+        // Keep hasantiaircraft in sync from snapshot
+        if (lastSetupInfo && snapshot.hasantiaircraft !== undefined) {
+            lastSetupInfo.hasantiaircraft = snapshot.hasantiaircraft;
+        }
         updateFleetPanels(snapshot.fleetview);
     }
 }
@@ -1312,6 +1408,9 @@ function applyActionResult(result) {
     switch (result.type) {
         case "fireresult":
             applyFireResult(result);
+            break;
+        case "fireantiaircraft":
+            applyFireAntiAircraftResult(result);
             break;
         case "placeshipresult":
             applyPlaceShipResult(result);
@@ -1363,6 +1462,38 @@ function applyFireResult(result) {
             invalidplacement: "You can't fire there",
         };
         showMessage(errorMessages[result.error] || "Unable to fire", "error");
+    }
+}
+
+function applyFireAntiAircraftResult(result) {
+    if (result.success) {
+        const iDidThis = result.actinguser === myUserId;
+
+        if (result.data?.ishit) {
+            if (result.data.isdestroyed) {
+                if (iDidThis) {
+                    showMessage(`You destroyed their ${result.data.destroyedname}!`, "success");
+                } else {
+                    showMessage(`Your ${result.data.destroyedname} was shot down!`, "error");
+                }
+            } else {
+                if (iDidThis) {
+                    showMessage("Anti-Aircraft hit!", "success");
+                } else {
+                    showMessage("Your plane was hit!", "error");
+                }
+            }
+        } else {
+            if (iDidThis) {
+                showMessage("Anti-Aircraft miss - no planes at that location", "info");
+            }
+        }
+    } else {
+        const errorMessages = {
+            notyourturn: "It's not your turn",
+            invalidplacement: "You can't target there",
+        };
+        showMessage(errorMessages[result.error] || "Unable to fire anti-aircraft", "error");
     }
 }
 

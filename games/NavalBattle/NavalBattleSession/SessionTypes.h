@@ -125,6 +125,7 @@ namespace NavalBattle {
         FleetView fleetView;
         bool youReady;
         bool opponentReady;
+        bool hasAntiAircraftGun;
     };
 
     struct StartupInfo {
@@ -136,6 +137,7 @@ namespace NavalBattle {
         FleetView fleetView;
         int boardRows;
         int boardCols;
+        bool hasAntiAircraftGun;
     };
 
     enum class AddUserToGameError {

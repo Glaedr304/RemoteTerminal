@@ -1,5 +1,4 @@
 #include "NavalBattleSession.h"
-#include "NavalBattleSession.h"
 #include "Action.h"
 
 #include <string>
@@ -109,6 +108,7 @@ AddressedMessageBundle NavalBattleSession::getSnapshotMessageBundles() {
 	p1Snapshot.userView = UserView(_playerToUserMap[Player::one], engine.boardViewForPlayer(Player::one));
 	p1Snapshot.youReady = engine.isPlayerReady(Player::one);
 	p1Snapshot.opponentReady = engine.isPlayerReady(opponent(Player::one));
+	p1Snapshot.hasAntiAircraftGun = engine.playerHasAntiAircraftGun(Player::one);
 	p1Snapshot.fleetView = FleetView{
 		engine.getFleetForPlayer(Player::one).getShips(),
 		engine.getFleetForPlayer(Player::two).getShips(),
@@ -122,6 +122,7 @@ AddressedMessageBundle NavalBattleSession::getSnapshotMessageBundles() {
 	p2Snapshot.userView = UserView(_playerToUserMap[Player::two], engine.boardViewForPlayer(Player::two));
 	p2Snapshot.youReady = engine.isPlayerReady(Player::two);
 	p2Snapshot.opponentReady = engine.isPlayerReady(opponent(Player::two));
+	p2Snapshot.hasAntiAircraftGun = engine.playerHasAntiAircraftGun(Player::two);
 	p2Snapshot.fleetView = FleetView{
 		engine.getFleetForPlayer(Player::two).getShips(),
 		engine.getFleetForPlayer(Player::one).getShips(),
@@ -153,7 +154,8 @@ AddressedMessageBundle NavalBattleSession::getStartupInfoMessageBundles() {
 			engine.getFleetForPlayer(Player::two).getPlanes()
 		},
 		engine.boardRows(),
-		engine.boardCols()
+		engine.boardCols(),
+		engine.playerHasAntiAircraftGun(Player::one)
 	);
 
 	StartupInfo p2startupInfo(
@@ -169,7 +171,8 @@ AddressedMessageBundle NavalBattleSession::getStartupInfoMessageBundles() {
 			engine.getFleetForPlayer(Player::one).getPlanes()
 		},
 		engine.boardRows(),
-		engine.boardCols()
+		engine.boardCols(),
+		engine.playerHasAntiAircraftGun(Player::two)
 	);
 
 	answer.addMessage(ToUser(_playerToUserMap[Player::one]), p1startupInfo);
@@ -191,6 +194,7 @@ AddressedMessageBundle NavalBattleSession::getSnapshotMessageBundleForUser(const
 	snapshot.userView = UserView(u, _engine.boardViewForPlayer(p));
 	snapshot.youReady = _engine.isPlayerReady(p);
 	snapshot.opponentReady = _engine.isPlayerReady(opp);
+	snapshot.hasAntiAircraftGun = _engine.playerHasAntiAircraftGun(p);
 	snapshot.fleetView = FleetView{
 		engine.getFleetForPlayer(p).getShips(),
 		engine.getFleetForPlayer(opp).getShips(),

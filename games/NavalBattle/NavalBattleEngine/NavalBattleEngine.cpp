@@ -10,8 +10,8 @@ inline constexpr bool always_false = false;
 NavalBattleEngine::NavalBattleEngine(GameMode mode) :
     _currentPlayer(Player::none),
     _phase(Phase::setup),
-    _p1Data(createFleetFromBlueprint(getBlueprintForMode(mode))),
-    _p2Data(createFleetFromBlueprint(getBlueprintForMode(mode))),
+    _p1Data(createPlayerDataForGameMode(mode)),
+    _p2Data(createPlayerDataForGameMode(mode)),
     _pNoneData(Fleet()),
     _boardDimensions(getBoardDimensionsForMode(mode))
 {
@@ -628,6 +628,12 @@ std::string NavalBattleEngine::nameForId(int id) const {
     for (const Ship& s : getFleetForPlayer(Player::two).getShips())
         if (s.getId() == id)
             return s.getName();
+    for (const Plane& p : getFleetForPlayer(Player::one).getPlanes())
+        if (p.getId() == id)
+            return p.getName();
+    for (const Plane& p : getFleetForPlayer(Player::two).getPlanes())
+        if (p.getId() == id)
+            return p.getName();
 
     return "";
 }
@@ -668,6 +674,10 @@ const std::set<coord>& NavalBattleEngine::getMissesForPlayer(Player p) const{
 	return getDataForPlayer(p).misses;
 }
 
+bool NavalBattle::NavalBattleEngine::playerHasAntiAircraftGun(Player p) const {
+	return getDataForPlayer(p).hasAntiAircraftGun;
+}
+
 BoardView NavalBattleEngine::boardViewForPlayer(Player p) const{
     BoardView b;
     b.ownGrid = ownGrid(p);
@@ -687,7 +697,7 @@ GridView NavalBattleEngine::ownGrid(Player p) const {
 
     // Add planes that are on carrier
     for (const Plane& plane : f.getPlanes())
-        if (plane.isPlaced() && plane.isOnCarrier())
+        if (plane.isPlaced() && plane.isOnCarrier() && !plane.isDestroyed())
             occupied[plane.getPos()].insert(SquareState::plane);
 
     for (const auto& c : getDataForPlayer(opponent(p)).revealedHits)
@@ -703,7 +713,7 @@ GridView NavalBattleEngine::opponentGrid(Player p) const {
     std::map<coord, std::set<SquareState>> occupied;
 
     for (const Plane& plane : getFleetForPlayer(p).getPlanes())
-        if (plane.isPlaced() && !plane.isOnCarrier())
+        if (plane.isPlaced() && !plane.isOnCarrier() && !plane.isDestroyed())
             occupied[plane.getPos()].insert(SquareState::plane);
 
     for (const auto& s : getDataForPlayer(p).scansWithHits)
@@ -720,7 +730,7 @@ GridView NavalBattleEngine::opponentGrid(Player p) const {
     return GridView(occupied);
 }
 
-Fleet NavalBattleEngine::createFleetFromBlueprint(const FleetBlueprint& blueprint) {
+Fleet NavalBattleEngine::createFleetFromBlueprint(const FleetBlueprint& blueprint){
     Fleet answer;
 
     for(const ShipBlueprint& sb : blueprint.ships)
@@ -734,6 +744,13 @@ Fleet NavalBattleEngine::createFleetFromBlueprint(const FleetBlueprint& blueprin
 
 VehicleId NavalBattleEngine::getNextVehicleId() {
     return _nextVehicleId++;
+}
+
+NavalBattleEngine::PlayerData NavalBattle::NavalBattleEngine::createPlayerDataForGameMode(GameMode mode) {
+	PlayerData data(createFleetFromBlueprint(getBlueprintForMode(mode)));
+	if (mode == GameMode::advanced)
+		data.hasAntiAircraftGun = true;
+	return data;
 }
 
 Player NavalBattleEngine::getPlayerWithVehicleId(VehicleId id) const {
@@ -794,7 +811,7 @@ std::set<coord>& NavalBattleEngine::getMissesForPlayer(Player p) {
 }
 
 //default fleet for normal game
-FleetBlueprint const& NavalBattleEngine::getBaseFleetBlueprint() {
+FleetBlueprint const& NavalBattleEngine::getBaseFleetBlueprint() const{
     static FleetBlueprint baseFleet{
         {
             Ship::carrier,
@@ -808,7 +825,7 @@ FleetBlueprint const& NavalBattleEngine::getBaseFleetBlueprint() {
 }
 
 //fleet with abilities for advanced game
-FleetBlueprint const& NavalBattleEngine::getAdvancedFleetBlueprint() {
+FleetBlueprint const& NavalBattleEngine::getAdvancedFleetBlueprint() const{
     static FleetBlueprint advancedFleet{
         {
             Ship::advancedCarrier,
@@ -825,7 +842,7 @@ FleetBlueprint const& NavalBattleEngine::getAdvancedFleetBlueprint() {
     return advancedFleet;
 }
 
-FleetBlueprint const& NavalBattleEngine::getBlueprintForMode(GameMode mode) {
+FleetBlueprint const& NavalBattleEngine::getBlueprintForMode(GameMode mode) const{
     if (mode == GameMode::advanced)
         return getAdvancedFleetBlueprint();
     return getBaseFleetBlueprint();
