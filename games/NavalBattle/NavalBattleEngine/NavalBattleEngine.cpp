@@ -658,7 +658,9 @@ Fleet::hitFleetShipsResult NavalBattleEngine::hitCoord(Player p, coord target) {
     auto r = f.hitFleetShips(target);
     if (r.success) {
         clearScansWithSquareForPlayer(opponent(p), target);
-        getDataForPlayer(opponent(p)).hits.insert(target);
+        auto& opponentData = getDataForPlayer(opponent(p));
+        opponentData.hits.insert(target);
+        opponentData.revealedHits.erase(target);
     }
     return r;
 }
