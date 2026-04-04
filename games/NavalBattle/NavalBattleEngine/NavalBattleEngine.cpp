@@ -512,8 +512,13 @@ ValidateAbilityResult NavalBattleEngine::validateRevealData(RevealData d, const 
     const Fleet& fleet = getFleetForPlayer(owner);
     if (const Ship* ship = fleet.getShipById(ctx.vehicleId))
         vehiclePos = ship->getPos();
-    else if (const Plane* plane = fleet.getPlaneById(ctx.vehicleId))
+    else if (const Plane* plane = fleet.getPlaneById(ctx.vehicleId)) {
+        if (plane->isOnCarrier()) {
+            answer.error = ActivateAbilityResultError::noSuchAbility;
+            return answer;
+        }
         vehiclePos = plane->getPos();
+    }
 
     std::set<coord> squaresToReveal;
     if (d.firingPattern == RevealData::FiringPattern::square) {
