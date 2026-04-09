@@ -1079,6 +1079,9 @@ function handleOppGridHover(row, col) {
 function handleOppGridClick(row, col) {
     if (!lastSetupInfo) return;
 
+    // Ignore opponent grid clicks while anti-aircraft mode is active
+    if (antiAircraftMode) return;
+
     // Check if we're in ability mode targeting opponent grid
     if (activeAbility) {
         const targetType = activeAbility.targetType;
