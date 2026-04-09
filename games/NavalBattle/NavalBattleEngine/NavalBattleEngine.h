@@ -51,6 +51,8 @@ class NavalBattleEngine {
         int boardCols() const;
         bool checkCoord(Player p, coord where);
 
+        void advanceTurn();
+
         const std::set<coord>& getHitsForPlayer(Player p) const;
         const std::set<coord>& getMissesForPlayer(Player p) const;
 

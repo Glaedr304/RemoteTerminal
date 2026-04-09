@@ -221,7 +221,7 @@ ActivateAbilityResult NavalBattleEngine::activateAbility(Player p, int shipId, c
 	answer.data = executeAbilityPlan(p, validation.plan);
 
 	getDataForPlayer(p).fleet.useShipAbility(shipId, VehicleAbilityAction.type);
-	_currentPlayer = opponent(p);
+	advanceTurn();
 
 	return answer;
 }
@@ -251,11 +251,10 @@ FireResult NavalBattleEngine::fireAntiAircraft(Player p, coord target) {
         answer.isSink = r.destroyed;
         answer.hitId = r.hitID;
     }
-    else {
+    else
         answer.isHit = false;
-    }
     if (answer.success)
-        _currentPlayer = opponent(p);
+        advanceTurn();
     
     return answer;
 }
@@ -605,14 +604,8 @@ FireResult NavalBattleEngine::fire(Player p, coord target) {
             getMissesForPlayer(p).insert(target);
         answer.isHit = false;
     }
-
-    if (getDataForPlayer(opponent(p)).fleet.isDefeated()) {
-        _phase = Phase::finished;
-        _currentPlayer = Player::none;
-    }
-    else
-        if (answer.success)
-            _currentPlayer = opponent(p);
+    if (answer.success)
+        advanceTurn();
 
     return answer;
 }
@@ -660,6 +653,12 @@ Fleet::hitFleetShipsResult NavalBattleEngine::hitCoord(Player p, coord target) {
         auto& opponentData = getDataForPlayer(opponent(p));
         opponentData.hits.insert(target);
         opponentData.revealedHits.erase(target);
+
+        //this belongs here because the game will always end on hitting a coord
+        if (opponentData.fleet.isDefeated()) {
+            _phase = Phase::finished;
+            _currentPlayer = Player::none;
+        }
     }
     return r;
 }
@@ -680,6 +679,10 @@ int NavalBattleEngine::boardCols() const{
 
 bool NavalBattleEngine::checkCoord(Player p, coord where) {
     return getDataForPlayer(p).fleet.wouldBeHit(where);
+}
+
+void NavalBattleEngine::advanceTurn() {
+    _currentPlayer = opponent(_currentPlayer);
 }
 
 const std::set<coord>& NavalBattleEngine::getHitsForPlayer(Player p) const{
