@@ -597,7 +597,6 @@ FireResult NavalBattleEngine::fire(Player p, coord target) {
     answer.success = true;
     if (r.success) {
         answer.isHit = true;
-        getHitsForPlayer(p).insert(target);
         answer.isSink = r.sunk;
         answer.hitId = r.hitID;
     }
