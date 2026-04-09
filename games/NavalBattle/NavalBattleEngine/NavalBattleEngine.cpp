@@ -411,13 +411,19 @@ ValidateAbilityResult NavalBattleEngine::validateTorpedoData(TorpedoData d) cons
 	return answer;
 }
 
-ValidateAbilityResult NavalBattleEngine::validateExocetData(ExocetData data) const {
+ValidateAbilityResult NavalBattleEngine::validateExocetData(ExocetData d) const {
     std::set<coord> targets;
-    for (int d = data.target.d - 1; d <= data.target.d + 1; d++)
-        for (int o = data.target.o - 1; o <= data.target.o + 1; o++)
-            targets.insert(coord({ d,o }));
-
-	return validateBulkFireData(targets);
+    targets.insert(d.target);
+    if (d.firingPattern == ExocetData::FiringPattern::plus)
+        for (int i = -1; i < 2; i += 2) {//i is -1 and 1
+            targets.insert(d.target + coord({ i, 0 }));
+            targets.insert(d.target + coord({ 0, i }));
+        }
+    else if (d.firingPattern == ExocetData::FiringPattern::x)
+        for (int i = -1; i < 2; i += 2) //i is -1 and 1
+            for (int j = -1; j < 2; j += 2) //j is -1 and 1
+                targets.insert(d.target + coord({ i, j }));
+    return validateBulkFireData(targets);
 }
 
 ValidateAbilityResult NavalBattleEngine::validateApacheData(ApacheData d) const {
@@ -434,18 +440,12 @@ ValidateAbilityResult NavalBattleEngine::validateApacheData(ApacheData d) const 
     return validateBulkFireData(targets);
 }
 
-ValidateAbilityResult NavalBattleEngine::validateTomahawkData(TomahawkData d) const {
+ValidateAbilityResult NavalBattleEngine::validateTomahawkData(TomahawkData data) const {
     std::set<coord> targets;
-    targets.insert(d.target);
-    if (d.firingPattern == TomahawkData::FiringPattern::plus)
-        for (int i = -1; i < 2; i += 2) {//i is -1 and 1
-            targets.insert(d.target + coord({ i, 0 }));
-            targets.insert(d.target + coord({ 0, i }));
-        }
-    else if (d.firingPattern == TomahawkData::FiringPattern::x)
-        for (int i = -1; i < 2; i += 2) //i is -1 and 1
-            for (int j = -1; j < 2; j += 2) //j is -1 and 1
-                targets.insert(d.target + coord({ i, j }));
+    for (int d = data.target.d - 1; d <= data.target.d + 1; d++)
+        for (int o = data.target.o - 1; o <= data.target.o + 1; o++)
+            targets.insert(coord({ d,o }));
+
     return validateBulkFireData(targets);
 }
 

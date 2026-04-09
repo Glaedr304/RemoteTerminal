@@ -113,7 +113,7 @@ struct TorpedoData {
 	coord startPoint;
 };
 
-struct ExocetData {
+struct TomahawkData {
 	coord target;
 };
 
@@ -126,7 +126,7 @@ struct ApacheData {
 	coord target;
 };
 
-struct TomahawkData {
+struct ExocetData {
 	enum class FiringPattern {
 		plus,
 		x
@@ -158,9 +158,9 @@ struct BulkFireData {
 
 using VehicleAbilityActionData = std::variant<
 	TorpedoData,
-	ExocetData,
-	ApacheData,
 	TomahawkData,
+	ApacheData,
+	ExocetData,
 	RelocateData,
 	ScanData,
 	RevealData

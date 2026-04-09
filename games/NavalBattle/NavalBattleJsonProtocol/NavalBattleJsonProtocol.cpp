@@ -194,19 +194,19 @@ ApacheData::FiringPattern apacheFiringPatternFromJson(const Json::Value& v) {
 	return ApacheData::FiringPattern::vertical;
 }
 
-Json::Value toJson(const TomahawkData::FiringPattern& p) {
+Json::Value toJson(const ExocetData::FiringPattern& p) {
 	switch (p) {
-		case TomahawkData::FiringPattern::plus: return "plus";
-		case TomahawkData::FiringPattern::x: return "x";
+		case ExocetData::FiringPattern::plus: return "plus";
+		case ExocetData::FiringPattern::x: return "x";
 	}
 	return "unknown";
 }
 
-TomahawkData::FiringPattern tomahawkFiringPatternFromJson(const Json::Value& v) {
+ExocetData::FiringPattern exocetFiringPatternFromJson(const Json::Value& v) {
 	std::string s = v.asString();
-	if (s == "plus") return TomahawkData::FiringPattern::plus;
-	if (s == "x") return TomahawkData::FiringPattern::x;
-	return TomahawkData::FiringPattern::plus;
+	if (s == "plus") return ExocetData::FiringPattern::plus;
+	if (s == "x") return ExocetData::FiringPattern::x;
+	return ExocetData::FiringPattern::plus;
 }
 
 Json::Value toJson(const RevealData::FiringPattern& p) {
@@ -231,7 +231,7 @@ Json::Value toJson(const TorpedoData& d) {
 	return answer;
 }
 
-Json::Value toJson(const ExocetData& d) {
+Json::Value toJson(const TomahawkData& d) {
 	Json::Value answer(Json::objectValue);
 	answer["target"] = toJson(d.target);
 	return answer;
@@ -244,7 +244,7 @@ Json::Value toJson(const ApacheData& d) {
 	return answer;
 }
 
-Json::Value toJson(const TomahawkData& d) {
+Json::Value toJson(const ExocetData& d) {
 	Json::Value answer(Json::objectValue);
 	answer["firingpattern"] = toJson(d.firingPattern);
 	answer["target"] = toJson(d.target);
@@ -315,8 +315,8 @@ TorpedoData torpedoDataFromJson(const Json::Value& v) {
 	};
 }
 
-ExocetData exocetDataFromJson(const Json::Value& v) {
-	return ExocetData{coordFromJson(v["target"])};
+TomahawkData tomahawkDataFromJson(const Json::Value& v) {
+	return TomahawkData{coordFromJson(v["target"])};
 }
 
 ApacheData apacheDataFromJson(const Json::Value& v) {
@@ -326,9 +326,9 @@ ApacheData apacheDataFromJson(const Json::Value& v) {
 	};
 }
 
-TomahawkData tomahawkDataFromJson(const Json::Value& v) {
-	return TomahawkData{
-		tomahawkFiringPatternFromJson(v["firingpattern"]),
+ExocetData exocetDataFromJson(const Json::Value& v) {
+	return ExocetData{
+		exocetFiringPatternFromJson(v["firingpattern"]),
 		coordFromJson(v["target"])
 	};
 }
@@ -381,10 +381,10 @@ Json::Value toJson(const VehicleAbilityActionData& d) {
 		answer["data"] = toJson(std::get<TorpedoData>(d));
 		return answer;
 	}
-	else if (std::holds_alternative<ExocetData>(d)) {
+	else if (std::holds_alternative<TomahawkData>(d)) {
 		Json::Value answer(Json::objectValue);
-		answer["type"] = "exocet";
-		answer["data"] = toJson(std::get<ExocetData>(d));
+		answer["type"] = "tomahawk";
+		answer["data"] = toJson(std::get<TomahawkData>(d));
 		return answer;
 	}
 	else if (std::holds_alternative<ApacheData>(d)) {
@@ -393,10 +393,10 @@ Json::Value toJson(const VehicleAbilityActionData& d) {
 		answer["data"] = toJson(std::get<ApacheData>(d));
 		return answer;
 	}
-	else if (std::holds_alternative<TomahawkData>(d)) {
+	else if (std::holds_alternative<ExocetData>(d)) {
 		Json::Value answer(Json::objectValue);
-		answer["type"] = "tomahawk";
-		answer["data"] = toJson(std::get<TomahawkData>(d));
+		answer["type"] = "exocet";
+		answer["data"] = toJson(std::get<ExocetData>(d));
 		return answer;
 	}
 	else if (std::holds_alternative<RelocateData>(d)) {

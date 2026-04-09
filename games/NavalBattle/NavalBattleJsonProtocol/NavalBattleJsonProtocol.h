@@ -61,8 +61,8 @@ TorpedoData::FiringPattern torpedoFiringPatternFromJson(const Json::Value& v);
 Json::Value toJson(const ApacheData::FiringPattern& p);
 ApacheData::FiringPattern apacheFiringPatternFromJson(const Json::Value& v);
 
-Json::Value toJson(const TomahawkData::FiringPattern& p);
-TomahawkData::FiringPattern tomahawkFiringPatternFromJson(const Json::Value& v);
+Json::Value toJson(const ExocetData::FiringPattern& p);
+ExocetData::FiringPattern exocetFiringPatternFromJson(const Json::Value& v);
 
 Json::Value toJson(const RevealData::FiringPattern& p);
 RevealData::FiringPattern revealFiringPatternFromJson(const Json::Value& v);
@@ -70,14 +70,14 @@ RevealData::FiringPattern revealFiringPatternFromJson(const Json::Value& v);
 Json::Value toJson(const TorpedoData& d);
 TorpedoData torpedoDataFromJson(const Json::Value& v);
 
-Json::Value toJson(const ExocetData& d);
-ExocetData exocetDataFromJson(const Json::Value& v);
+Json::Value toJson(const TomahawkData& d);
+TomahawkData tomahawkDataFromJson(const Json::Value& v);
 
 Json::Value toJson(const ApacheData& d);
 ApacheData apacheDataFromJson(const Json::Value& v);
 
-Json::Value toJson(const TomahawkData& d);
-TomahawkData tomahawkDataFromJson(const Json::Value& v);
+Json::Value toJson(const ExocetData& d);
+ExocetData exocetDataFromJson(const Json::Value& v);
 
 Json::Value toJson(const RelocateData& d);
 RelocateData relocateDataFromJson(const Json::Value& v);
