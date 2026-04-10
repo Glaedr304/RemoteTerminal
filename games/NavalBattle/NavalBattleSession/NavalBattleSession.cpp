@@ -104,6 +104,7 @@ AddressedMessageBundle NavalBattleSession::getSnapshotMessageBundles() {
 
 	UserSnapshot p1Snapshot;
 	p1Snapshot.currentUser = _playerToUserMap[engine.currentTurn()];
+	p1Snapshot.winner = _playerToUserMap[engine.getWinner()];
 	p1Snapshot.phase = engine.phase();
 	p1Snapshot.userView = UserView(_playerToUserMap[Player::one], engine.boardViewForPlayer(Player::one));
 	p1Snapshot.youReady = engine.isPlayerReady(Player::one);
@@ -118,6 +119,7 @@ AddressedMessageBundle NavalBattleSession::getSnapshotMessageBundles() {
 
 	UserSnapshot p2Snapshot;
 	p2Snapshot.currentUser = p1Snapshot.currentUser;
+	p2Snapshot.winner = p1Snapshot.winner;
 	p2Snapshot.phase = p1Snapshot.phase;
 	p2Snapshot.userView = UserView(_playerToUserMap[Player::two], engine.boardViewForPlayer(Player::two));
 	p2Snapshot.youReady = engine.isPlayerReady(Player::two);
@@ -190,6 +192,7 @@ AddressedMessageBundle NavalBattleSession::getSnapshotMessageBundleForUser(const
 
 	UserSnapshot snapshot;
 	snapshot.currentUser = _playerToUserMap[_engine.currentTurn()];
+	snapshot.winner = _playerToUserMap[_engine.getWinner()];
 	snapshot.phase = _engine.phase();
 	snapshot.userView = UserView(u, _engine.boardViewForPlayer(p));
 	snapshot.youReady = _engine.isPlayerReady(p);

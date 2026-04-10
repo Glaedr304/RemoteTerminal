@@ -121,6 +121,7 @@ namespace NavalBattle {
     struct UserSnapshot {
         Phase phase;
         UserId currentUser;
+        UserId winner;
         UserView userView;
         FleetView fleetView;
         bool youReady;

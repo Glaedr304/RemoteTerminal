@@ -1341,12 +1341,7 @@ function applySnapshot(snapshot) {
     
     // Check for game end BEFORE updating lastPhase
     if (currentPhase === "finished" && lastPhase !== "finished") {
-        // Determine if we won by checking if we have any unhit ships left
-        const ownGridData = snapshot.userview?.boardview?.owngrid || [];
-        const hasShipsLeft = ownGridData.some(entry => 
-            entry.states && Array.isArray(entry.states) && entry.states.includes("ship")
-        );
-        showGameOver(hasShipsLeft);
+        showGameOver(snapshot.winner === myUserId);
     }
 
     // Now update the phase tracking
