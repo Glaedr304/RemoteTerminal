@@ -46,8 +46,9 @@ private:
     std::map<UserId, Player> _userToPlayerMap;
     std::map<Player, UserId> _playerToUserMap;
 
+    GameMode _gameMode;
     NavalBattleEngine _engine;
-    
+
     // Rematch tracking
     bool _playerOneWantsRematch = false;
     bool _playerTwoWantsRematch = false;

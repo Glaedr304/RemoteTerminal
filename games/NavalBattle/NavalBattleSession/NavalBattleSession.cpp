@@ -6,7 +6,7 @@
 using namespace NavalBattle;
 
 NavalBattleSession::NavalBattleSession(const GameId& id, const UserId& playerOneId, const UserId& playerTwoId, GameMode mode)
-	: _engine(mode)
+	: _gameMode(mode), _engine(mode)
 {
 	_userToPlayerMap[playerOneId] = Player::one;
 	_userToPlayerMap[playerTwoId] = Player::two;
@@ -478,7 +478,7 @@ AddressedMessageBundle NavalBattleSession::processRematchRequest(const UserId& u
 	// Check if both players want a rematch
 	if (_playerOneWantsRematch && _playerTwoWantsRematch) {
 		// Reset the engine for a new game
-		_engine = NavalBattleEngine();
+		_engine = NavalBattleEngine(_gameMode);
 		_playerOneWantsRematch = false;
 		_playerTwoWantsRematch = false;
 		
