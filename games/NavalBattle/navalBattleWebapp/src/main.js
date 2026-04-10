@@ -60,13 +60,13 @@ let antiAircraftMode = false; // true when player is selecting a target for anti
 
 // Ability configuration - what additional options each ability needs
 const ABILITY_CONFIG = {
-    torpedo: { needsTarget: true, needsFiringPattern: true, patterns: ["vertical", "horizontal"], targetType: "opponent" },
-    exocet: { needsTarget: true, needsFiringPattern: false, targetType: "opponent" },
-    apache: { needsTarget: true, needsFiringPattern: true, patterns: ["vertical", "horizontal"], targetType: "opponent" },
-    tomahawk: { needsTarget: true, needsFiringPattern: true, patterns: ["plus", "x"], targetType: "opponent" },
-    scan: { needsTarget: true, needsFiringPattern: false, targetType: "opponent" },
-    reveal: { needsTarget: false, needsFiringPattern: true, patterns: ["square", "diamond"] },
-    relocate: { needsTarget: true, needsFiringPattern: false, targetType: "dynamic", needsShipId: true }
+    torpedo:  { needsTarget: true, needsFiringPattern: true,  patterns: ["vertical", "horizontal"], targetType: "opponent" },
+    exocet:   { needsTarget: true, needsFiringPattern: true,  patterns: ["plus", "x"],              targetType: "opponent" },
+    apache:   { needsTarget: true, needsFiringPattern: true,  patterns: ["vertical", "horizontal"], targetType: "opponent" },
+    tomahawk: { needsTarget: true, needsFiringPattern: false,                                        targetType: "opponent" },
+    scan:     { needsTarget: true, needsFiringPattern: false,                                        targetType: "opponent" },
+    reveal:   { needsTarget: false, needsFiringPattern: true, patterns: ["square", "diamond"] },
+    relocate: { needsTarget: true, needsFiringPattern: false,                                        targetType: "dynamic", needsShipId: true }
 };
 
 // === Utility Functions ===
