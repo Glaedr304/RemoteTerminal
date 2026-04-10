@@ -216,7 +216,7 @@ SessionActionResult NavalBattleSession::handlePlaceShip(Player p, const SessionA
 		}
 	}
 	
-	return answer;;
+	return answer;
 }
 
 SessionActionResult NavalBattleSession::handlePlacePlane(Player p, const SessionAction& a) {
