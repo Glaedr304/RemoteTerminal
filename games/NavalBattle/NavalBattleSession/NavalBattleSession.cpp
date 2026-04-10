@@ -99,42 +99,8 @@ AddressedMessageBundle NavalBattleSession::handleAction(const UserId& user, cons
 
 AddressedMessageBundle NavalBattleSession::getSnapshotMessageBundles() {
 	AddressedMessageBundle answer;
-
-	const auto& engine = static_cast<const NavalBattleEngine&>(_engine);
-
-	UserSnapshot p1Snapshot;
-	p1Snapshot.currentUser = _playerToUserMap[engine.currentTurn()];
-	p1Snapshot.winner = _playerToUserMap[engine.getWinner()];
-	p1Snapshot.phase = engine.phase();
-	p1Snapshot.userView = UserView(_playerToUserMap[Player::one], engine.boardViewForPlayer(Player::one));
-	p1Snapshot.youReady = engine.isPlayerReady(Player::one);
-	p1Snapshot.opponentReady = engine.isPlayerReady(opponent(Player::one));
-	p1Snapshot.hasAntiAircraftGun = engine.playerHasAntiAircraftGun(Player::one);
-	p1Snapshot.fleetView = FleetView{
-		engine.getFleetForPlayer(Player::one).getShips(),
-		engine.getFleetForPlayer(Player::two).getShips(),
-		engine.getFleetForPlayer(Player::one).getPlanes(),
-		engine.getFleetForPlayer(Player::two).getPlanes()
-	};
-
-	UserSnapshot p2Snapshot;
-	p2Snapshot.currentUser = p1Snapshot.currentUser;
-	p2Snapshot.winner = p1Snapshot.winner;
-	p2Snapshot.phase = p1Snapshot.phase;
-	p2Snapshot.userView = UserView(_playerToUserMap[Player::two], engine.boardViewForPlayer(Player::two));
-	p2Snapshot.youReady = engine.isPlayerReady(Player::two);
-	p2Snapshot.opponentReady = engine.isPlayerReady(opponent(Player::two));
-	p2Snapshot.hasAntiAircraftGun = engine.playerHasAntiAircraftGun(Player::two);
-	p2Snapshot.fleetView = FleetView{
-		engine.getFleetForPlayer(Player::two).getShips(),
-		engine.getFleetForPlayer(Player::one).getShips(),
-		engine.getFleetForPlayer(Player::two).getPlanes(),
-		engine.getFleetForPlayer(Player::one).getPlanes()
-	};
-	
-	answer.addMessage(ToUser(_playerToUserMap[Player::one]), p1Snapshot);
-	answer.addMessage(ToUser(_playerToUserMap[Player::two]), p2Snapshot);
-
+	answer.addMessageBundle(getSnapshotMessageBundleForUser(_playerToUserMap[Player::one]));
+	answer.addMessageBundle(getSnapshotMessageBundleForUser(_playerToUserMap[Player::two]));
 	return answer;
 }
 
