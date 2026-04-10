@@ -334,13 +334,9 @@ ActivateAbilityResultData NavalBattle::NavalBattleEngine::executeAbilityPlan(Pla
 ActivateAbilityResultData NavalBattleEngine::executeBulkFirePlan(Player p, BulkFirePlan plan) {
     BulkFireResultData answer;
 
-    for (const coord& c : plan.targets) {
-        Fleet::hitFleetShipsResult r = hitCoord(opponent(p), c);
-        if (r.success)
+    for (const coord& c : plan.targets)
+        if (hitCoord(opponent(p), c).success)
             answer.isHit = true;
-        else if (r.error != Fleet::hitFleetShipsError::coordAlreadyHit) //not a true miss if this coord was hit before
-            getMissesForPlayer(p).insert(c);
-    }
     
     return answer;
 }
@@ -599,11 +595,9 @@ FireResult NavalBattleEngine::fire(Player p, coord target) {
         answer.isSink = r.sunk;
         answer.hitId = r.hitID;
     }
-    else {
-        if(r.error != Fleet::hitFleetShipsError::coordAlreadyHit) //not a true miss if this coord was hit before
-            getMissesForPlayer(p).insert(target);
+    else
         answer.isHit = false;
-    }
+
     if (answer.success)
         advanceTurn();
 
@@ -648,9 +642,9 @@ std::string NavalBattleEngine::nameForId(int id) const {
 Fleet::hitFleetShipsResult NavalBattleEngine::hitCoord(Player p, coord target) {
     auto& f = getDataForPlayer(p).fleet;
     auto r = f.hitFleetShips(target);
+    auto& opponentData = getDataForPlayer(opponent(p));
     if (r.success) {
         clearScansWithSquareForPlayer(opponent(p), target);
-        auto& opponentData = getDataForPlayer(opponent(p));
         opponentData.hits.insert(target);
         opponentData.revealedHits.erase(target);
 
@@ -660,6 +654,9 @@ Fleet::hitFleetShipsResult NavalBattleEngine::hitCoord(Player p, coord target) {
             _currentPlayer = Player::none;
         }
     }
+    else if(r.error != Fleet::hitFleetShipsError::coordAlreadyHit) 
+		opponentData.misses.insert(target);
+    
     return r;
 }
 
