@@ -54,15 +54,12 @@ void Fleet::placeShip(VehicleId id, coord pos, int rotation) {
 
 void Fleet::addPlane(const Plane& plane) {
 	planes.push_back(plane);
-	hitmapUpToDate = false;
 }
 
 void Fleet::placePlane(VehicleId id, coord pos) {
 	Plane* p = getPlaneById(id);
-	if (p) {
+	if (p)
 		p->setPos(pos);
-		hitmapUpToDate = false;
-	}
 }
 
 void Fleet::placeVehicle(VehicleId id, coord pos, int rotation /*=0*/) {
@@ -74,10 +71,8 @@ void Fleet::placeVehicle(VehicleId id, coord pos, int rotation /*=0*/) {
 		return;
 	}
 	Plane* p = getPlaneById(id);
-	if (p) {
+	if (p)
 		p->setPos(pos);
-		hitmapUpToDate = false;
-	}
 }
 
 void NavalBattle::Fleet::vehicleIsOnShip(VehicleId id, bool state) {
