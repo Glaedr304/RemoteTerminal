@@ -773,7 +773,10 @@ function executeAbility(row, col) {
             };
             break;
         case "exocet":
-            abilityData = { target: { row, col } };
+            abilityData = {
+                firingpattern: firingPattern,
+                target: { row, col }
+            };
             break;
         case "apache":
             abilityData = {
@@ -782,10 +785,7 @@ function executeAbility(row, col) {
             };
             break;
         case "tomahawk":
-            abilityData = {
-                firingpattern: firingPattern,
-                target: { row, col }
-            };
+            abilityData = { target: { row, col } };
             break;
         case "scan":
             abilityData = { target: { row, col } };
@@ -1031,7 +1031,10 @@ function handleOppGridHover(row, col) {
             };
             break;
         case "exocet":
-            abilityData = { target: { row, col } };
+            abilityData = {
+                firingpattern: firingPattern,
+                target: { row, col }
+            };
             break;
         case "apache":
             abilityData = {
@@ -1040,10 +1043,7 @@ function handleOppGridHover(row, col) {
             };
             break;
         case "tomahawk":
-            abilityData = {
-                firingpattern: firingPattern,
-                target: { row, col }
-            };
+            abilityData = { target: { row, col } };
             break;
         case "scan":
             abilityData = { target: { row, col } };
@@ -1316,8 +1316,8 @@ function applySetupInfo(setupInfo) {
     gameSection.classList.remove("hidden");
 
     // Populate info
-    meSpan.textContent = setupInfo.you || "—";
-    opponentSpan.textContent = setupInfo.opponent || "—";
+    meSpan.textContent = setupInfo.you || "ï¿½";
+    opponentSpan.textContent = setupInfo.opponent || "ï¿½";
     updatePhaseDisplay(lastPhase);
 
     // Build grids
