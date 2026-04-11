@@ -649,7 +649,7 @@ Fleet::hitFleetShipsResult NavalBattleEngine::hitCoord(Player p, coord target) {
         opponentData.revealedHits.erase(target);
 
         //this belongs here because the game will always end on hitting a coord
-        if (opponentData.fleet.isDefeated()) {
+        if (f.isDefeated()) {
             _phase = Phase::finished;
             _currentPlayer = Player::none;
         }
