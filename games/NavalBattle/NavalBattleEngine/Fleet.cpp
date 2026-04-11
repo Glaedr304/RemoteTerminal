@@ -7,18 +7,18 @@ Fleet::Fleet(std::vector<Ship> ships) :
 	ships(ships)
 {};
 
-void Fleet::buildHitmap() {
+void Fleet::buildHitmap() const{
 	hitmap.clear();
-	for (Ship& s : ships) {
-		for (coord c : s.getCoords()) { //maybe should only add unhit coords?
+	for (const Ship& s : ships) {
+		for (coord c : s.getCoords()) {
 			coord transformed = c.applyTransform(s.getPos(), s.getRotation());
-			hitmap[transformed] = &s;
+			hitmap[transformed] = const_cast<Ship*>(&s);
 		}
 	}
 	hitmapUpToDate = true;
 }
 
-std::map<coord, Ship*>& Fleet::getHitmap() {
+std::map<coord, Ship*>& Fleet::getHitmap() const{
 	if (!hitmapUpToDate)
 		buildHitmap();
 

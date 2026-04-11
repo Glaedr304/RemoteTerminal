@@ -10,10 +10,10 @@ class Fleet {
 private:
 	std::vector<Ship> ships;
 	std::vector<Plane> planes;
-	void buildHitmap();
-	std::map<coord, Ship*>& getHitmap();
-	bool hitmapUpToDate = false;
-	std::map<coord, Ship*> hitmap;
+	void buildHitmap() const;
+	std::map<coord, Ship*>& getHitmap() const;
+	mutable bool hitmapUpToDate = false;
+	mutable std::map<coord, Ship*> hitmap;
 
 	Ship* getShipById(VehicleId id);
 	Plane* getPlaneById(VehicleId id);
