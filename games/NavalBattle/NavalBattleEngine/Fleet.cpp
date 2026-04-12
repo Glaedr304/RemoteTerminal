@@ -212,7 +212,7 @@ Fleet::hitFleetPlanesResult Fleet::hitFleetPlanesOnShip(coord c) {
 bool Fleet::wouldBeHit(const coord& c) {
 	auto m = getHitmap();
 	auto r = m.find(c);
-	if (r == m.end())
+	if (r == m.end() || !r->second->wouldBeHit(c))
 		return false;
 	return true;
 }

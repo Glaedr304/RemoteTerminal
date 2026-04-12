@@ -103,6 +103,11 @@ const std::set<coord>& Ship::getCoords() const {
 	return coords;
 }
 
+bool NavalBattle::Ship::wouldBeHit(coord where) const {
+	coord transformed = where.applyInverseTransform(pos, rotation);
+	return coords.find(transformed) != coords.end() && hits.find(transformed) == hits.end();
+}
+
 bool Ship::useAbility(VehicleAbilityType abilityType) {
 	for (VehicleAbility& a : _abilities)
 		if (a.getType() == abilityType)

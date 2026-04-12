@@ -48,6 +48,8 @@ public:
 	bool isPlaced() const;
 	const std::set<coord>& getCoords() const;
 
+	bool wouldBeHit(coord where) const;
+
 	bool useAbility(VehicleAbilityType abilityType);
 
 	const std::vector<VehicleAbility>& getAbilities() const;
