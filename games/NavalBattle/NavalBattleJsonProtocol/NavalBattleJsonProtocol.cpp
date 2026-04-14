@@ -685,6 +685,15 @@ Json::Value toJson(const BoardView& b) {
 	return answer;
 }
 
+Json::Value toJson(const SquareView& s) {
+	Json::Value answer;
+
+	answer["coord"] = toJson(s.first);
+	answer["state"] = toJson(s.second);
+
+	return answer;
+}
+
 Json::Value toJson(const GridView& g) {
 	Json::Value answer(Json::arrayValue);
 	for (SquareView s : g)
@@ -703,10 +712,6 @@ Json::Value toJson(const SquareState& s) {
 			answer = "hit";
 			break;
 		}
-		case SquareState::ship: {
-			answer = "ship";
-			break;
-		}
 		case SquareState::revealedMiss: {
 			answer = "revealedmiss";
 			break;
@@ -719,26 +724,7 @@ Json::Value toJson(const SquareState& s) {
 			answer = "scannedpositive";
 			break;
 		}
-		case SquareState::plane: {
-			answer = "plane";
-			break;
-		}
 	}
-	return answer;
-}
-
-Json::Value toJson(const SquareView& s) {
-	Json::Value answer;
-
-	answer["coord"] = toJson(s.first);
-
-	// Convert set of SquareStates to JSON array
-	Json::Value statesArray(Json::arrayValue);
-	for (const SquareState& state : s.second)
-		statesArray.append(toJson(state));
-	
-	answer["states"] = statesArray;
-
 	return answer;
 }
 

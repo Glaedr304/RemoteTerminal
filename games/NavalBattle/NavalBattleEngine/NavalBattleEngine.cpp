@@ -704,45 +704,30 @@ BoardView NavalBattleEngine::boardViewForPlayer(Player p) const{
 GridView NavalBattleEngine::ownGrid(Player p) const {
     GridView occupied;
     const Fleet& f = getFleetForPlayer(p);
-
-    // Add ships
-    for (const Ship& s : f.getShips())
-        if(s.isPlaced())
-            for (const coord& c : s.getCoords())
-                occupied[c.applyTransform(s.getPos(), s.getRotation())].insert(SquareState::ship);
-
-    // Add planes that are on carrier
-    for (const Plane& plane : f.getPlanes())
-        if (plane.isPlaced() && plane.isOnCarrier() && !plane.isDestroyed())
-            occupied[plane.getPos()].insert(SquareState::plane);
-
+    
     for (const auto& c : getDataForPlayer(opponent(p)).revealedHits)
-        occupied[c].insert(SquareState::revealedHit);
+        occupied[c] = SquareState::revealedHit;
     for (const auto& c : getMissesForPlayer(opponent(p)))
-        occupied[c].insert(SquareState::miss);
+        occupied[c] = SquareState::miss;
     for (const auto& c : getHitsForPlayer(opponent(p)))
-        occupied[c].insert(SquareState::hit);
+        occupied[c] = SquareState::hit;
     return occupied;
 }
 
 GridView NavalBattleEngine::opponentGrid(Player p) const {
-    std::map<coord, std::set<SquareState>> occupied;
-
-    for (const Plane& plane : getFleetForPlayer(p).getPlanes())
-        if (plane.isPlaced() && !plane.isOnCarrier() && !plane.isDestroyed())
-            occupied[plane.getPos()].insert(SquareState::plane);
+    std::map<coord, SquareState> occupied;
 
     for (const auto& s : getDataForPlayer(p).scansWithHits)
         for (const auto& c : s)
-            occupied[c].insert(SquareState::scannedPositive);
+            occupied[c] = SquareState::scannedPositive;
     for (const auto& c : getDataForPlayer(p).revealedMisses)
-        occupied[c].insert(SquareState::revealedMiss);
+        occupied[c] = SquareState::revealedMiss;
     for (const auto& c : getDataForPlayer(p).revealedHits)
-        occupied[c].insert(SquareState::revealedHit);
+        occupied[c] = SquareState::revealedHit;
     for (const auto& c : getMissesForPlayer(p))
-        occupied[c].insert(SquareState::miss);
+        occupied[c] = SquareState::miss;
     for (const auto& c : getHitsForPlayer(p))
-        occupied[c].insert(SquareState::hit);
+        occupied[c] = SquareState::hit;
     return GridView(occupied);
 }
 

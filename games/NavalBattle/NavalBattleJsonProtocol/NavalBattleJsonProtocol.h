@@ -116,8 +116,6 @@ Json::Value toJson(const GridView& g);
 
 Json::Value toJson(const SquareState& s);
 
-Json::Value toJson(const SquareView& s);
-
 Json::Value toJson(const SessionActionResultData& s);
 
 Json::Value toJson(const SessionActionResultError& s);

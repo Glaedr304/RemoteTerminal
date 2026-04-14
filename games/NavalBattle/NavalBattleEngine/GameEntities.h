@@ -88,15 +88,13 @@ struct ReadyUpResult {
 
 enum class SquareState {
 	miss,
-	ship,
 	hit,
 	revealedMiss,
 	revealedHit,
-	scannedPositive,
-	plane
+	scannedPositive
 };
 
-using GridView = std::map<coord, std::set<SquareState>>;
+using GridView = std::map<coord, SquareState>;
 using SquareView = GridView::value_type;
 
 struct BoardView {
