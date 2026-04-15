@@ -675,6 +675,7 @@ Json::Value toJson(const UserView& u) {
 	Json::Value answer(Json::objectValue);
 	answer["userid"] = toJson(u.userId);
 	answer["boardview"] = toJson(u.boardView);
+	answer["vehicleview"] = toJson(u.vehicleView);
 	return answer;
 }
 
@@ -949,7 +950,6 @@ Json::Value toJson(const StartupInfo& s) {
 	answer["opponent"] = toJson(s.opponent);
 	answer["gameid"] = toJson(s.gameId);
 	answer["userview"] = toJson(s.userView);
-	answer["fleetview"] = toJson(s.fleetView);
 	answer["boardrows"] = s.boardRows;
 	answer["boardcols"] = s.boardCols;
 	answer["hasantiaircraft"] = s.hasAntiAircraftGun;
@@ -962,7 +962,6 @@ Json::Value toJson(const UserSnapshot& u) {
 	answer["currentturn"] = toJson(u.currentUser);
 	answer["winner"] = toJson(u.winner);
 	answer["userview"] = toJson(u.userView);
-	answer["fleetview"] = toJson(u.fleetView);
 	answer["youready"] = u.youReady;
 	answer["opponentready"] = u.opponentReady;
 	answer["hasantiaircraft"] = u.hasAntiAircraftGun;
@@ -972,58 +971,48 @@ Json::Value toJson(const UserSnapshot& u) {
 Json::Value toJson(const FleetView& f) {
 	Json::Value answer(Json::objectValue);
 
-	Json::Value yourShips(Json::arrayValue);
-	for (const Ship& s : f.yourShips)
-		yourShips.append(toJson(s));
-	answer["yourships"] = yourShips;
+	Json::Value shipViews(Json::arrayValue);
+	for (const ShipView& s : f.ships)
+		shipViews.append(toJson(s));
+	answer["ships"] = shipViews;
 
-	Json::Value opponentShips(Json::arrayValue);
-	for (const Ship& s : f.opponentShips)
-		opponentShips.append(toJson(s));
-	answer["opponentships"] = opponentShips;
-
-	Json::Value yourPlanes(Json::arrayValue);
-	for (const Plane& p : f.yourPlanes)
-		yourPlanes.append(toJson(p));
-	answer["yourplanes"] = yourPlanes;
-
-	Json::Value opponentPlanes(Json::arrayValue);
-	for (const Plane& p : f.opponentPlanes)
-		opponentPlanes.append(toJson(p));
-	answer["opponentplanes"] = opponentPlanes;
+	Json::Value planeViews(Json::arrayValue);
+	for (const PlaneView& p : f.planes)
+		planeViews.append(toJson(p));
+	answer["planes"] = planeViews;
 
 	return answer;
 }
 
-Json::Value toJson(const Fleet& f) {
+Json::Value toJson(const ShipView& s) {
 	Json::Value answer(Json::objectValue);
-
-	Json::Value ships(Json::arrayValue);
-	for (const Ship& s : f.getShips())
-		ships.append(toJson(s));
-	answer["ships"] = ships;
-
-	Json::Value planes(Json::arrayValue);
-	for (const Plane& p : f.getPlanes())
-		planes.append(toJson(p));
-	answer["planes"] = planes;
-
-	return answer;
-}
-
-Json::Value toJson(const Ship& s) {
-	Json::Value answer(Json::objectValue);
-	answer["name"] = toJson(s.getName());
-	answer["id"] = s.getId();
-	answer["coords"] = toJson(s.getCoords());
-	answer["issunk"] = s.isSunk();
-	answer["canholdplanes"] = s.canHoldPlanes();
-
+	answer["name"] = toJson(s.name);
+	answer["id"] = s.id;
+	answer["coords"] = toJson(s.shape);
+	answer["issunk"] = s.isSunk;
+	if(s.pos)
+		answer["position"] = toJson(s.pos.value());
+	if(s.rotation)
+		answer["rotation"] = s.rotation.value();
 	Json::Value abilities(Json::arrayValue);
-	for (const VehicleAbility& a : s.getAbilities())
+	for (const VehicleAbility& a : s.abilities)
 		abilities.append(toJson(a));
 	answer["abilities"] = abilities;
 
+	return answer;
+}
+
+Json::Value toJson(const PlaneView& p) {
+	Json::Value answer(Json::objectValue);
+	answer["name"] = toJson(p.name);
+	answer["id"] = p.id;
+	answer["isdestroyed"] = p.isDestroyed;
+	if (p.pos)
+		answer["position"] = toJson(p.pos.value());
+	Json::Value abilities(Json::arrayValue);
+	for (const VehicleAbility& a : p.abilities)
+		abilities.append(toJson(a));
+	answer["abilities"] = abilities;
 	return answer;
 }
 
@@ -1120,6 +1109,13 @@ OutboundWireMessage outboundWireMessageFromJson(const Json::Value v) {
 	wb["indentation"] = ""; // single-line
 
 	return Json::writeString(wb, v);
+}
+
+Json::Value toJson(const VehicleView& v) {
+	Json::Value answer(Json::objectValue);
+	answer["yourfleet"] = toJson(v.yourFleet);
+	answer["opponentfleet"] = toJson(v.opponentFleet);
+	return answer;
 }
 
 } // namespace NavalBattle

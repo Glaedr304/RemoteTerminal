@@ -109,13 +109,7 @@ namespace NavalBattle {
     struct UserView {
         UserId userId;
         BoardView boardView;
-    };
-
-    struct FleetView {
-        std::vector<Ship> yourShips;
-        std::vector<Ship> opponentShips;
-        std::vector<Plane> yourPlanes;
-        std::vector<Plane> opponentPlanes;
+		VehicleView vehicleView;
     };
 
     struct UserSnapshot {
@@ -123,7 +117,6 @@ namespace NavalBattle {
         UserId currentUser;
         UserId winner;
         UserView userView;
-        FleetView fleetView;
         bool youReady;
         bool opponentReady;
         bool hasAntiAircraftGun;
@@ -135,7 +128,6 @@ namespace NavalBattle {
         UserId opponent;
         GameId gameId;
         UserView userView;
-        FleetView fleetView;
         int boardRows;
         int boardCols;
         bool hasAntiAircraftGun;

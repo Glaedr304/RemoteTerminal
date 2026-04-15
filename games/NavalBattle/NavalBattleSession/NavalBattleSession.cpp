@@ -114,13 +114,7 @@ AddressedMessageBundle NavalBattleSession::getStartupInfoMessageBundles() {
 		_playerToUserMap[Player::one],
 		_playerToUserMap[opponent(Player::one)],
 		_gameId,
-		UserView(_playerToUserMap[Player::one], engine.boardViewForPlayer(Player::one)),
-		FleetView{
-			engine.getFleetForPlayer(Player::one).getShips(),
-			engine.getFleetForPlayer(Player::two).getShips(),
-			engine.getFleetForPlayer(Player::one).getPlanes(),
-			engine.getFleetForPlayer(Player::two).getPlanes()
-		},
+		UserView(_playerToUserMap[Player::one], engine.boardViewForPlayer(Player::one), engine.vehicleViewForPlayer(Player::one)),
 		engine.boardRows(),
 		engine.boardCols(),
 		engine.playerHasAntiAircraftGun(Player::one)
@@ -131,13 +125,7 @@ AddressedMessageBundle NavalBattleSession::getStartupInfoMessageBundles() {
 		_playerToUserMap[Player::two],
 		_playerToUserMap[opponent(Player::two)],
 		_gameId,
-		UserView(_playerToUserMap[Player::two], engine.boardViewForPlayer(Player::two)),
-		FleetView{
-			engine.getFleetForPlayer(Player::two).getShips(),
-			engine.getFleetForPlayer(Player::one).getShips(),
-			engine.getFleetForPlayer(Player::two).getPlanes(),
-			engine.getFleetForPlayer(Player::one).getPlanes()
-		},
+		UserView(_playerToUserMap[Player::two], engine.boardViewForPlayer(Player::two), engine.vehicleViewForPlayer(Player::two)),
 		engine.boardRows(),
 		engine.boardCols(),
 		engine.playerHasAntiAircraftGun(Player::two)
@@ -160,17 +148,10 @@ AddressedMessageBundle NavalBattleSession::getSnapshotMessageBundleForUser(const
 	snapshot.currentUser = _playerToUserMap[_engine.currentTurn()];
 	snapshot.winner = _playerToUserMap[_engine.getWinner()];
 	snapshot.phase = _engine.phase();
-	snapshot.userView = UserView(u, _engine.boardViewForPlayer(p));
+	snapshot.userView = UserView(u, _engine.boardViewForPlayer(p), _engine.vehicleViewForPlayer(p));
 	snapshot.youReady = _engine.isPlayerReady(p);
 	snapshot.opponentReady = _engine.isPlayerReady(opp);
 	snapshot.hasAntiAircraftGun = _engine.playerHasAntiAircraftGun(p);
-	snapshot.fleetView = FleetView{
-		engine.getFleetForPlayer(p).getShips(),
-		engine.getFleetForPlayer(opp).getShips(),
-		engine.getFleetForPlayer(p).getPlanes(),
-		engine.getFleetForPlayer(opp).getPlanes()
-	};
-
 	answer.addMessage(ToUser(u), snapshot);
 	return answer;
 }

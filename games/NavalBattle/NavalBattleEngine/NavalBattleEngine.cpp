@@ -25,6 +25,70 @@ Fleet& NavalBattleEngine::getFleetForPlayer(Player p) {
 	return getDataForPlayer(p).fleet;
 }
 
+FleetView NavalBattle::NavalBattleEngine::getViewOfOwnFleet(Player viewer) const {
+    FleetView answer;
+    const auto& fleet = getFleetForPlayer(viewer);
+	const auto& ships = fleet.getShips();
+
+    for (const Ship& s : ships) {
+        ShipView sv;
+        sv.id = s.getId();
+        sv.name = s.getName();
+        sv.shape = s.getCoords();
+        sv.pos = s.getPos();
+        sv.rotation = s.getRotation();
+        sv.isSunk = s.isSunk();
+		for (const VehicleAbility& a : s.getAbilities())
+            sv.abilities.push_back(a);
+        answer.ships.push_back(sv);
+    }
+	const auto& planes = fleet.getPlanes();
+    for (const Plane& p : planes) {
+        PlaneView pv;
+		pv.id = p.getId();
+        pv.name = p.getName();
+        pv.pos = p.getPos();
+        pv.isOnShip = p.isOnShip();
+        pv.isDestroyed = p.isDestroyed();
+        for (const VehicleAbility& a : p.getAbilities())
+            pv.abilities.push_back(a);
+		answer.planes.push_back(pv);
+    }
+
+	return answer;
+}
+
+FleetView NavalBattleEngine::getViewOfOpponentFleet(Player viewer) const {
+    FleetView answer;
+    const auto& fleet = getFleetForPlayer(opponent(viewer));
+    const auto& ships = fleet.getShips();
+    for (const Ship& s : ships) {
+        ShipView sv;
+        sv.id = s.getId();
+        sv.name = s.getName();
+        sv.shape = s.getCoords();
+        sv.pos = std::nullopt;
+        sv.rotation = std::nullopt;
+        sv.isSunk = s.isSunk();
+        answer.ships.push_back(sv);
+        for (const VehicleAbility& a : s.getAbilities())
+            sv.abilities.push_back(a);
+    }
+    const auto& planes = fleet.getPlanes();
+    for (const Plane& p : planes) {
+        PlaneView pv;
+        pv.id = p.getId();
+        pv.name = p.getName();
+        pv.pos = std::nullopt;
+        pv.isOnShip = p.isOnShip();
+        pv.isDestroyed = p.isDestroyed();
+        for (const VehicleAbility& a : p.getAbilities())
+            pv.abilities.push_back(a);
+        answer.planes.push_back(pv);
+    }
+    return answer;
+}
+
 // only checks the overall status of the fleet
 // not the specific result of changing ship s
 PlaceShipResult NavalBattleEngine::placeShip( Player p, int ID, coord pos, int rotation ) {
@@ -699,6 +763,13 @@ BoardView NavalBattleEngine::boardViewForPlayer(Player p) const{
     b.ownGrid = ownGrid(p);
     b.opponentGrid = opponentGrid(p);
     return b;
+}
+
+VehicleView NavalBattleEngine::vehicleViewForPlayer(Player viewer) const {
+    VehicleView v;
+    v.yourFleet = getViewOfOwnFleet(viewer);
+    v.opponentFleet = getViewOfOpponentFleet(viewer);
+    return v;
 }
 
 GridView NavalBattleEngine::ownGrid(Player p) const {

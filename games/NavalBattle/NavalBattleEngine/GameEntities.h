@@ -5,6 +5,7 @@
 #include <string>
 #include <variant>
 #include <vector>
+#include <optional>
 #include <map>
 #include <set>
 
@@ -100,6 +101,35 @@ using SquareView = GridView::value_type;
 struct BoardView {
 	GridView ownGrid;
 	GridView opponentGrid;
+};
+
+struct ShipView {
+	int id;
+	std::string name;
+	std::set<coord> shape;
+	std::optional<coord> pos;
+	std::optional<int> rotation;
+	bool isSunk;
+	std::vector<VehicleAbility> abilities;
+};
+
+struct PlaneView {
+	int id;
+	std::string name;
+	std::optional<coord> pos;
+	bool isOnShip;
+	bool isDestroyed;
+	std::vector<VehicleAbility> abilities;
+};
+
+struct FleetView {
+	std::vector<ShipView> ships;
+	std::vector<PlaneView> planes;
+};
+
+struct VehicleView {
+	FleetView yourFleet;
+	FleetView opponentFleet;
 };
 
 struct TorpedoData {

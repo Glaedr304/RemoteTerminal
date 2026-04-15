@@ -60,6 +60,7 @@ class NavalBattleEngine {
 
         BoardView boardViewForPlayer(Player p) const;
 
+        VehicleView vehicleViewForPlayer(Player p) const;
 
 private:
 
@@ -67,6 +68,9 @@ private:
     std::set<coord>& getMissesForPlayer(Player p);
 
     Fleet& getFleetForPlayer(Player p);
+
+	FleetView getViewOfOwnFleet(Player viewer) const;
+	FleetView getViewOfOpponentFleet(Player viewer) const;
 
     GridView ownGrid(Player p) const;
     GridView opponentGrid(Player p) const;

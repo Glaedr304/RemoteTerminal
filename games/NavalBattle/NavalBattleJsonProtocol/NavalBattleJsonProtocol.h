@@ -162,9 +162,9 @@ Json::Value toJson(const FleetView& f);
 
 Json::Value toJson(const StartupInfo& s);
 
-Json::Value toJson(const Fleet& f);
+Json::Value toJson(const ShipView& s);
 
-Json::Value toJson(const Ship& s);
+Json::Value toJson(const PlaneView& p);
 
 Json::Value toJson(const std::set<coord> s);
 
@@ -179,5 +179,7 @@ JoinRequest joinRequestFromJson(const Json::Value& v);
 ActionRequest actionRequestFromJson(const Json::Value& v);
 
 OutboundWireMessage outboundWireMessageFromJson(const Json::Value v);
+
+Json::Value toJson(const VehicleView& v);
 
 } // namespace NavalBattle
