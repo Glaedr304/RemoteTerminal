@@ -517,7 +517,7 @@ ValidateAbilityResult NavalBattleEngine::validateRelocateData(RelocateData d) co
 	plan.shipId = d.shipId;
 	plan.willBeOnShip = false;
 
-	if (!isValidCoord(d.target))
+	if (d.target.d < 1 || d.target.o < 1 || d.target.d >= boardRows() - 1 || d.target.o >= boardCols() - 1)
 		answer.error = ActivateAbilityResultError::outOfBounds;
 
 	Player vehicleOwner = getPlayerWithVehicleId(d.shipId);
