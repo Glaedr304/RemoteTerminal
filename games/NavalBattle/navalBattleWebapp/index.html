@@ -77,14 +77,8 @@
 
             <!-- Main Game Area -->
             <div class="game-area">
-                <!-- Your Fleet Panel (Left) -->
-                <div class="fleet-panel your-fleet">
-                    <h3>Your Fleet</h3>
-                    <div id="yourFleetList" class="fleet-list"></div>
-                </div>
-
-                <!-- Grids Container (Center) -->
-                <div class="grids-container">
+                <!-- Your Column -->
+                <div class="player-column">
                     <div class="grid-wrapper">
                         <h3>Your Waters</h3>
                         <div class="grid-with-labels">
@@ -94,6 +88,14 @@
                             <div id="ownGrid" class="grid"></div>
                         </div>
                     </div>
+                    <div class="fleet-panel your-fleet">
+                        <h3>Your Fleet</h3>
+                        <div id="yourFleetList" class="fleet-list"></div>
+                    </div>
+                </div>
+
+                <!-- Enemy Column -->
+                <div class="player-column">
                     <div class="grid-wrapper">
                         <h3>Enemy Waters</h3>
                         <div class="grid-with-labels">
@@ -103,12 +105,10 @@
                             <div id="oppGrid" class="grid"></div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Opponent Fleet Panel (Right) -->
-                <div class="fleet-panel opponent-fleet">
-                    <h3>Enemy Fleet</h3>
-                    <div id="opponentFleetList" class="fleet-list"></div>
+                    <div class="fleet-panel opponent-fleet">
+                        <h3>Enemy Fleet</h3>
+                        <div id="opponentFleetList" class="fleet-list"></div>
+                    </div>
                 </div>
             </div>
         </section>
