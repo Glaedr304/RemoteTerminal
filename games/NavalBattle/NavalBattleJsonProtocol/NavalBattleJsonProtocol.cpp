@@ -1007,6 +1007,7 @@ Json::Value toJson(const PlaneView& p) {
 	answer["name"] = toJson(p.name);
 	answer["id"] = p.id;
 	answer["isdestroyed"] = p.isDestroyed;
+	answer["isoncarrier"] = p.isOnShip;
 	if (p.pos)
 		answer["position"] = toJson(p.pos.value());
 	Json::Value abilities(Json::arrayValue);

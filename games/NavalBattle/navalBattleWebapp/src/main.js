@@ -359,8 +359,7 @@ function createShipCard(ship, isYours) {
     }
 
     // Mark as placed if ship has valid position
-    const isPlaced = ship.pos && ship.pos.row !== undefined && ship.pos.col !== undefined &&
-                     !(ship.pos.row === -1 && ship.pos.col === -1);
+    const isPlaced = ship.position !== undefined && ship.position !== null;
     if (isPlaced) {
         card.classList.add("placed");
     }
@@ -415,8 +414,7 @@ function createPlaneCard(plane, isYours, planeIndex = 0) {
     }
 
     // Mark as placed if plane has valid position
-    const isPlaced = plane.pos && plane.pos.row !== undefined && plane.pos.col !== undefined &&
-                     !(plane.pos.row === -1 && plane.pos.col === -1);
+    const isPlaced = plane.position !== undefined && plane.position !== null;
     if (isPlaced) {
         card.classList.add("placed");
     }
@@ -450,8 +448,8 @@ function createPlaneCard(plane, isYours, planeIndex = 0) {
     if (isPlaced) {
         const posEl = document.createElement("div");
         posEl.className = "plane-position";
-        const rowLabel = String.fromCharCode(65 + plane.pos.row);
-        posEl.textContent = `${rowLabel}${plane.pos.col + 1}`;
+        const rowLabel = String.fromCharCode(65 + plane.position.row);
+        posEl.textContent = `${rowLabel}${plane.position.col + 1}`;
         card.appendChild(posEl);
     }
 
@@ -515,27 +513,100 @@ function renderFleetPanel(container, ships, planes, isYours) {
     }
 }
 
-function updateFleetPanels(fleetView) {
-    if (!fleetView) return;
+// Resolves a ship's intrinsic shape coords into absolute board coords by
+// applying `rotation` counterclockwise 90-degree rotations and then
+// translating by `position`. Returns null if position is not set.
+function getAbsoluteShipCoords(ship) {
+    if (!ship.position || !ship.coords || ship.coords.length === 0) return null;
 
-    // Keep lastSetupInfo.fleetview in sync for re-renders
+    const rotation = ship.rotation || 0;
+    let coords = ship.coords.map(c => ({ row: c.row, col: c.col }));
+
+    // Apply counterclockwise 90-degree rotations: (row, col) -> (-col, row)
+    for (let i = 0; i < rotation; i++) {
+        coords = coords.map(c => ({ row: -c.col, col: c.row }));
+    }
+
+    // Translate by the placed position
+    return coords.map(c => ({
+        row: c.row + ship.position.row,
+        col: c.col + ship.position.col
+    }));
+}
+
+function drawVehiclesOnGrid(vehicleView, cols) {
+    if (!vehicleView) return;
+
+    // Draw own ships on own grid
+    for (const ship of vehicleView.yourfleet?.ships || []) {
+        const absCoords = getAbsoluteShipCoords(ship);
+        if (!absCoords) continue;
+        for (const coord of absCoords) {
+            const idx = coord.row * cols + coord.col;
+            const cell = ownGrid.children[idx];
+            if (cell && !cell.classList.contains("hit") && !cell.classList.contains("revealedhit")) cell.classList.add("ship");
+        }
+    }
+
+    // Draw own planes: on carrier → ownGrid, deployed (in air) → oppGrid
+    (vehicleView.yourfleet?.planes || []).forEach((plane, planeIndex) => {
+        if (plane.position && !plane.isdestroyed) {
+            const targetGrid = plane.isoncarrier ? ownGrid : oppGrid;
+            const idx = plane.position.row * cols + plane.position.col;
+            const cell = targetGrid.children[idx];
+            if (cell) {
+                cell.classList.add("plane");
+                cell.classList.add(`plane-color-${planeIndex % PLANE_COLORS.length}`);
+            }
+        }
+    });
+
+    // Draw opponent ships on opponent grid (only if position is known, e.g. sunk ships)
+    for (const ship of vehicleView.opponentfleet?.ships || []) {
+        const absCoords = getAbsoluteShipCoords(ship);
+        if (!absCoords) continue;
+        for (const coord of absCoords) {
+            const idx = coord.row * cols + coord.col;
+            const cell = oppGrid.children[idx];
+            if (cell && !cell.classList.contains("hit") && !cell.classList.contains("revealedhit")) cell.classList.add("ship");
+        }
+    }
+
+    // Draw opponent planes: on carrier → oppGrid, deployed (attacking us) → ownGrid
+    (vehicleView.opponentfleet?.planes || []).forEach((plane, planeIndex) => {
+        if (plane.position && !plane.isdestroyed) {
+            const targetGrid = plane.isoncarrier ? oppGrid : ownGrid;
+            const idx = plane.position.row * cols + plane.position.col;
+            const cell = targetGrid.children[idx];
+            if (cell) {
+                cell.classList.add("plane");
+                cell.classList.add(`plane-color-${planeIndex % PLANE_COLORS.length}`);
+            }
+        }
+    });
+}
+
+function updateFleetPanels(vehicleView) {
+    if (!vehicleView) return;
+
+    // Keep lastSetupInfo.vehicleview in sync for re-renders
     if (lastSetupInfo) {
-        lastSetupInfo.fleetview = fleetView;
+        lastSetupInfo.vehicleview = vehicleView;
     }
 
     // Render your fleet (ships and planes)
     renderFleetPanel(
-        yourFleetList, 
-        fleetView.yourships || [], 
-        fleetView.yourplanes || [],
+        yourFleetList,
+        vehicleView.yourfleet?.ships || [],
+        vehicleView.yourfleet?.planes || [],
         true
     );
 
     // Render opponent fleet (ships and planes)
     renderFleetPanel(
-        opponentFleetList, 
-        fleetView.opponentships || [], 
-        fleetView.opponentplanes || [],
+        opponentFleetList,
+        vehicleView.opponentfleet?.ships || [],
+        vehicleView.opponentfleet?.planes || [],
         false
     );
 }
@@ -601,20 +672,13 @@ function showFiringPatternSelector(vehicleId, abilityType, patterns, onPatternSe
 }
 
 function isVehicleAPlane(vehicleId) {
-    if (!lastSetupInfo || !lastSetupInfo.fleetview) return false;
+    if (!lastSetupInfo || !lastSetupInfo.vehicleview) return false;
 
-    // Check in your planes
-    if (lastSetupInfo.fleetview.yourplanes) {
-        for (const plane of lastSetupInfo.fleetview.yourplanes) {
-            if (plane.id === vehicleId) return true;
-        }
+    for (const plane of lastSetupInfo.vehicleview.yourfleet?.planes || []) {
+        if (plane.id === vehicleId) return true;
     }
-
-    // Check in opponent planes (just in case)
-    if (lastSetupInfo.fleetview.opponentplanes) {
-        for (const plane of lastSetupInfo.fleetview.opponentplanes) {
-            if (plane.id === vehicleId) return true;
-        }
+    for (const plane of lastSetupInfo.vehicleview.opponentfleet?.planes || []) {
+        if (plane.id === vehicleId) return true;
     }
 
     return false;
@@ -693,8 +757,8 @@ function handleAntiAircraftClick() {
     updateAntiAircraftModeUI();
 
     // Re-render fleet panels to show active state
-    if (lastSetupInfo && lastSetupInfo.fleetview) {
-        updateFleetPanels(lastSetupInfo.fleetview);
+    if (lastSetupInfo && lastSetupInfo.vehicleview) {
+        updateFleetPanels(lastSetupInfo.vehicleview);
     }
 }
 
@@ -703,8 +767,8 @@ function cancelAntiAircraftMode() {
     updateAntiAircraftModeUI();
 
     // Re-render fleet panels to clear active state
-    if (lastSetupInfo && lastSetupInfo.fleetview) {
-        updateFleetPanels(lastSetupInfo.fleetview);
+    if (lastSetupInfo && lastSetupInfo.vehicleview) {
+        updateFleetPanels(lastSetupInfo.vehicleview);
     }
 }
 
@@ -830,32 +894,27 @@ function executeAbility(row, col) {
 function selectVehicle(type, id) {
     selectedVehicle = { type, id };
     // Re-render fleet panels to show selection
-    if (lastSetupInfo && lastSetupInfo.fleetview) {
-        updateFleetPanels(lastSetupInfo.fleetview);
+    if (lastSetupInfo && lastSetupInfo.vehicleview) {
+        updateFleetPanels(lastSetupInfo.vehicleview);
     }
     showMessage(`Selected ${type} for placement`, "info");
 }
 
-function selectNextUnplacedVehicle(fleetView) {
-    // First check for unplaced ships
-    for (const ship of fleetView.yourships || []) {
-        const isPlaced = ship.pos && ship.pos.row !== undefined && ship.pos.col !== undefined &&
-                         !(ship.pos.row === -1 && ship.pos.col === -1);
+function selectNextUnplacedVehicle(vehicleView) {
+    for (const ship of vehicleView.yourfleet?.ships || []) {
+        const isPlaced = ship.position !== undefined && ship.position !== null;
         if (!isPlaced && !placedShipIds.has(ship.id)) {
             selectVehicle('ship', ship.id);
             return;
         }
     }
-    // Then check for unplaced planes
-    for (const plane of fleetView.yourplanes || []) {
-        const isPlaced = plane.pos && plane.pos.row !== undefined && plane.pos.col !== undefined &&
-                         !(plane.pos.row === -1 && plane.pos.col === -1);
+    for (const plane of vehicleView.yourfleet?.planes || []) {
+        const isPlaced = plane.position !== undefined && plane.position !== null;
         if (!isPlaced && !placedPlaneIds.has(plane.id)) {
             selectVehicle('plane', plane.id);
             return;
         }
     }
-    // All placed
     selectedVehicle = null;
 }
 
@@ -1323,11 +1382,13 @@ function applySetupInfo(setupInfo) {
     // Build grids
     buildGrids(setupInfo.boardrows, setupInfo.boardcols);
 
-    // Render initial fleet panels from setupinfo
-    if (setupInfo.fleetview) {
-        updateFleetPanels(setupInfo.fleetview);
+    // Render initial fleet panels from vehicleview
+    const vehicleView = setupInfo.userview?.vehicleview;
+    if (vehicleView) {
+        updateFleetPanels(vehicleView);
+        drawVehiclesOnGrid(vehicleView, setupInfo.boardcols || 10);
         // Auto-select first unplaced vehicle
-        selectNextUnplacedVehicle(setupInfo.fleetview);
+        selectNextUnplacedVehicle(vehicleView);
     }
 
     showMessage("Game started! Click a ship to select it, then click on your grid to place it.", "success");
@@ -1372,18 +1433,15 @@ function applySnapshot(snapshot) {
     for (const entry of ownGridData) {
         const r = entry.coord?.row;
         const c = entry.coord?.col;
-        const states = entry.states; // Now 'states' is an array
+        const state = entry.state;
 
         if (typeof r !== "number" || typeof c !== "number") continue;
 
         const idx = r * cols + c;
         const cell = ownGrid.children[idx];
 
-        // Apply all states from the array
-        if (cell && states && Array.isArray(states)) {
-            for (const state of states) {
-                cell.classList.add(state);
-            }
+        if (cell && state) {
+            cell.classList.add(state);
         }
     }
 
@@ -1392,28 +1450,26 @@ function applySnapshot(snapshot) {
     for (const entry of oppGridData) {
         const r = entry.coord?.row;
         const c = entry.coord?.col;
-        const states = entry.states; // Now 'states' is an array
+        const state = entry.state;
 
         if (typeof r !== "number" || typeof c !== "number") continue;
 
         const idx = r * cols + c;
         const cell = oppGrid.children[idx];
 
-        // Apply all states from the array
-        if (cell && states && Array.isArray(states)) {
-            for (const state of states) {
-                cell.classList.add(state);
-            }
+        if (cell && state) {
+            cell.classList.add(state);
         }
     }
 
-    // Update fleet panels from snapshot
-    if (snapshot.fleetview) {
-        // Keep hasantiaircraft in sync from snapshot
+    // Update fleet panels from vehicleview
+    const vehicleView = snapshot.userview?.vehicleview;
+    if (vehicleView) {
         if (lastSetupInfo && snapshot.hasantiaircraft !== undefined) {
             lastSetupInfo.hasantiaircraft = snapshot.hasantiaircraft;
         }
-        updateFleetPanels(snapshot.fleetview);
+        updateFleetPanels(vehicleView);
+        drawVehiclesOnGrid(vehicleView, cols);
     }
 }
 
@@ -1516,8 +1572,8 @@ function applyPlaceShipResult(result) {
         if (selectedVehicle && selectedVehicle.type === 'ship') {
             placedShipIds.add(selectedVehicle.id);
         }
-        if (lastSetupInfo && lastSetupInfo.fleetview) {
-            selectNextUnplacedVehicle(lastSetupInfo.fleetview);
+        if (lastSetupInfo && lastSetupInfo.vehicleview) {
+            selectNextUnplacedVehicle(lastSetupInfo.vehicleview);
         }
     } else {
         const errorMessages = {
@@ -1535,8 +1591,8 @@ function applyPlacePlaneResult(result) {
         if (selectedVehicle && selectedVehicle.type === 'plane') {
             placedPlaneIds.add(selectedVehicle.id);
         }
-        if (lastSetupInfo && lastSetupInfo.fleetview) {
-            selectNextUnplacedVehicle(lastSetupInfo.fleetview);
+        if (lastSetupInfo && lastSetupInfo.vehicleview) {
+            selectNextUnplacedVehicle(lastSetupInfo.vehicleview);
         }
     } else {
         const errorMessages = {
