@@ -70,9 +70,9 @@ FleetView NavalBattleEngine::getViewOfOpponentFleet(Player viewer) const {
         sv.pos = std::nullopt;
         sv.rotation = std::nullopt;
         sv.isSunk = s.isSunk();
-        answer.ships.push_back(sv);
         for (const VehicleAbility& a : s.getAbilities())
             sv.abilities.push_back(a);
+        answer.ships.push_back(sv);
     }
     const auto& planes = fleet.getPlanes();
     for (const Plane& p : planes) {
