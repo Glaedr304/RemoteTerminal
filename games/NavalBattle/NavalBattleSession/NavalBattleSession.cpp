@@ -2,16 +2,14 @@
 #include "Action.h"
 
 #include <string>
+#include <random>
 
 using namespace NavalBattle;
 
 NavalBattleSession::NavalBattleSession(const GameId& id, const UserId& playerOneId, const UserId& playerTwoId, GameMode mode)
 	: _gameMode(mode), _engine(mode)
 {
-	_userToPlayerMap[playerOneId] = Player::one;
-	_userToPlayerMap[playerTwoId] = Player::two;
-	_playerToUserMap[Player::one] = playerOneId;
-	_playerToUserMap[Player::two] = playerTwoId;
+	randomlyAssignUsersToPlayers(playerOneId, playerTwoId);
 	_playerToUserMap[Player::none] = "";
 	_gameId = id;
 }
@@ -462,6 +460,8 @@ AddressedMessageBundle NavalBattleSession::processRematchRequest(const UserId& u
 		_engine = NavalBattleEngine(_gameMode);
 		_playerOneWantsRematch = false;
 		_playerTwoWantsRematch = false;
+
+		randomlyAssignUsersToPlayers(user, opponentForUser(user));
 		
 		// Send rematch confirmation to the user who completed the rematch
 		a.addMessage(ToUser(user), result);
@@ -480,6 +480,23 @@ AddressedMessageBundle NavalBattleSession::processRematchRequest(const UserId& u
 	a.addMessage(ToUser(opponent), RematchRequest{user});
 	a.addMessage(ToUser(user), result);
 	return a;
+}
+
+void NavalBattle::NavalBattleSession::randomlyAssignUsersToPlayers(UserId u1, UserId u2) {
+	Player firstPlayer = getRandomPlayer();
+	Player secondPlayer = opponent(firstPlayer);
+
+	_userToPlayerMap[u1] = firstPlayer;
+	_userToPlayerMap[u2] = secondPlayer;
+	_playerToUserMap[firstPlayer] = u1;
+	_playerToUserMap[secondPlayer] = u2;
+}
+
+Player NavalBattle::NavalBattleSession::getRandomPlayer() {
+	static std::random_device rd;
+	static std::uniform_int_distribution<int> dist(0, 1);
+
+	return dist(rd) == 0 ? Player::one : Player::two;
 }
 
 SessionActionResult NavalBattleSession::handleActivateAbility(Player p, const SessionAction& a) {

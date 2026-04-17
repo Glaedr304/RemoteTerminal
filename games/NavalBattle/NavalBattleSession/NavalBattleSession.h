@@ -52,6 +52,10 @@ private:
     // Rematch tracking
     bool _playerOneWantsRematch = false;
     bool _playerTwoWantsRematch = false;
+
+    void randomlyAssignUsersToPlayers(UserId u1, UserId u2);
+
+    static Player getRandomPlayer();
 };
 
 } // namespace NavalBattle
