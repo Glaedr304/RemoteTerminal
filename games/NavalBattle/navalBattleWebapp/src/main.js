@@ -342,7 +342,7 @@ function createAbilityButton(ability, shipId, isYours) {
     element.appendChild(uses);
 
     if (isYours) {
-        element.disabled = !ability.canuse;
+        element.disabled = !ability.canuse || lastPhase === "setup";
         element.addEventListener("click", () => handleAbilityClick(shipId, ability.type));
     }
 
@@ -612,6 +612,7 @@ function updateFleetPanels(vehicleView) {
 }
 
 function handleAbilityClick(vehicleId, abilityType) {
+    if (lastPhase === "setup") return;
     const config = ABILITY_CONFIG[abilityType];
     if (!config) {
         showMessage(`Unknown ability type: ${abilityType}`, "error");
