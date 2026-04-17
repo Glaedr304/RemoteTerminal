@@ -369,8 +369,8 @@ function createShipCard(ship, isYours) {
         card.classList.add("selected");
     }
 
-    // Make clickable during setup for unplaced ships
-    if (isYours && lastPhase === "setup" && !isPlaced) {
+    // Make clickable during setup (placed ships can be re-selected to reposition)
+    if (isYours && lastPhase === "setup") {
         card.classList.add("selectable");
         card.addEventListener("click", () => selectVehicle('ship', ship.id));
     }
@@ -424,8 +424,8 @@ function createPlaneCard(plane, isYours, planeIndex = 0) {
         card.classList.add("selected");
     }
 
-    // Make clickable during setup for unplaced planes
-    if (isYours && lastPhase === "setup" && !isPlaced) {
+    // Make clickable during setup (placed planes can be re-selected to reposition)
+    if (isYours && lastPhase === "setup") {
         card.classList.add("selectable");
         card.addEventListener("click", () => selectVehicle('plane', plane.id));
     }
@@ -893,6 +893,10 @@ function executeAbility(row, col) {
 
 function selectVehicle(type, id) {
     selectedVehicle = { type, id };
+    // If re-selecting an already-placed vehicle, remove it from the placed
+    // sets so auto-advance won't skip it when searching for unplaced vehicles
+    if (type === 'ship') placedShipIds.delete(id);
+    else if (type === 'plane') placedPlaneIds.delete(id);
     // Re-render fleet panels to show selection
     if (lastSetupInfo && lastSetupInfo.vehicleview) {
         updateFleetPanels(lastSetupInfo.vehicleview);
