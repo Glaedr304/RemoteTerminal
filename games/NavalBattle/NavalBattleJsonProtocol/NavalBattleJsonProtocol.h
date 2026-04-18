@@ -138,7 +138,11 @@ Json::Value toJson(const ActivateAbilityResultError& e);
 
 Json::Value toJson(const TorpedoResultData& d);
 
-Json::Value toJson(const BulkFireResultData& d);
+Json::Value toJson(const ExocetResultData& d);
+
+Json::Value toJson(const ApacheResultData& d);
+
+Json::Value toJson(const TomahawkResultData& d);
 
 Json::Value toJson(const RelocateResultData& d);
 

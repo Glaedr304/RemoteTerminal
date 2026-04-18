@@ -882,9 +882,23 @@ Json::Value toJson(const TorpedoResultData& d) {
 	return answer;
 }
 
-Json::Value toJson(const BulkFireResultData& d) {
+Json::Value toJson(const ExocetResultData& d) {
 	Json::Value answer(Json::objectValue);
-	answer["resulttype"] = "bulkfire";
+	answer["resulttype"] = "exocet";
+	answer["ishit"] = d.isHit;
+	return answer;
+}
+
+Json::Value toJson(const ApacheResultData& d) {
+	Json::Value answer(Json::objectValue);
+	answer["resulttype"] = "apache";
+	answer["ishit"] = d.isHit;
+	return answer;
+}
+
+Json::Value toJson(const TomahawkResultData& d) {
+	Json::Value answer(Json::objectValue);
+	answer["resulttype"] = "tomahawk";
 	answer["ishit"] = d.isHit;
 	return answer;
 }
@@ -892,6 +906,7 @@ Json::Value toJson(const BulkFireResultData& d) {
 Json::Value toJson(const RelocateResultData& d) {
 	Json::Value answer(Json::objectValue);
 	answer["resulttype"] = "relocate";
+	answer["shipid"] = d.shipId;
 	return answer;
 }
 
@@ -912,8 +927,12 @@ Json::Value toJson(const RevealResultData& d) {
 Json::Value toJson(const ActivateAbilityResultData& d) {
 	if (std::holds_alternative<TorpedoResultData>(d))
 		return toJson(std::get<TorpedoResultData>(d));
-	if (std::holds_alternative<BulkFireResultData>(d))
-		return toJson(std::get<BulkFireResultData>(d));
+	if (std::holds_alternative<ExocetResultData>(d))
+		return toJson(std::get<ExocetResultData>(d));
+	if (std::holds_alternative<ApacheResultData>(d))
+		return toJson(std::get<ApacheResultData>(d));
+	if (std::holds_alternative<TomahawkResultData>(d))
+		return toJson(std::get<TomahawkResultData>(d));
 	if (std::holds_alternative<RelocateResultData>(d))
 		return toJson(std::get<RelocateResultData>(d));
 	if (std::holds_alternative<ScanResultData>(d))

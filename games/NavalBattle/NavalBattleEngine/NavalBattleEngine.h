@@ -81,7 +81,10 @@ private:
     ActivateAbilityResultData executeRelocatePlan(Player p, RelocatePlan plan);
     ActivateAbilityResultData executeScanPlan(Player p, ScanPlan plan);
     ActivateAbilityResultData executeRevealPlan(Player p, RevealPlan plan);
-    ActivateAbilityResultData executeBulkFirePlan(Player p, BulkFirePlan plan);
+    ActivateAbilityResultData executeExocetPlan(Player p, ExocetPlan plan);
+    ActivateAbilityResultData executeApachePlan(Player p, ApachePlan plan);
+    ActivateAbilityResultData executeTomahawkPlan(Player p, TomahawkPlan plan);
+    bool executeBulkFireTargets(Player p, const std::set<coord>& targets);
 
 	ValidateAbilityResult validateTorpedoData(TorpedoData d) const;
 	ValidateAbilityResult validateExocetData(ExocetData data) const;
@@ -91,17 +94,18 @@ private:
 	ValidateAbilityResult validateScanData(ScanData data) const;
 	ValidateAbilityResult validateRevealData(RevealData d, const AbilityContext& ctx) const;
 
-	ValidateAbilityResult validateBulkFireData(std::set<coord> targets) const;
+	struct BulkFireValidationResult {
+		ActivateAbilityResultError error = ActivateAbilityResultError::none;
+		std::set<coord> targets;
+	};
 
-
+	BulkFireValidationResult validateBulkFireTargets(BulkFireData data) const;
 
 	Fleet createFleetFromBlueprint(const FleetBlueprint& blueprint);
 
-    
-
 	VehicleId getNextVehicleId();
 
-    struct PlayerData {
+	struct PlayerData {
         PlayerData(const Fleet& fleet) : fleet(fleet) {}
         bool isReady = false;
         Fleet fleet;

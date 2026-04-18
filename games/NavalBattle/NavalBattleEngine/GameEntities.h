@@ -212,11 +212,19 @@ struct TorpedoResultData {
 	bool isHit;
 };
 
-struct BulkFireResultData {
+struct ExocetResultData {
 	bool isHit;
 };
 
-struct RelocateResultData {}; //no data
+struct ApacheResultData {
+	bool isHit;
+};
+
+struct TomahawkResultData {
+	bool isHit;
+};
+
+struct RelocateResultData { int shipId = -1; };
 
 struct ScanResultData {
 	bool isFound = false;
@@ -228,7 +236,9 @@ struct RevealResultData {
 
 using ActivateAbilityResultData = std::variant<
 	TorpedoResultData,
-	BulkFireResultData,
+	ExocetResultData,
+	ApacheResultData,
+	TomahawkResultData,
 	RelocateResultData,
 	ScanResultData,
 	RevealResultData
@@ -256,7 +266,15 @@ struct TorpedoPlan {
 	TorpedoDirection direction;
 };
 
-struct BulkFirePlan {
+struct ExocetPlan {
+	std::set<coord> targets;
+};
+
+struct ApachePlan {
+	std::set<coord> targets;
+};
+
+struct TomahawkPlan {
 	std::set<coord> targets;
 };
 
@@ -276,7 +294,9 @@ struct RevealPlan {
 
 using AbilityPlan = std::variant<
 	TorpedoPlan,
-	BulkFirePlan,
+	ExocetPlan,
+	ApachePlan,
+	TomahawkPlan,
 	RelocatePlan,
 	ScanPlan,
 	RevealPlan

@@ -363,56 +363,67 @@ ActivateAbilityResultData NavalBattleEngine::executeTorpedoPlan(Player p, Torped
     return answer;
 }
 
-ValidateAbilityResult NavalBattleEngine::validateBulkFireData(std::set<coord> targets) const {
-	ValidateAbilityResult answer;
-    BulkFirePlan plan;
-
-	for (coord c : targets)
-        if (isValidCoord(c))
-			plan.targets.insert(c);
-        else
-            answer.error = ActivateAbilityResultError::outOfBounds;
-
-	answer.plan = plan;
-	return answer;
+NavalBattleEngine::BulkFireValidationResult NavalBattleEngine::validateBulkFireTargets(BulkFireData data) const {
+	BulkFireValidationResult result;
+	for (coord c : data.targets)
+	    if (isValidCoord(c))
+            result.targets.insert(c);
+	    else
+	        result.error = ActivateAbilityResultError::outOfBounds;
+	return result;
 }
 
 ActivateAbilityResultData NavalBattle::NavalBattleEngine::executeAbilityPlan(Player p, const AbilityPlan& plan) {
-    return std::visit([this, p](auto&& arg) {
-        using T = std::decay_t<decltype(arg)>;
-        if constexpr (std::is_same_v<T, TorpedoPlan>)
-            return executeTorpedoPlan(p, arg);
-        else if constexpr (std::is_same_v<T, BulkFirePlan>)
-            return executeBulkFirePlan(p, arg);
-        else if constexpr (std::is_same_v<T, RelocatePlan>)
-            return executeRelocatePlan(p, arg);
-        else if constexpr (std::is_same_v<T, ScanPlan>)
-            return executeScanPlan(p, arg);
-        else if constexpr (std::is_same_v<T, RevealPlan>)
-            return executeRevealPlan(p, arg);
-        else
-            static_assert(always_false<T>, "Non-exhaustive visitor!");
+	return std::visit([this, p](auto&& arg) {
+		using T = std::decay_t<decltype(arg)>;
+		if constexpr (std::is_same_v<T, TorpedoPlan>)
+			return executeTorpedoPlan(p, arg);
+		else if constexpr (std::is_same_v<T, ExocetPlan>)
+			return executeExocetPlan(p, arg);
+		else if constexpr (std::is_same_v<T, ApachePlan>)
+			return executeApachePlan(p, arg);
+		else if constexpr (std::is_same_v<T, TomahawkPlan>)
+			return executeTomahawkPlan(p, arg);
+		else if constexpr (std::is_same_v<T, RelocatePlan>)
+			return executeRelocatePlan(p, arg);
+		else if constexpr (std::is_same_v<T, ScanPlan>)
+			return executeScanPlan(p, arg);
+		else if constexpr (std::is_same_v<T, RevealPlan>)
+			return executeRevealPlan(p, arg);
+		else
+			static_assert(always_false<T>, "Non-exhaustive visitor!");
 		}, plan);
 }
 
-ActivateAbilityResultData NavalBattleEngine::executeBulkFirePlan(Player p, BulkFirePlan plan) {
-    BulkFireResultData answer;
-
-    for (const coord& c : plan.targets)
+bool NavalBattleEngine::executeBulkFireTargets(Player p, const std::set<coord>& targets) {
+    bool isHit = false;
+    for (const coord& c : targets)
         if (hitCoord(opponent(p), c).success)
-            answer.isHit = true;
-    
-    return answer;
+            isHit = true;
+    return isHit;
+}
+
+ActivateAbilityResultData NavalBattleEngine::executeExocetPlan(Player p, ExocetPlan plan) {
+    return ExocetResultData{ executeBulkFireTargets(p, plan.targets) };
+}
+
+ActivateAbilityResultData NavalBattleEngine::executeApachePlan(Player p, ApachePlan plan) {
+    return ApacheResultData{ executeBulkFireTargets(p, plan.targets) };
+}
+
+ActivateAbilityResultData NavalBattleEngine::executeTomahawkPlan(Player p, TomahawkPlan plan) {
+    return TomahawkResultData{ executeBulkFireTargets(p, plan.targets) };
 }
 
 ActivateAbilityResultData NavalBattleEngine::executeRelocatePlan(Player p, RelocatePlan plan) {
-    RelocateResultData answer;
+	RelocateResultData answer;
+	answer.shipId = plan.shipId;
 
-    Fleet& f = getDataForPlayer(p).fleet;
+	Fleet& f = getDataForPlayer(p).fleet;
 	f.placeVehicle(plan.shipId, plan.target);
-    f.vehicleIsOnShip(plan.shipId, plan.willBeOnShip);
+	f.vehicleIsOnShip(plan.shipId, plan.willBeOnShip);
 
-    return answer;
+	return answer;
 }
 
 ActivateAbilityResultData NavalBattleEngine::executeScanPlan(Player p, ScanPlan plan) {
@@ -472,6 +483,7 @@ ValidateAbilityResult NavalBattleEngine::validateTorpedoData(TorpedoData d) cons
 }
 
 ValidateAbilityResult NavalBattleEngine::validateExocetData(ExocetData d) const {
+    ValidateAbilityResult answer;
     std::set<coord> targets;
     targets.insert(d.target);
     if (d.firingPattern == ExocetData::FiringPattern::plus)
@@ -483,10 +495,14 @@ ValidateAbilityResult NavalBattleEngine::validateExocetData(ExocetData d) const 
         for (int i = -1; i < 2; i += 2) //i is -1 and 1
             for (int j = -1; j < 2; j += 2) //j is -1 and 1
                 targets.insert(d.target + coord({ i, j }));
-    return validateBulkFireData(targets);
+    auto r = validateBulkFireTargets(BulkFireData{targets});
+    answer.error = r.error;
+    answer.plan = ExocetPlan{r.targets};
+    return answer;
 }
 
-ValidateAbilityResult NavalBattleEngine::validateApacheData(ApacheData d) const {
+ValidateAbilityResult NavalBattleEngine::validateApacheData(ApacheData d) const{
+    ValidateAbilityResult answer;
     std::set<coord> targets;
     targets.insert(d.target);
     if (d.firingPattern == ApacheData::FiringPattern::vertical) {
@@ -497,16 +513,23 @@ ValidateAbilityResult NavalBattleEngine::validateApacheData(ApacheData d) const 
         targets.insert(d.target + coord({ 0, -1 }));
         targets.insert(d.target + coord({ 0, 1 }));
     }
-    return validateBulkFireData(targets);
+    auto r = validateBulkFireTargets(BulkFireData{targets});
+    answer.error = r.error;
+    answer.plan = ApachePlan{r.targets};
+    return answer;
 }
 
 ValidateAbilityResult NavalBattleEngine::validateTomahawkData(TomahawkData data) const {
+	ValidateAbilityResult answer;
     std::set<coord> targets;
     for (int d = data.target.d - 1; d <= data.target.d + 1; d++)
         for (int o = data.target.o - 1; o <= data.target.o + 1; o++)
             targets.insert(coord({ d,o }));
 
-    return validateBulkFireData(targets);
+	auto r = validateBulkFireTargets(BulkFireData{targets});
+	answer.error = r.error;
+	answer.plan = TomahawkPlan{r.targets};
+	return answer;
 }
 
 ValidateAbilityResult NavalBattleEngine::validateRelocateData(RelocateData d) const {

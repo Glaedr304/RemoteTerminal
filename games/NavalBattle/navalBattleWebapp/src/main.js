@@ -1525,9 +1525,10 @@ function applyFireResult(result) {
                 }
             }
         } else {
-            // Miss - only show for the shooter
             if (iDidThis) {
                 showMessage("Miss", "info");
+            } else {
+                showMessage(`${result.actinguser} missed!`, "info");
             }
         }
     } else {
@@ -1560,6 +1561,8 @@ function applyFireAntiAircraftResult(result) {
         } else {
             if (iDidThis) {
                 showMessage("Anti-Aircraft miss - no planes at that location", "info");
+            } else {
+                showMessage(`${result.actinguser} fired anti-aircraft and missed!`, "info");
             }
         }
     } else {
@@ -1683,41 +1686,78 @@ function applyActivateAbilityResult(result) {
     const iDidThis = result.actinguser === myUserId;
 
     if (result.success) {
-        const data = result.data;
+        const innerData = result.data?.data; // ActivateAbilityResult wraps data in { success, error, data }
+        const resultType = innerData?.resulttype;
 
         // Handle different ability result types
-        if (data?.ishit !== undefined) {
-            // Torpedo or bulk fire result
-            if (data.ishit) {
+        if (innerData?.ishit !== undefined) {
+            // Torpedo or bulk fire result (exocet, apache, tomahawk)
+            const abilityName = getAbilityDisplayName(resultType) || "Ability";
+            if (innerData.ishit) {
                 if (iDidThis) {
-                    showMessage("Ability hit!", "success");
+                    showMessage(`${abilityName} hit!`, "success");
+                } else {
+                    showMessage(`${result.actinguser} fired their ${abilityName} and hit your fleet!`, "error");
                 }
             } else {
                 if (iDidThis) {
-                    showMessage("Ability missed", "info");
+                    showMessage(`${abilityName} missed`, "info");
+                } else {
+                    showMessage(`${result.actinguser} fired their ${abilityName} and missed!`, "info");
                 }
             }
-        } else if (data?.isfound !== undefined) {
+        } else if (innerData?.isfound !== undefined) {
             // Scan result
             if (iDidThis) {
-                if (data.isfound) {
+                if (innerData.isfound) {
                     showMessage("Scan detected enemy ships in the area!", "success");
                 } else {
                     showMessage("Scan found no ships in the area", "info");
                 }
+            } else {
+                if (innerData.isfound) {
+                    showMessage(`${result.actinguser} used a Scan and detected ships!`, "error");
+                } else {
+                    showMessage(`${result.actinguser} used a Scan and found nothing`, "info");
+                }
             }
-        } else if (data?.hitsrevealed !== undefined) {
+        } else if (innerData?.hitsrevealed !== undefined) {
             // Reveal result
+            const count = innerData.hitsrevealed?.length || 0;
             if (iDidThis) {
-                const count = data.hitsrevealed?.length || 0;
                 if (count > 0) {
-                    showMessage(`Revealed ${count} ship positions!`, "success");
+                    showMessage(`Revealed ${count} ship position${count !== 1 ? "s" : ""}!`, "success");
                 } else {
                     showMessage("No ships found in revealed area", "info");
                 }
+            } else {
+                if (count > 0) {
+                    showMessage(`${result.actinguser} used Reveal and found ${count} of your ship position${count !== 1 ? "s" : ""}!`, "error");
+                } else {
+                    showMessage(`${result.actinguser} used Reveal but found nothing`, "info");
+                }
+            }
+        } else if (resultType === "relocate") {
+            const vehicleId = innerData?.shipid;
+            const vehicleView = lastSetupInfo?.vehicleview;
+            const fleet = iDidThis ? vehicleView?.yourfleet : vehicleView?.opponentfleet;
+            let vehicleName = null;
+            if (vehicleId !== undefined) {
+                for (const s of fleet?.ships || []) {
+                    if (s.id === vehicleId) { vehicleName = s.name; break; }
+                }
+                if (!vehicleName) {
+                    for (const pl of fleet?.planes || []) {
+                        if (pl.id === vehicleId) { vehicleName = pl.name; break; }
+                    }
+                }
+            }
+            if (iDidThis) {
+                showMessage(`${vehicleName ?? "Vehicle"} relocated successfully`, "success");
+            } else {
+                showMessage(`${result.actinguser} relocated their ${vehicleName ?? "vehicle"}!`, "info");
             }
         } else {
-            // Generic success (e.g., relocate)
             if (iDidThis) {
                 showMessage("Ability activated successfully", "success");
             }

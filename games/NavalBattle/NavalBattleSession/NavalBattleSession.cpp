@@ -397,7 +397,7 @@ SessionActionResult NavalBattleSession::handleCheckAbility(Player p, const Sessi
 			else
 				data.overlay[{arg.startPoint, _playerToUserMap[opponent(p)]}].insert(state);
 		}
-		else if constexpr (std::is_same_v<T, BulkFirePlan>) {
+		else if constexpr (std::is_same_v<T, ExocetPlan> || std::is_same_v<T, ApachePlan> || std::is_same_v<T, TomahawkPlan>) {
 			for (const coord& c : arg.targets)
 				data.overlay[{c, _playerToUserMap[opponent(p)]}].insert(state);
 		}
