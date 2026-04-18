@@ -95,12 +95,14 @@ function setConnectionStatus(status) {
 function updatePhaseDisplay(phase) {
     phaseSpan.textContent = phase;
     phaseSpan.className = `phase-badge ${phase}`;
-    
+
     // Show/hide setup controls based on phase
     if (phase === "setup") {
         setupControls.classList.remove("hidden");
+        gameSection.classList.add("phase-setup");
     } else {
         setupControls.classList.add("hidden");
+        gameSection.classList.remove("phase-setup");
     }
 }
 

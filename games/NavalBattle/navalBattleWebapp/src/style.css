@@ -479,7 +479,6 @@ kbd {
     flex-direction: column;
     align-items: center;
     min-width: 0;
-    overflow: hidden;
 }
 
 /* Grid with labels layout */
@@ -948,8 +947,11 @@ kbd {
 }
 
 .ship-card.placed {
-    opacity: 0.6;
     border-color: var(--accent-success);
+}
+
+.phase-setup .ship-card.placed {
+    opacity: 0.6;
 }
 
 .ship-name {
@@ -1155,8 +1157,11 @@ kbd {
 }
 
 .plane-card.placed {
-    opacity: 0.6;
     border-color: var(--accent-success);
+}
+
+.phase-setup .plane-card.placed {
+    opacity: 0.6;
 }
 
 .plane-name {
@@ -1314,16 +1319,16 @@ kbd {
 
 /* === Ability Target Mode === */
 .grid-wrapper.ability-target {
-    box-shadow: 0 0 0 3px var(--accent-warning);
+    box-shadow: inset 0 0 0 3px var(--accent-warning);
     animation: pulseGlow 1.5s infinite;
 }
 
 @keyframes pulseGlow {
     0%, 100% {
-        box-shadow: 0 0 0 3px var(--accent-warning);
+        box-shadow: inset 0 0 0 3px var(--accent-warning);
     }
     50% {
-        box-shadow: 0 0 0 3px var(--accent-warning), 0 0 15px rgba(245, 158, 11, 0.4);
+        box-shadow: inset 0 0 0 3px var(--accent-warning), inset 0 0 20px rgba(245, 158, 11, 0.25);
     }
 }
 
