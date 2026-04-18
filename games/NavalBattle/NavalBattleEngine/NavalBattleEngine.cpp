@@ -921,6 +921,11 @@ FleetBlueprint const& NavalBattleEngine::getBaseFleetBlueprint() const{
 
 //fleet with abilities for advanced game
 FleetBlueprint const& NavalBattleEngine::getAdvancedFleetBlueprint() const{
+	static PlaneBlueprint reconOneBlueprint = Plane::reconPlane;
+	reconOneBlueprint.name = "Recon One";
+	static PlaneBlueprint reconTwoBlueprint = Plane::reconPlane;
+	reconTwoBlueprint.name = "Recon Two";
+
     static FleetBlueprint advancedFleet{
         {
             Ship::advancedCarrier,
@@ -930,8 +935,8 @@ FleetBlueprint const& NavalBattleEngine::getAdvancedFleetBlueprint() const{
             Ship::pt,
         },
         {
-            Plane::reconPlane,
-            Plane::reconPlane
+            reconOneBlueprint,
+            reconTwoBlueprint
         }
     };
     return advancedFleet;
