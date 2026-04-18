@@ -15,6 +15,7 @@
             <h1>&#9875; Naval Battle</h1>
             <p class="subtitle">Enter your credentials to join a game</p>
 
+            <form id="connectForm">
             <div class="form-group">
                 <label for="userid">User ID</label>
                 <input id="userid" type="text" autocomplete="off" placeholder="Enter your user ID" />
@@ -25,7 +26,8 @@
                 <input id="gameid" type="text" autocomplete="off" placeholder="Enter game ID to join" />
             </div>
 
-            <button id="connectBtn" class="btn-primary">Connect</button>
+            <button id="connectBtn" type="submit" class="btn-primary">Connect</button>
+            </form>
             <div class="status-badge" id="statusBadge">
                 <span class="status-dot"></span>
                 <span id="status">Disconnected</span>

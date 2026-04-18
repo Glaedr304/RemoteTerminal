@@ -1229,6 +1229,11 @@ readyBtn.addEventListener("click", () => {
     sendMessage(message);
 });
 
+document.getElementById("connectForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    connectBtn.click();
+});
+
 connectBtn.addEventListener("click", () => {
     const userId = userIdInput.value.trim();
     const gameIdValue = gameIdInput.value.trim();
