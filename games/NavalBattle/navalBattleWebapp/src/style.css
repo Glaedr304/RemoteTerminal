@@ -661,12 +661,12 @@ kbd {
 }
 
 /* Plane colors - cycles through for multiple planes */
-.cell.plane-color-0::before { color: #f59e0b; } /* Amber */
-.cell.plane-color-1::before { color: #ec4899; } /* Pink */
+.cell.plane-color-0::before { color: #ef4444; } /* Red */
+.cell.plane-color-1::before { color: #3b82f6; } /* Blue */
 .cell.plane-color-2::before { color: #8b5cf6; } /* Purple */
 .cell.plane-color-3::before { color: #22c55e; } /* Green */
 .cell.plane-color-4::before { color: #06b6d4; } /* Cyan */
-.cell.plane-color-5::before { color: #ef4444; } /* Red */
+.cell.plane-color-5::before { color: #f59e0b; } /* Amber */
 
 /* Default plane color if no color class */
 .cell.plane:not([class*="plane-color-"])::before {

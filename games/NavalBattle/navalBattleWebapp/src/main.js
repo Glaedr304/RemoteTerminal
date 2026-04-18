@@ -404,7 +404,7 @@ function createShipCard(ship, isYours) {
 }
 
 // Plane colors array - matches CSS plane-color-N classes
-const PLANE_COLORS = ['#f59e0b', '#ec4899', '#8b5cf6', '#22c55e', '#06b6d4', '#ef4444'];
+const PLANE_COLORS = ['#ef4444', '#3b82f6', '#8b5cf6', '#22c55e', '#06b6d4', '#f59e0b'];
 
 function createPlaneCard(plane, isYours, planeIndex = 0) {
     const card = document.createElement("div");
