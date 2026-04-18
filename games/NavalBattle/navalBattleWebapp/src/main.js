@@ -499,17 +499,44 @@ function renderFleetPanel(container, ships, planes, isYours) {
         });
     }
 
-    // Render anti-aircraft button below fleet if player has it
-    if (isYours && lastSetupInfo?.hasantiaircraft) {
-        const aaBtn = document.createElement("button");
-        aaBtn.className = "aa-gun-btn";
-        aaBtn.id = "antiAircraftBtn";
-        if (antiAircraftMode) {
-            aaBtn.classList.add("active");
+    // Render anti-aircraft button and cancel-ability button below fleet if player has them
+    const fleetHasAbilities = isYours && lastPhase !== "setup" &&
+        ([...(ships || []), ...(planes || [])].some(v => v.abilities && v.abilities.length > 0));
+
+    // Remove any previously rendered action row from the panel so re-renders don't duplicate it
+    const panel = container.closest(".fleet-panel");
+    panel?.querySelector(".fleet-action-row")?.remove();
+
+    if (isYours && (lastSetupInfo?.hasantiaircraft || fleetHasAbilities)) {
+        const actionRow = document.createElement("div");
+        actionRow.className = "fleet-action-row";
+
+        if (lastSetupInfo?.hasantiaircraft) {
+            const aaBtn = document.createElement("button");
+            aaBtn.className = "aa-gun-btn";
+            aaBtn.id = "antiAircraftBtn";
+            if (antiAircraftMode) aaBtn.classList.add("active");
+            aaBtn.innerHTML = `<span class="aa-icon">\u{1F6E1}\uFE0F</span> Anti-Aircraft`;
+            aaBtn.addEventListener("click", () => handleAntiAircraftClick());
+            actionRow.appendChild(aaBtn);
         }
-        aaBtn.innerHTML = `<span class="aa-icon">\u{1F6E1}\uFE0F</span> Anti-Aircraft`;
-        aaBtn.addEventListener("click", () => handleAntiAircraftClick());
-        container.appendChild(aaBtn);
+
+        if (fleetHasAbilities) {
+            const cancelBtn = document.createElement("button");
+            cancelBtn.className = "cancel-ability-btn";
+            cancelBtn.id = "cancelAbilityBtn";
+            cancelBtn.disabled = !activeAbility;
+            if (activeAbility) cancelBtn.classList.add("active");
+            cancelBtn.innerHTML = `✕ Cancel Ability`;
+            cancelBtn.addEventListener("click", () => {
+                cancelAbilityMode();
+                showMessage("Ability cancelled", "info");
+            });
+            actionRow.appendChild(cancelBtn);
+        }
+
+        if (actionRow.children.length > 0)
+            panel.appendChild(actionRow);
     }
 }
 
@@ -613,6 +640,14 @@ function updateFleetPanels(vehicleView) {
 
 function handleAbilityClick(vehicleId, abilityType) {
     if (lastPhase === "setup") return;
+
+    // Toggle off if this ability is already active
+    if (activeAbility && activeAbility.vehicleId === vehicleId && activeAbility.type === abilityType) {
+        cancelAbilityMode();
+        showMessage("Ability cancelled", "info");
+        return;
+    }
+
     const config = ABILITY_CONFIG[abilityType];
     if (!config) {
         showMessage(`Unknown ability type: ${abilityType}`, "error");
@@ -821,6 +856,21 @@ function updateAbilityModeUI() {
         ownGridWrapper?.classList.remove("ability-target");
         oppGridWrapper?.classList.remove("ability-target");
     }
+
+    // Update cancel button state (lives inside the fleet panel)
+    const cancelBtn = document.getElementById("cancelAbilityBtn");
+    if (cancelBtn) {
+        cancelBtn.disabled = !activeAbility;
+        cancelBtn.classList.toggle("active", !!activeAbility);
+    }
+
+    // Reflect active state on ability buttons so the user can see which is selected
+    document.querySelectorAll(".ability-btn").forEach(btn => {
+        const isActive = activeAbility &&
+            parseInt(btn.dataset.vehicleId) === activeAbility.vehicleId &&
+            btn.dataset.abilityType === activeAbility.type;
+        btn.classList.toggle("active", !!isActive);
+    });
 }
 
 function executeAbility(row, col) {

@@ -1020,6 +1020,12 @@ kbd {
     border-color: var(--accent-primary);
 }
 
+.ability-btn.active {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4);
+}
+
 .ability-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
@@ -1183,6 +1189,20 @@ kbd {
 }
 
 /* === Anti-Aircraft Button === */
+/* === Fleet action row (AA + cancel ability) === */
+.fleet-action-row {
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.fleet-action-row > * {
+    flex: 1;
+    margin-top: 0;
+}
+
 .aa-gun-btn {
     display: flex;
     align-items: center;
@@ -1190,7 +1210,6 @@ kbd {
     gap: 0.4rem;
     width: 100%;
     padding: 0.5rem 0.75rem;
-    margin-top: 0.5rem;
     font-size: 0.75rem;
     font-weight: 600;
     font-family: var(--font-family);
@@ -1216,6 +1235,42 @@ kbd {
 
 .aa-icon {
     font-size: 1rem;
+}
+
+.cancel-ability-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-family: var(--font-family);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.cancel-ability-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.cancel-ability-btn:not(:disabled):hover {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: var(--accent-primary);
+    color: var(--text-primary);
+}
+
+.cancel-ability-btn.active {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: var(--accent-primary);
+    color: var(--text-primary);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.35);
 }
 
 /* === Pattern Selector Overlay === */
