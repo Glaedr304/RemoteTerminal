@@ -9,3 +9,6 @@ build/
 *.ninja
 *.ninja_log
 *.bak
+
+#auto generated
+_codeql_detected_source_root
