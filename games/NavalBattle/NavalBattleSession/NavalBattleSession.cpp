@@ -1,16 +1,15 @@
 #include "NavalBattleSession.h"
-#include "NavalBattleSession.h"
 #include "Action.h"
 
 #include <string>
+#include <random>
 
 using namespace NavalBattle;
 
-NavalBattleSession::NavalBattleSession(const GameId& id, const UserId& playerOneId, const UserId& playerTwoId) {
-	_userToPlayerMap[playerOneId] = Player::one;
-	_userToPlayerMap[playerTwoId] = Player::two;
-	_playerToUserMap[Player::one] = playerOneId;
-	_playerToUserMap[Player::two] = playerTwoId;
+NavalBattleSession::NavalBattleSession(const GameId& id, const UserId& playerOneId, const UserId& playerTwoId, GameMode mode)
+	: _gameMode(mode), _engine(mode)
+{
+	randomlyAssignUsersToPlayers(playerOneId, playerTwoId);
 	_playerToUserMap[Player::none] = "";
 	_gameId = id;
 }
@@ -38,6 +37,10 @@ AddressedMessageBundle NavalBattleSession::handleAction(const UserId& user, cons
 			s = handlePlaceShip(p, action);
 			break;
 		}
+		case SessionActionType::PlacePlane: {
+			s = handlePlacePlane(p, action);
+			break;
+		}
 		case SessionActionType::Ready: {
 			s = handleReady(p);
 			break;
@@ -46,14 +49,32 @@ AddressedMessageBundle NavalBattleSession::handleAction(const UserId& user, cons
 			s = handleFire(p, action);
 			break;
 		}
+		case SessionActionType::FireAntiAircraft: {
+			s = handleFireAntiAircraft(p, action);
+			break;
+		}
 		case SessionActionType::CheckPlacement: {
 			// Only return the action result with preview data, no snapshot
 			s = handleCheckPlacement(p, action);
 			return a.addMessage(ToUser(user), s);
 		}
+		case SessionActionType::CheckPlanePlacement: {
+			// Only return the action result with preview data, no snapshot
+			s = handleCheckPlanePlacement(p, action);
+			return a.addMessage(ToUser(user), s);
+		}
+		case SessionActionType::CheckAbility: {
+			// Only return the action result with preview data, no snapshot
+			s = handleCheckAbility(p, action);
+			return a.addMessage(ToUser(user), s);
+		}
 		case SessionActionType::Rematch: {
 			s = handleRematch(p);
 			return processRematchRequest(user, p, s);
+		}
+		case SessionActionType::ActivateAbility: {
+			s = handleActivateAbility(p, action);
+			break;
 		}
 		default: {
 			s.success = false;
@@ -62,9 +83,11 @@ AddressedMessageBundle NavalBattleSession::handleAction(const UserId& user, cons
 		}
 	}
 
+	s.actingUser = user;
+
 	a.addMessage(ToUser(user), s);
 	a.addMessageBundle(getSnapshotMessageBundleForUser(user));
-	if (s.success && s.type != SessionActionResultType::PlaceShipResult) {//do not alert opponent on ship placement or failed actions
+	if (s.success && s.type != SessionActionResultType::PlaceShipResult && s.type != SessionActionResultType::PlacePlaneResult) {//do not alert opponent on ship/plane placement or failed actions
 		a.addMessage(ToUser(opponentForUser(user)), s);
 		a.addMessageBundle(getSnapshotMessageBundleForUser(opponentForUser(user)));
 	}
@@ -74,66 +97,59 @@ AddressedMessageBundle NavalBattleSession::handleAction(const UserId& user, cons
 
 AddressedMessageBundle NavalBattleSession::getSnapshotMessageBundles() {
 	AddressedMessageBundle answer;
-
-	UserSnapshot p1Snapshot;
-	p1Snapshot.currentUser = _playerToUserMap[_engine.currentTurn()];
-	p1Snapshot.phase = _engine.phase();
-	p1Snapshot.userView = UserView(_playerToUserMap[Player::one], _engine.boardViewForPlayer(Player::one));
-	p1Snapshot.youReady = _engine.isPlayerReady(Player::one);
-	p1Snapshot.opponentReady = _engine.isPlayerReady(opponent(Player::one));
-
-	UserSnapshot p2Snapshot;
-	p2Snapshot.currentUser = p1Snapshot.currentUser;
-	p2Snapshot.phase = p1Snapshot.phase;
-	p2Snapshot.userView = UserView(_playerToUserMap[Player::two], _engine.boardViewForPlayer(Player::two));
-	p2Snapshot.youReady = _engine.isPlayerReady(Player::two);
-	p2Snapshot.opponentReady = _engine.isPlayerReady(opponent(Player::two));
-	
-	answer.addMessage(ToUser(_playerToUserMap[Player::one]), p1Snapshot);
-	answer.addMessage(ToUser(_playerToUserMap[Player::two]), p2Snapshot);
-
+	answer.addMessageBundle(getSnapshotMessageBundleForUser(_playerToUserMap[Player::one]));
+	answer.addMessageBundle(getSnapshotMessageBundleForUser(_playerToUserMap[Player::two]));
 	return answer;
 }
 
 AddressedMessageBundle NavalBattleSession::getStartupInfoMessageBundles() {
 	AddressedMessageBundle answer;
 
+	const auto& engine = static_cast<const NavalBattleEngine&>(_engine);
+
 	StartupInfo p1startupInfo(
-		_engine.phase(),
+		engine.phase(),
 		_playerToUserMap[Player::one],
 		_playerToUserMap[opponent(Player::one)],
 		_gameId,
-		_engine.getFleetForPlayer(Player::one),
-		UserView(_playerToUserMap[Player::one], _engine.boardViewForPlayer(Player::one)),
-		_engine.boardRows(),
-		_engine.boardCols()
+		UserView(_playerToUserMap[Player::one], engine.boardViewForPlayer(Player::one), engine.vehicleViewForPlayer(Player::one)),
+		engine.boardRows(),
+		engine.boardCols(),
+		engine.playerHasAntiAircraftGun(Player::one)
 	);
 
 	StartupInfo p2startupInfo(
-		_engine.phase(),
+		engine.phase(),
 		_playerToUserMap[Player::two],
 		_playerToUserMap[opponent(Player::two)],
 		_gameId,
-		_engine.getFleetForPlayer(Player::two),
-		UserView(_playerToUserMap[Player::two], _engine.boardViewForPlayer(Player::two)),
-		_engine.boardRows(),
-		_engine.boardCols()
+		UserView(_playerToUserMap[Player::two], engine.boardViewForPlayer(Player::two), engine.vehicleViewForPlayer(Player::two)),
+		engine.boardRows(),
+		engine.boardCols(),
+		engine.playerHasAntiAircraftGun(Player::two)
 	);
 
 	answer.addMessage(ToUser(_playerToUserMap[Player::one]), p1startupInfo);
 	answer.addMessage(ToUser(_playerToUserMap[Player::two]), p2startupInfo);
-	
+
 	return answer;
 }
 
 AddressedMessageBundle NavalBattleSession::getSnapshotMessageBundleForUser(const UserId& u) {
 	AddressedMessageBundle answer;
+	Player p = playerFor(u);
+	Player opp = opponent(p);
+
+	const auto& engine = static_cast<const NavalBattleEngine&>(_engine);
+
 	UserSnapshot snapshot;
 	snapshot.currentUser = _playerToUserMap[_engine.currentTurn()];
+	snapshot.winner = _playerToUserMap[_engine.getWinner()];
 	snapshot.phase = _engine.phase();
-	snapshot.userView = UserView(u, _engine.boardViewForPlayer(playerFor(u)));
-	snapshot.youReady = _engine.isPlayerReady(playerFor(u));
-	snapshot.opponentReady = _engine.isPlayerReady(opponent(playerFor(u)));
+	snapshot.userView = UserView(u, _engine.boardViewForPlayer(p), _engine.vehicleViewForPlayer(p));
+	snapshot.youReady = _engine.isPlayerReady(p);
+	snapshot.opponentReady = _engine.isPlayerReady(opp);
+	snapshot.hasAntiAircraftGun = _engine.playerHasAntiAircraftGun(p);
 	answer.addMessage(ToUser(u), snapshot);
 	return answer;
 }
@@ -179,7 +195,40 @@ SessionActionResult NavalBattleSession::handlePlaceShip(Player p, const SessionA
 		}
 	}
 	
-	return answer;;
+	return answer;
+}
+
+SessionActionResult NavalBattleSession::handlePlacePlane(Player p, const SessionAction& a) {
+	SessionActionResult answer;
+
+	PlacePlaneData ppd = std::get<PlacePlaneData>(a.data);
+	auto r = _engine.placePlane(p, ppd.planeId, ppd.position);
+
+	answer.success = r.success;
+	answer.type = SessionActionResultType::PlacePlaneResult;
+
+	if (answer.success) {
+		answer.data = PlacePlaneResultData();
+	}
+	else {
+		switch (r.error) {
+			case PlacePlaneError::OverlapsAnotherPlane:
+			case PlacePlaneError::NotOnCarrier: {
+				answer.error = SessionActionResultError::invalidPlacement;
+				break;
+			}
+			case PlacePlaneError::WrongPhase: {
+				answer.error = SessionActionResultError::wrongPhase;
+				break;
+			}
+			case PlacePlaneError::invalidID: {
+				answer.error = SessionActionResultError::vehicleNotFound;
+				break;
+			}
+		}
+	}
+
+	return answer;
 }
 
 SessionActionResult NavalBattleSession::handleFire(Player p, const SessionAction& a) {
@@ -195,6 +244,39 @@ SessionActionResult NavalBattleSession::handleFire(Player p, const SessionAction
 		d.isSunk = r.isSink;
 		if (r.isSink) {
 			d.sunkName = _engine.nameForId(r.hitId);
+			d.hitId = r.hitId;
+		}
+		answer.data = d;
+	}
+	else {
+		switch (r.error) {
+			case FireError::outOfBounds: {
+				answer.error = SessionActionResultError::invalidPlacement;
+				break;
+			}
+			case FireError::notYourTurn: {
+				answer.error = SessionActionResultError::notYourTurn;
+				break;
+			}
+		}
+	}
+
+	return answer;
+}
+
+SessionActionResult NavalBattleSession::handleFireAntiAircraft(Player p, const SessionAction& a) {
+	SessionActionResult answer;
+	FireResult r = _engine.fireAntiAircraft(p, std::get<FireAntiAircraftData>(a.data).target);
+
+	answer.success = r.success;
+	answer.type = SessionActionResultType::FireAntiAircraftResult;
+
+	if (answer.success) {
+		FireAntiAircraftResultData d;
+		d.isHit = r.isHit;
+		d.isDestroyed = r.isSink;
+		if (r.isSink) {
+			d.destroyedName = _engine.nameForId(r.hitId);
 			d.hitId = r.hitId;
 		}
 		answer.data = d;
@@ -244,16 +326,98 @@ SessionActionResult NavalBattleSession::handleReady(Player p) {
 SessionActionResult NavalBattleSession::handleCheckPlacement(Player p, const SessionAction& a) {
 	SessionActionResult answer;
 	answer.success = true;
-	answer.type = SessionActionResultType::CheckPlacementResult;
-	
+	answer.type = SessionActionResultType::TransientOverlayResult;
+
 	PlaceShipData psd = std::get<PlaceShipData>(a.data);
-	auto r = _engine.validatePlacement(p, psd.shipId, psd.position, psd.rotation);
-	
-	CheckPlacementResultData data;
-	data.valid = r.valid;
-	data.coords = r.coords;
+	auto r = _engine.validateShipPlacement(p, psd.shipId, psd.position, psd.rotation);
+
+	TransientOverlayData data;
+	auto state = r.valid ? TransientSquareState::validPlacement : TransientSquareState::invalidPlacement;
+	for (const auto& c : r.coords)
+		data.overlay[{c, _playerToUserMap[p]}].insert(state);
 	answer.data = data;
-	
+
+	return answer;
+}
+
+SessionActionResult NavalBattleSession::handleCheckPlanePlacement(Player p, const SessionAction& a) {
+	SessionActionResult answer;
+	answer.success = true;
+	answer.type = SessionActionResultType::TransientOverlayResult;
+
+	PlacePlaneData ppd = std::get<PlacePlaneData>(a.data);
+	auto r = _engine.validatePlanePlacement(p, ppd.planeId, ppd.position);
+
+	TransientOverlayData data;
+	auto state = r.valid ? TransientSquareState::validPlacement : TransientSquareState::invalidPlacement;
+	if (r.position != coord::unspecified)
+		data.overlay[{r.position, _playerToUserMap[p]}].insert(state);
+	answer.data = data;
+
+	return answer;
+}
+
+SessionActionResult NavalBattleSession::handleCheckAbility(Player p, const SessionAction& a) {
+	SessionActionResult answer;
+	answer.success = true;
+	answer.type = SessionActionResultType::TransientOverlayResult;
+
+	CheckAbilityData cad = std::get<CheckAbilityData>(a.data);
+	AbilityContext ctx{ cad.vehicleId };
+	auto r = _engine.validateAbility(cad.abilityData, ctx);
+
+	TransientOverlayData data;
+	auto state = (r.error == ActivateAbilityResultError::none) ? TransientSquareState::targetedSquare : TransientSquareState::invalidPlacement;
+
+	//this may not be the most correct place to associate
+	//the overlay coords with the UserId, but it does work
+	//what would be better? should the engine own this logic?
+	std::visit([&data, state, p, this](auto&& arg) {
+		using T = std::decay_t<decltype(arg)>;
+		if constexpr (std::is_same_v<T, TorpedoPlan>) {
+			// Only show torpedo direction if valid, otherwise show invalidPlacement
+			if (state == TransientSquareState::targetedSquare) {
+				TransientSquareState torpedoDirection;
+				switch (arg.direction) {
+					case TorpedoPlan::TorpedoDirection::up:
+						torpedoDirection = TransientSquareState::torpedoUp;
+						break;
+					case TorpedoPlan::TorpedoDirection::down:
+						torpedoDirection = TransientSquareState::torpedoDown;
+						break;
+					case TorpedoPlan::TorpedoDirection::left:
+						torpedoDirection = TransientSquareState::torpedoLeft;
+						break;
+					case TorpedoPlan::TorpedoDirection::right:
+						torpedoDirection = TransientSquareState::torpedoRight;
+						break;
+				}
+				data.overlay[{arg.startPoint, _playerToUserMap[opponent(p)]}].insert(torpedoDirection);
+			}
+			else
+				data.overlay[{arg.startPoint, _playerToUserMap[opponent(p)]}].insert(state);
+		}
+		else if constexpr (std::is_same_v<T, ExocetPlan> || std::is_same_v<T, ApachePlan> || std::is_same_v<T, TomahawkPlan>) {
+			for (const coord& c : arg.targets)
+				data.overlay[{c, _playerToUserMap[opponent(p)]}].insert(state);
+		}
+		else if constexpr (std::is_same_v<T, RelocatePlan>) {
+			Player targetPlayer = arg.willBeOnShip ? p : opponent(p);
+			if (arg.target != coord::unspecified)
+				data.overlay[{arg.target, _playerToUserMap[targetPlayer]}].insert(state);
+		}
+		else if constexpr (std::is_same_v<T, ScanPlan>) {
+			for (const coord& c : arg.targets)
+				data.overlay[{c, _playerToUserMap[opponent(p)]}].insert(state);
+		}
+		else if constexpr (std::is_same_v<T, RevealPlan>) {
+			for (const coord& c : arg.targets)
+				data.overlay[{c, _playerToUserMap[opponent(p)]}].insert(state);
+		}
+		}, r.plan);
+
+	answer.data = data;
+
 	return answer;
 }
 
@@ -293,9 +457,11 @@ AddressedMessageBundle NavalBattleSession::processRematchRequest(const UserId& u
 	// Check if both players want a rematch
 	if (_playerOneWantsRematch && _playerTwoWantsRematch) {
 		// Reset the engine for a new game
-		_engine = NavalBattleEngine();
+		_engine = NavalBattleEngine(_gameMode);
 		_playerOneWantsRematch = false;
 		_playerTwoWantsRematch = false;
+
+		randomlyAssignUsersToPlayers(user, opponentForUser(user));
 		
 		// Send rematch confirmation to the user who completed the rematch
 		a.addMessage(ToUser(user), result);
@@ -314,4 +480,64 @@ AddressedMessageBundle NavalBattleSession::processRematchRequest(const UserId& u
 	a.addMessage(ToUser(opponent), RematchRequest{user});
 	a.addMessage(ToUser(user), result);
 	return a;
+}
+
+void NavalBattle::NavalBattleSession::randomlyAssignUsersToPlayers(UserId u1, UserId u2) {
+	Player firstPlayer = getRandomPlayer();
+	Player secondPlayer = opponent(firstPlayer);
+
+	_userToPlayerMap[u1] = firstPlayer;
+	_userToPlayerMap[u2] = secondPlayer;
+	_playerToUserMap[firstPlayer] = u1;
+	_playerToUserMap[secondPlayer] = u2;
+}
+
+Player NavalBattle::NavalBattleSession::getRandomPlayer() {
+	static std::random_device rd;
+	static std::uniform_int_distribution<int> dist(0, 1);
+
+	return dist(rd) == 0 ? Player::one : Player::two;
+}
+
+SessionActionResult NavalBattleSession::handleActivateAbility(Player p, const SessionAction& a) {
+	SessionActionResult answer;
+	answer.type = SessionActionResultType::ActivateAbilityResult;
+
+	const auto& abilityData = std::get<ActivateAbilityData>(a.data);
+	ActivateAbilityResult r = _engine.activateAbility(p, abilityData.vehicleId, abilityData.abilityAction);
+
+	answer.success = r.success;
+
+	if (answer.success)
+		answer.data = r;
+	else {
+		switch (r.error) {
+			case ActivateAbilityResultError::outOfBounds: {
+				answer.error = SessionActionResultError::invalidPlacement;
+				break;
+			}
+			case ActivateAbilityResultError::notYourTurn: {
+				answer.error = SessionActionResultError::notYourTurn;
+				break;
+			}
+			case ActivateAbilityResultError::notYourShip: {
+				answer.error = SessionActionResultError::vehicleNotFound;
+				break;
+			}
+			case ActivateAbilityResultError::shipSunk: {
+				answer.error = SessionActionResultError::vehicleSunk;
+				break;
+			}
+			case ActivateAbilityResultError::noSuchAbility: {
+				answer.error = SessionActionResultError::noSuchAbility;
+				break;
+			}
+			default: {
+				answer.error = SessionActionResultError::internalError;
+				break;
+			}
+		}
+	}
+
+	return answer;
 }

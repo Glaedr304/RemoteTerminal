@@ -66,6 +66,7 @@ cmake --install "${BUILD_DIR}"
 declare -a WEBAPPS=(
   "platform/remoteTerminalWebapp:"
   "games/NavalBattle/navalBattleWebapp:navalbattle"
+  "games/NavalBattle/navalBattleWebapp:advancednavalbattle"
   "games/TicTacToe/ticTacToeWebapp:tictactoe"
 )
 

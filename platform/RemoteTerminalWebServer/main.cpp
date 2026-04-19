@@ -3,13 +3,17 @@
 #include "GamesHttpController.h"
 #include "NavalBattleEndpoint.h"
 #include "TicTacToeEndpoint.h"
+#include "GameEntities.h"
 #include <drogon/drogon.h>
 
 int main(int argc, char* argv[]) {
     RemoteTerminalEndpointRegistry registry;
 
-    NavalBattleEndpoint* navalBattleEndpoint = new NavalBattleEndpoint();
+    NavalBattleEndpoint* navalBattleEndpoint = new NavalBattleEndpoint(NavalBattle::GameMode::classic);
     registry.registerEndpoint("/ws/" + navalBattleEndpoint->routePath(), navalBattleEndpoint);
+
+    NavalBattleEndpoint* advancedNavalBattleEndpoint = new NavalBattleEndpoint(NavalBattle::GameMode::advanced);
+    registry.registerEndpoint("/ws/" + advancedNavalBattleEndpoint->routePath(), advancedNavalBattleEndpoint);
 
     TicTacToeEndpoint* ticTacToeEndpoint = new TicTacToeEndpoint();
     registry.registerEndpoint("/ws/" + ticTacToeEndpoint->routePath(), ticTacToeEndpoint);

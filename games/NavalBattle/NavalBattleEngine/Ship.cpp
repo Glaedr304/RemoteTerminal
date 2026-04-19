@@ -4,32 +4,43 @@
 
 using namespace NavalBattle;
 
-int Ship::nextID = 0;
-
-Ship::Ship(std::set<coord> coords, std::string name /*=""*/, int rotation /*= 0*/, coord pos /*= coord::unspecified*/) :
+Ship::Ship(ShipBlueprint blueprint, VehicleId id, int rotation /*= 0*/, coord pos /*= coord::unspecified*/) :
 	rotation(rotation),
-	coords(coords),
-	_name(name),
+	coords(blueprint.coords),
+	_name(blueprint.name),
+	_abilities(blueprint.abilities),
+	_canHoldPlanes(blueprint.canHoldPlanes),
 	pos(pos),
-	ID(nextID++)
+	_id(id)
 {
 };
 
 Ship::Ship(const Ship& other) :
 	rotation(other.rotation),
 	coords(other.coords),
+	hits(other.hits),
+	_sunk(other._sunk),
 	_name(other._name),
+	_abilities(other._abilities),
+	_canHoldPlanes(other._canHoldPlanes),
 	pos(other.pos),
-	ID(nextID++)
+	_id(other._id)
 {
+}
+
+bool Ship::hasAbility(const VehicleAbilityType& abilityType) const {
+	for (const VehicleAbility& a : _abilities)
+		if (a.getType() == abilityType && a.canUse())
+			return true;
+	return false;
 }
 
 bool Ship::isSunk() const {
 	return _sunk;
 }
 
-int Ship::getID() const {
-	return ID;
+int Ship::getId() const {
+	return _id;
 }
 
 std::string Ship::getName() const {
@@ -92,7 +103,28 @@ const std::set<coord>& Ship::getCoords() const {
 	return coords;
 }
 
-Ship const Ship::carrier{
+bool NavalBattle::Ship::wouldBeHit(coord where) const {
+	coord transformed = where.applyInverseTransform(pos, rotation);
+	return coords.find(transformed) != coords.end() && hits.find(transformed) == hits.end();
+}
+
+bool Ship::useAbility(VehicleAbilityType abilityType) {
+	for (VehicleAbility& a : _abilities)
+		if (a.getType() == abilityType)
+			if (a.use())
+				return true;
+	return false;
+}
+
+const std::vector<VehicleAbility>& Ship::getAbilities() const {
+	return _abilities;
+}
+
+bool Ship::canHoldPlanes() const {
+	return _canHoldPlanes;
+}
+
+ShipBlueprint const Ship::carrier{
 	{
 		coord({0,0}),
 		coord({0,1}),
@@ -103,7 +135,20 @@ Ship const Ship::carrier{
 	"Aircraft Carrier"
 };
 
-Ship const Ship::battleship{
+ShipBlueprint const Ship::advancedCarrier{
+	{
+		coord({0,0}),
+		coord({0,1}),
+		coord({0,2}),
+		coord({0,3}),
+		coord({0,4})
+	},
+	"Aircraft Carrier",
+	{VehicleAbility(VehicleAbilityType::Exocet, VehicleAbilityUsagePolicy::limited, 2)  },
+	true //can hold planes
+};
+
+ShipBlueprint const Ship::battleship{
 	{
 		coord({0,0}),
 		coord({0,1}),
@@ -113,7 +158,18 @@ Ship const Ship::battleship{
 	"Battleship"
 };
 
-Ship const Ship::destroyer{
+ShipBlueprint const Ship::advancedBattleship{
+	{
+		coord({0,0}),
+		coord({0,1}),
+		coord({0,2}),
+		coord({0,3})
+	},
+	"Battleship",
+	{ VehicleAbility(VehicleAbilityType::Tomahawk, VehicleAbilityUsagePolicy::limited, 1) }
+};
+
+ShipBlueprint const Ship::destroyer{
 	{
 		coord({0,0}),
 		coord({0,1}),
@@ -122,7 +178,17 @@ Ship const Ship::destroyer{
 	"Destroyer"
 };
 
-Ship const Ship::sub{
+ShipBlueprint const Ship::advancedDestroyer{
+	{
+		coord({0,0}),
+		coord({0,1}),
+		coord({0,2}),
+	},
+	"Destroyer",
+	{VehicleAbility(VehicleAbilityType::Apache, VehicleAbilityUsagePolicy::limited, 2)  }
+};
+
+ShipBlueprint const Ship::sub{
 	{
 		coord({0,0}),
 		coord({0,1}),
@@ -131,7 +197,20 @@ Ship const Ship::sub{
 	"Submarine"
 };
 
-Ship const Ship::pt{
+ShipBlueprint const Ship::advancedSub{
+	{
+		coord({0,0}),
+		coord({0,1}),
+		coord({0,2})
+	},
+	"Submarine",
+	{
+		VehicleAbility(VehicleAbilityType::Torpedo, VehicleAbilityUsagePolicy::limited, 2),
+		VehicleAbility(VehicleAbilityType::scan, VehicleAbilityUsagePolicy::unlimited)
+	}
+};
+
+ShipBlueprint const Ship::pt{
 	{
 		coord({0,0}),
 		coord({0,1})

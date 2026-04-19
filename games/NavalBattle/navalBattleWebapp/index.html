@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -12,9 +12,10 @@
     <div id="app">
         <!-- Connection Screen -->
         <section id="connect" class="card">
-            <h1>? Naval Battle</h1>
+            <h1>&#9875; Naval Battle</h1>
             <p class="subtitle">Enter your credentials to join a game</p>
 
+            <form id="connectForm">
             <div class="form-group">
                 <label for="userid">User ID</label>
                 <input id="userid" type="text" autocomplete="off" placeholder="Enter your user ID" />
@@ -25,7 +26,8 @@
                 <input id="gameid" type="text" autocomplete="off" placeholder="Enter game ID to join" />
             </div>
 
-            <button id="connectBtn" class="btn-primary">Connect</button>
+            <button id="connectBtn" type="submit" class="btn-primary">Connect</button>
+            </form>
             <div class="status-badge" id="statusBadge">
                 <span class="status-dot"></span>
                 <span id="status">Disconnected</span>
@@ -38,7 +40,7 @@
             <header class="game-header">
                 <div class="player-info">
                     <span class="label">You</span>
-                    <span id="me" class="player-name">�</span>
+                    <span id="me" class="player-name">—</span>
                     <span id="youReadyBadge" class="ready-badge hidden">Ready</span>
                 </div>
                 <div class="phase-info">
@@ -47,7 +49,7 @@
                 </div>
                 <div class="player-info">
                     <span class="label">Opponent</span>
-                    <span id="opponent" class="player-name">�</span>
+                    <span id="opponent" class="player-name">—</span>
                     <span id="opponentReadyBadge" class="ready-badge hidden">Ready</span>
                 </div>
             </header>
@@ -71,32 +73,43 @@
 
             <!-- Controls -->
             <div id="setupControls" class="controls-bar">
-                <div class="control-group">
-                    <label for="shipSelect">Ship</label>
-                    <select id="shipSelect"></select>
-                </div>
-                <button id="rotateBtn" class="btn-secondary btn-sm">? Rotate <kbd>R</kbd></button>
+                <button id="rotateBtn" class="btn-secondary btn-sm">↻ Rotate <kbd>R</kbd></button>
                 <button id="readyBtn" class="btn-primary btn-sm">Ready</button>
             </div>
 
-            <!-- Grids Container -->
-            <div class="grids-container">
-                <div class="grid-wrapper">
-                    <h3>Your Fleet</h3>
-                    <div class="grid-with-labels">
-                        <div class="corner-spacer"></div>
-                        <div id="ownColLabels" class="col-labels"></div>
-                        <div id="ownRowLabels" class="row-labels"></div>
-                        <div id="ownGrid" class="grid"></div>
+            <!-- Main Game Area -->
+            <div class="game-area">
+                <!-- Your Column -->
+                <div class="player-column">
+                    <div class="grid-wrapper">
+                        <h3>Your Waters</h3>
+                        <div class="grid-with-labels">
+                            <div class="corner-spacer"></div>
+                            <div id="ownColLabels" class="col-labels"></div>
+                            <div id="ownRowLabels" class="row-labels"></div>
+                            <div id="ownGrid" class="grid"></div>
+                        </div>
+                    </div>
+                    <div class="fleet-panel your-fleet">
+                        <h3>Your Fleet</h3>
+                        <div id="yourFleetList" class="fleet-list"></div>
                     </div>
                 </div>
-                <div class="grid-wrapper">
-                    <h3>Enemy Waters</h3>
-                    <div class="grid-with-labels">
-                        <div class="corner-spacer"></div>
-                        <div id="oppColLabels" class="col-labels"></div>
-                        <div id="oppRowLabels" class="row-labels"></div>
-                        <div id="oppGrid" class="grid"></div>
+
+                <!-- Enemy Column -->
+                <div class="player-column">
+                    <div class="grid-wrapper">
+                        <h3>Enemy Waters</h3>
+                        <div class="grid-with-labels">
+                            <div class="corner-spacer"></div>
+                            <div id="oppColLabels" class="col-labels"></div>
+                            <div id="oppRowLabels" class="row-labels"></div>
+                            <div id="oppGrid" class="grid"></div>
+                        </div>
+                    </div>
+                    <div class="fleet-panel opponent-fleet">
+                        <h3>Enemy Fleet</h3>
+                        <div id="opponentFleetList" class="fleet-list"></div>
                     </div>
                 </div>
             </div>

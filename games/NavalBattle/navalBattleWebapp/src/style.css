@@ -63,7 +63,7 @@ body {
 }
 
 #app {
-    max-width: 1000px;
+    max-width: 1600px;
     margin: 0 auto;
     padding: 1rem;
     min-height: 100vh;
@@ -252,6 +252,8 @@ kbd {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
@@ -320,6 +322,13 @@ kbd {
     background: rgba(34, 197, 94, 0.15);
     padding: 0.15rem 0.4rem;
     border-radius: 3px;
+}
+
+/* Keep ready badges in the layout at all times to prevent header shift.
+   Override .hidden's display:none with visibility:hidden instead. */
+.ready-badge.hidden {
+    visibility: hidden;
+    display: inline-block !important;
 }
 
 /* === Message Toast === */
@@ -459,12 +468,6 @@ kbd {
 }
 
 /* === Grids === */
-.grids-container {
-    display: flex;
-    gap: 1.5rem;
-    justify-content: center;
-    flex-wrap: wrap;
-}
 
 .grid-wrapper {
     background: var(--bg-card);
@@ -472,6 +475,10 @@ kbd {
     border-radius: var(--border-radius);
     padding: 0.75rem;
     box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 0;
 }
 
 /* Grid with labels layout */
@@ -580,6 +587,92 @@ kbd {
     transform: translate(-50%, -50%);
 }
 
+/* Revealed miss - same as regular miss (from reveal ability) */
+.cell.revealedmiss {
+    background: var(--miss);
+}
+
+.cell.revealedmiss::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 8px;
+    height: 8px;
+    background: var(--text-muted);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Revealed hit - light red (from reveal ability - ship found) */
+.cell.revealedhit {
+    background: linear-gradient(135deg, #fca5a5 0%, #f87171 100%);
+}
+
+.cell.revealedhit::after {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    background: rgba(255, 255, 255, 0.6);
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z' fill='white'/%3E%3C/svg%3E");
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z' fill='white'/%3E%3C/svg%3E");
+}
+
+/* Scanned positive - dark blue (from scan ability - ships detected) */
+.cell.scannedpositive {
+    background: linear-gradient(135deg, #1e3a5f 0%, #0f2744 100%);
+    box-shadow: inset 0 0 8px rgba(30, 58, 95, 0.8);
+}
+
+.cell.scannedpositive::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 10px;
+    height: 10px;
+    background: #3b82f6;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    animation: scanPulse 1.5s infinite;
+}
+
+@keyframes scanPulse {
+    0%, 100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+        opacity: 0.6;
+        transform: translate(-50%, -50%) scale(0.8);
+    }
+}
+
+/* Plane on grid - displayed as overlay on ship cells */
+.cell.plane::before {
+    content: '\2708';  /* Unicode airplane symbol */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6), 0 0 1px rgba(0, 0, 0, 0.8);
+    z-index: 2;
+}
+
+/* Plane colors - cycles through for multiple planes */
+.cell.plane-color-0::before { color: #ef4444; } /* Red */
+.cell.plane-color-1::before { color: #3b82f6; } /* Blue */
+.cell.plane-color-2::before { color: #8b5cf6; } /* Purple */
+.cell.plane-color-3::before { color: #22c55e; } /* Green */
+.cell.plane-color-4::before { color: #06b6d4; } /* Cyan */
+.cell.plane-color-5::before { color: #f59e0b; } /* Amber */
+
+/* Default plane color if no color class */
+.cell.plane:not([class*="plane-color-"])::before {
+    color: #f59e0b;
+}
+
 /* Ship placement preview - valid (ghostly/transparent) */
 .cell.preview-valid {
     background: linear-gradient(135deg, rgba(148, 163, 184, 0.6) 0%, rgba(100, 116, 139, 0.6) 100%);
@@ -592,6 +685,63 @@ kbd {
     background: linear-gradient(135deg, rgba(239, 68, 68, 0.5) 0%, rgba(185, 28, 28, 0.5) 100%);
     border: 2px dashed var(--accent-danger);
     box-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
+}
+
+/* Ability target preview - targeted square */
+.cell.preview-targeted {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.5) 0%, rgba(37, 99, 235, 0.5) 100%);
+    border: 2px dashed var(--accent-primary);
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+}
+
+/* Torpedo direction indicators - show which direction torpedo fires */
+.cell.torpedoup,
+.cell.torpedodown,
+.cell.torpedoleft,
+.cell.torpedoright {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.4) 100%);
+    border: 1px solid rgba(59, 130, 246, 0.6);
+}
+
+.cell.torpedoup::after,
+.cell.torpedodown::after,
+.cell.torpedoleft::after,
+.cell.torpedoright::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    transform: translate(-50%, -50%);
+}
+
+/* Up arrow */
+.cell.torpedoup::after {
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 10px solid var(--accent-primary);
+}
+
+/* Down arrow */
+.cell.torpedodown::after {
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 10px solid var(--accent-primary);
+}
+
+/* Left arrow */
+.cell.torpedoleft::after {
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    border-right: 10px solid var(--accent-primary);
+}
+
+/* Right arrow */
+.cell.torpedoright::after {
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    border-left: 10px solid var(--accent-primary);
 }
 
 .cell.hover-ok {
@@ -645,36 +795,549 @@ kbd {
 }
 
 /* === Responsive === */
-@media (max-width: 768px) {
-    #app {
-        padding: 0.5rem;
-    }
-    
-    .card {
-        margin: 1rem auto;
-        padding: 1.25rem;
-    }
-    
-    h1 {
-        font-size: 1.75rem;
-    }
-    
-    .game-header {
-        flex-direction: column;
-        gap: 0.5rem;
-        padding: 0.5rem;
-    }
-    
-    .controls-bar {
-        flex-wrap: wrap;
-    }
-    
-    .grids-container {
-        gap: 1rem;
-    }
-    
+
+/* Shrink cells at medium widths to prevent grid overflow */
+@media (max-width: 1100px) {
     :root {
         --cell-size: 24px;
         --label-size: 16px;
     }
+}
+
+@media (max-width: 900px) {
+    :root {
+        --cell-size: 20px;
+        --label-size: 14px;
+    }
+}
+
+@media (max-width: 768px) {
+    #app {
+        padding: 0.5rem;
+    }
+
+    .card {
+        margin: 1rem auto;
+        padding: 1.25rem;
+    }
+
+    h1 {
+        font-size: 1.75rem;
+    }
+
+    .controls-bar {
+        flex-wrap: wrap;
+    }
+
+    :root {
+        --cell-size: 18px;
+        --label-size: 13px;
+    }
+
+    /* Stack the two player columns vertically */
+    .game-area {
+        grid-template-columns: 1fr;
+    }
+
+    .ship-card,
+    .plane-card {
+        flex: 1 1 120px;
+        min-width: 110px;
+    }
+}
+
+/* Only collapse header to column on very small phones */
+@media (max-width: 480px) {
+    .game-header {
+        flex-direction: column;
+        align-items: center;
+        padding: 0.5rem;
+    }
+
+    .player-info {
+        flex-direction: row;
+        gap: 0.5rem;
+        align-items: center;
+    }
+}
+
+/* === Game Area Layout === */
+.game-area {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    align-items: start;
+}
+
+.player-column {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-width: 0;
+    overflow: hidden;
+}
+
+/* === Fleet Panels === */
+.fleet-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 0.75rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.fleet-panel h3 {
+    text-align: center;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.fleet-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.fleet-empty {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    padding: 1rem 0;
+}
+
+/* === Ship Card === */
+.ship-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    padding: 0.5rem;
+    transition: all 0.2s;
+    flex: 1 1 140px;
+    min-width: 130px;
+    max-width: 200px;
+}
+
+.ship-card.sunk {
+    opacity: 0.4;
+    filter: grayscale(1);
+}
+
+.ship-card.sunk .ship-name {
+    text-decoration: line-through;
+}
+
+/* Ship card selection states during setup */
+.ship-card.selectable {
+    cursor: pointer;
+    border-color: var(--accent-warning);
+}
+
+.ship-card.selectable:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent-primary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.ship-card.selected {
+    border-color: var(--accent-primary);
+    background: rgba(59, 130, 246, 0.15);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.ship-card.placed {
+    border-color: var(--accent-success);
+}
+
+.phase-setup .ship-card.placed {
+    opacity: 0.6;
+}
+
+.ship-name {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.4rem;
+    text-align: center;
+}
+
+/* === Ship Form (Mini Grid) === */
+.ship-form {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+}
+
+.ship-form-grid {
+    display: inline-grid;
+    gap: 1px;
+    background: var(--bg-secondary);
+    padding: 2px;
+    border-radius: 3px;
+}
+
+.ship-form-cell {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+}
+
+.ship-form-cell.ship {
+    background: linear-gradient(135deg, var(--ship) 0%, var(--ship-hover) 100%);
+}
+
+.ship-form-cell.empty {
+    background: transparent;
+}
+
+.ship-card.sunk .ship-form-cell.ship {
+    background: linear-gradient(135deg, var(--text-muted) 0%, var(--bg-hover) 100%);
+}
+
+/* === Ship Abilities === */
+.ship-abilities {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.ability-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.65rem;
+    font-weight: 500;
+    background: var(--bg-hover);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.ability-btn:hover:not(:disabled) {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+}
+
+.ability-btn.active {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4);
+}
+
+.ability-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.ability-btn .ability-name {
+    text-transform: capitalize;
+}
+
+.ability-btn .ability-uses {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    background: var(--bg-primary);
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+}
+
+.ability-btn .ability-uses.unlimited {
+    color: var(--accent-success);
+}
+
+/* === Opponent Ability Display (non-interactive) === */
+.ability-display {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.65rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    color: var(--text-secondary);
+}
+
+.ability-display .ability-name {
+    text-transform: capitalize;
+}
+
+.ability-display .ability-uses {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+}
+
+/* === Ability Type Icons === */
+.ability-icon {
+    margin-right: 0.25rem;
+}
+
+.ability-icon::before {
+    font-size: 0.7rem;
+}
+
+/* Ability type colors */
+.ability-btn[data-ability-type="torpedo"],
+.ability-display[data-ability-type="torpedo"] {
+    border-left: 2px solid #06b6d4;
+}
+
+.ability-btn[data-ability-type="exocet"],
+.ability-display[data-ability-type="exocet"] {
+    border-left: 2px solid #f59e0b;
+}
+
+.ability-btn[data-ability-type="apache"],
+.ability-display[data-ability-type="apache"] {
+    border-left: 2px solid #ef4444;
+}
+
+.ability-btn[data-ability-type="tomahawk"],
+.ability-display[data-ability-type="tomahawk"] {
+    border-left: 2px solid #8b5cf6;
+}
+
+.ability-btn[data-ability-type="scan"],
+.ability-display[data-ability-type="scan"] {
+    border-left: 2px solid #22c55e;
+}
+
+.ability-btn[data-ability-type="reveal"],
+.ability-display[data-ability-type="reveal"] {
+    border-left: 2px solid #3b82f6;
+}
+
+.ability-btn[data-ability-type="relocate"],
+.ability-display[data-ability-type="relocate"] {
+    border-left: 2px solid #ec4899;
+}
+
+/* === Plane Card === */
+.plane-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    padding: 0.5rem;
+    transition: all 0.2s;
+    flex: 1 1 140px;
+    min-width: 130px;
+    max-width: 200px;
+}
+
+.plane-card.destroyed {
+    opacity: 0.4;
+    filter: grayscale(1);
+}
+
+.plane-card.destroyed .plane-name {
+    text-decoration: line-through;
+}
+
+/* Plane card selection states during setup */
+.plane-card.selectable {
+    cursor: pointer;
+    border-color: var(--accent-warning);
+}
+
+.plane-card.selectable:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent-primary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.plane-card.selected {
+    border-color: var(--accent-primary);
+    background: rgba(59, 130, 246, 0.15);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.plane-card.placed {
+    border-color: var(--accent-success);
+}
+
+.phase-setup .plane-card.placed {
+    opacity: 0.6;
+}
+
+.plane-name {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.4rem;
+    text-align: center;
+}
+
+.plane-icon {
+    font-size: 1.5rem;
+    text-align: center;
+    margin-bottom: 0.3rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.plane-position {
+    font-size: 0.65rem;
+    text-align: center;
+    color: var(--text-muted);
+    margin-bottom: 0.3rem;
+    font-family: monospace;
+}
+
+.plane-abilities {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+/* === Anti-Aircraft Button === */
+/* === Fleet action row (AA + cancel ability) === */
+.fleet-action-row {
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.fleet-action-row > * {
+    flex: 1;
+    margin-top: 0;
+}
+
+.aa-gun-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-family: var(--font-family);
+    background: var(--bg-primary);
+    border: 1px solid var(--accent-danger);
+    border-radius: var(--border-radius-sm);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.aa-gun-btn:hover {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: var(--accent-danger);
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
+}
+
+.aa-gun-btn.active {
+    background: rgba(239, 68, 68, 0.3);
+    border-color: var(--accent-danger);
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.4);
+}
+
+.aa-icon {
+    font-size: 1rem;
+}
+
+.cancel-ability-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-family: var(--font-family);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.cancel-ability-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.cancel-ability-btn:not(:disabled):hover {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: var(--accent-primary);
+    color: var(--text-primary);
+}
+
+.cancel-ability-btn.active {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: var(--accent-primary);
+    color: var(--text-primary);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.35);
+}
+
+/* === Pattern Selector Overlay === */
+.pattern-selector-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1500;
+    animation: fadeIn 0.2s ease;
+}
+
+.pattern-selector-content {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+    min-width: 200px;
+}
+
+.pattern-selector-content h3 {
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    text-transform: none;
+    font-size: 1rem;
+}
+
+.pattern-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.pattern-btn {
+    text-transform: capitalize;
+}
+
+/* === Ability Target Mode === */
+.grid-wrapper.ability-target {
+    box-shadow: inset 0 0 0 3px var(--accent-warning);
+    animation: pulseGlow 1.5s infinite;
+}
+
+@keyframes pulseGlow {
+    0%, 100% {
+        box-shadow: inset 0 0 0 3px var(--accent-warning);
+    }
+    50% {
+        box-shadow: inset 0 0 0 3px var(--accent-warning), inset 0 0 20px rgba(245, 158, 11, 0.25);
+    }
+}
+
+/* Ability mode cursor change */
+.grid-wrapper.ability-target .cell {
+    cursor: crosshair;
+}
+
+.grid-wrapper.ability-target .cell:hover {
+    outline: 2px solid var(--accent-warning);
+    outline-offset: -1px;
 }
