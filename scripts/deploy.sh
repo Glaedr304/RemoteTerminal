@@ -61,10 +61,10 @@ cmake --build "${BUILD_DIR}" -j
 cmake --install "${BUILD_DIR}"
 
 # ---- Deploy webapps (Vite) ----
-# Each webapp: [source_dir, dest_subpath]
+# Each webapp: source_dir:dest_subpath:vite_mode
 # dest_subpath is relative to WEB_ROOT ("" means root)
 declare -a WEBAPPS=(
-  "platform/remoteTerminalWebapp:production"
+"platform/remoteTerminalWebapp::production"
   "games/NavalBattle/navalBattleWebapp:navalbattle:navalbattle"
   "games/NavalBattle/navalBattleWebapp:advancednavalbattle:advancednavalbattle"
   "games/TicTacToe/ticTacToeWebapp:tictactoe:production"
@@ -76,6 +76,7 @@ sudo rm -rf "${WEB_ROOT:?}/"*
 
 for entry in "${WEBAPPS[@]}"; do
   IFS=':' read -r webapp_src webapp_dest vite_mode <<< "${entry}"
+  : "${vite_mode:=production}"
   webapp_dir="${SRC_DIR}/${webapp_src}"
 
   if [ -d "${webapp_dir}" ]; then
