@@ -316,7 +316,7 @@ function createShipFormGrid(coords) {
     return container;
 }
 
-function createAbilityButton(ability, shipId, isYours) {
+function createAbilityButton(ability, shipId, isYours, vehicleDestroyed = false) {
     const element = document.createElement(isYours ? "button" : "div");
     element.className = isYours ? "ability-btn" : "ability-display";
     element.dataset.abilityType = ability.type;
@@ -344,7 +344,7 @@ function createAbilityButton(ability, shipId, isYours) {
     element.appendChild(uses);
 
     if (isYours) {
-        element.disabled = !ability.canuse || lastPhase === "setup";
+        element.disabled = !ability.canuse || lastPhase === "setup" || vehicleDestroyed;
         element.addEventListener("click", () => handleAbilityClick(shipId, ability.type));
     }
 
@@ -393,7 +393,7 @@ function createShipCard(ship, isYours) {
         abilitiesContainer.className = "ship-abilities";
 
         for (const ability of ship.abilities) {
-            const abilityEl = createAbilityButton(ability, ship.id, isYours);
+            const abilityEl = createAbilityButton(ability, ship.id, isYours, ship.issunk);
             abilitiesContainer.appendChild(abilityEl);
         }
 
@@ -461,7 +461,7 @@ function createPlaneCard(plane, isYours, planeIndex = 0) {
         abilitiesContainer.className = "plane-abilities";
 
         for (const ability of plane.abilities) {
-            const abilityEl = createAbilityButton(ability, plane.id, isYours);
+            const abilityEl = createAbilityButton(ability, plane.id, isYours, plane.isdestroyed);
             abilitiesContainer.appendChild(abilityEl);
         }
 
