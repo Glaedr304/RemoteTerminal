@@ -1459,6 +1459,10 @@ function applySetupInfo(setupInfo) {
 function applySnapshot(snapshot) {
     if (!snapshot) return;
 
+    // A confirmed server snapshot supersedes any transient hover/ability previews
+    clearPreview();
+    clearAbilityPreview();
+
     const myUserId = lastSetupInfo?.you;
     const currentPhase = snapshot.phase;
     
