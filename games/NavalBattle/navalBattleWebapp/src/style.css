@@ -1002,6 +1002,12 @@ kbd {
     gap: 0.25rem;
 }
 
+/* During setup, let clicks fall through abilities to the card */
+.phase-setup .ship-abilities,
+.phase-setup .plane-abilities {
+    pointer-events: none;
+}
+
 .ability-btn {
     display: flex;
     align-items: center;
