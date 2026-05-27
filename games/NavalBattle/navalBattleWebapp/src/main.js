@@ -1287,6 +1287,11 @@ document.getElementById("connectForm").addEventListener("submit", (e) => {
 });
 
 connectBtn.addEventListener("click", () => {
+    if (socket && (socket.readyState === WebSocket.CONNECTING || socket.readyState === WebSocket.OPEN)) {
+        showMessage("Already connected. Use the existing session.", "info");
+        return;
+    }
+
     const userId = userIdInput.value.trim();
     const gameIdValue = gameIdInput.value.trim();
 
@@ -1343,8 +1348,10 @@ connectBtn.addEventListener("click", () => {
                 case "actionresult":
                     applyActionResult(obj[key]);
                     break;
-                case "waiting":
-                    showMessage("Waiting for opponent to join...", "info");
+                case "readytostart":
+                    if (obj.success === true && obj[key] === false) {
+                        showMessage("Waiting for opponent to join...", "info");
+                    }
                     break;
                 case "rematchrequest":
                     handleRematchRequest(obj[key]);
@@ -1368,6 +1375,7 @@ connectBtn.addEventListener("click", () => {
     socket.onclose = () => {
         setConnectionStatus("disconnected");
         logLine("WebSocket closed");
+        socket = null;
     };
 });
 

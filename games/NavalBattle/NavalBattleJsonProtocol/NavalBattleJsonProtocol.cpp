@@ -1050,9 +1050,6 @@ Json::Value toJson(const AddUserToGameResult& r) {
 	answer["readytostart"] = r.readyToStart;
 	answer["error"] = toJson(r.error);
 
-	if (!r.readyToStart)
-		answer["waiting"] = true; // backwards compatability for now, fix to be more in line with rest of code
-
 	return answer;
 }
 
