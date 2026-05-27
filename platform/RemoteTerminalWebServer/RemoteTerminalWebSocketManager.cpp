@@ -79,12 +79,17 @@ drogon::WebSocketConnectionPtr RemoteTerminalWebSocketManager::socketForUser(con
 }
 
 void RemoteTerminalWebSocketManager::processMessageResultFromConn(const WireMessageResult& m, const drogon::WebSocketConnectionPtr& conn) {
-	if (m.senderAction == SenderAction::Bind)
-		bindUserToSocket(m.userToBind, conn);
+   if (m.senderAction == SenderAction::Bind && !bindUserToSocket(m.userToBind, conn)) {
+		conn->shutdown();
+		return;
+	}
 
 	for (const AddressedWireMessage& addressedMessage : m.addressedMessages)
 		if (std::holds_alternative<ToSender>(addressedMessage.address))
 			sendToSocket(conn, addressedMessage.message);
 		else if (std::holds_alternative<ToUser>(addressedMessage.address))
 			sendToUser(std::get<ToUser>(addressedMessage.address).userId, addressedMessage.message);
+
+	if (m.senderAction == SenderAction::TerminateSession)
+		conn->shutdown();
 }
