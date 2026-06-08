@@ -78,6 +78,60 @@ h1 {
     font-size: 0.9rem;
 }
 
+.connect-help {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0.75rem;
+}
+
+.info-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    border: 1px solid var(--text-secondary);
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 700;
+    line-height: 1;
+    padding: 0;
+}
+
+.info-icon:hover,
+.info-icon:focus-visible {
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+}
+
+.connect-help-tooltip {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 0.5rem);
+    transform: translateX(-50%);
+    width: 260px;
+    padding: 0.55rem 0.65rem;
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--border-color);
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    text-align: left;
+    box-shadow: var(--shadow-md);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+    z-index: 10;
+}
+
+.connect-help:hover .connect-help-tooltip,
+.connect-help:focus-within .connect-help-tooltip {
+    opacity: 1;
+    visibility: visible;
+}
+
 .label {
     font-size: 0.65rem;
     font-weight: 500;
