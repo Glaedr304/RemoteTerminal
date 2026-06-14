@@ -105,33 +105,32 @@ AddressedMessageBundle NavalBattleSession::getSnapshotMessageBundles() {
 AddressedMessageBundle NavalBattleSession::getStartupInfoMessageBundles() {
 	AddressedMessageBundle answer;
 
+	answer.addMessageBundle(getStartupInfoMessageBundleForUser(_playerToUserMap[Player::one]));
+	answer.addMessageBundle(getStartupInfoMessageBundleForUser(_playerToUserMap[Player::two]));
+
+	return answer;
+}
+
+AddressedMessageBundle NavalBattleSession::getStartupInfoMessageBundleForUser(const UserId& u) {
+	AddressedMessageBundle answer;
+	Player p = playerFor(u);
+	if (p == Player::none)
+		return answer;
+
 	const auto& engine = static_cast<const NavalBattleEngine&>(_engine);
 
-	StartupInfo p1startupInfo(
+	StartupInfo startupInfo(
 		engine.phase(),
-		_playerToUserMap[Player::one],
-		_playerToUserMap[opponent(Player::one)],
+		u,
+		opponentForUser(u),
 		_gameId,
-		UserView(_playerToUserMap[Player::one], engine.boardViewForPlayer(Player::one), engine.vehicleViewForPlayer(Player::one)),
+		UserView(u, engine.boardViewForPlayer(p), engine.vehicleViewForPlayer(p)),
 		engine.boardRows(),
 		engine.boardCols(),
-		engine.playerHasAntiAircraftGun(Player::one)
+		engine.playerHasAntiAircraftGun(p)
 	);
 
-	StartupInfo p2startupInfo(
-		engine.phase(),
-		_playerToUserMap[Player::two],
-		_playerToUserMap[opponent(Player::two)],
-		_gameId,
-		UserView(_playerToUserMap[Player::two], engine.boardViewForPlayer(Player::two), engine.vehicleViewForPlayer(Player::two)),
-		engine.boardRows(),
-		engine.boardCols(),
-		engine.playerHasAntiAircraftGun(Player::two)
-	);
-
-	answer.addMessage(ToUser(_playerToUserMap[Player::one]), p1startupInfo);
-	answer.addMessage(ToUser(_playerToUserMap[Player::two]), p2startupInfo);
-
+	answer.addMessage(ToUser(u), startupInfo);
 	return answer;
 }
 
