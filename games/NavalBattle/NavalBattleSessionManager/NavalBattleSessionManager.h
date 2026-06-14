@@ -25,6 +25,34 @@ public:
 	NavalBattleSession* findSession(GameId g);
 
 private:
+	AddUserToGameResult buildSuccessfulJoinResponse(bool readyToStart) const;
+
+	AddUserToGameResult buildFailedJoinResponse(AddUserToGameError error) const;
+
+	MessageResult buildImmediateJoinResult(const UserId& userId, SenderAction senderAction, const AddUserToGameResult& response) const;
+
+	void addReconnectRestoreMessages(MessageResult& result, NavalBattleSession* session, const UserId& userId) const;
+
+	MessageResult handleInProgressGameJoin(
+		const UserId& userId,
+		NavalBattleSession* session
+	) const;
+
+	MessageResult handleNewLobbyJoin(
+		const UserId& userId,
+		const GameId& gameId
+	);
+
+	MessageResult handleExistingLobbyOwnerJoin(
+		const UserId& userId
+	) const;
+
+	MessageResult handleSecondPlayerJoin(
+		const UserId& userId,
+		const GameId& gameId,
+		const UserId& firstUser
+	);
+
 	GameMode _gameMode;
 	std::map<GameId, NavalBattleSession*> _gameIdToSessionMap;
 	std::map<GameId, UserId> _lobbyGames;

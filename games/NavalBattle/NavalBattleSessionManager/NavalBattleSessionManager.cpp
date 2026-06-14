@@ -3,69 +3,99 @@
 
 using namespace NavalBattle;
 
-MessageResult NavalBattleSessionManager::handleJoinRequest(const JoinRequest& request) {
-	MessageResult result; //rename to answer at some point
+AddUserToGameResult NavalBattleSessionManager::buildSuccessfulJoinResponse(bool readyToStart) const {
+	AddUserToGameResult response;
+	response.success = true;
+	response.readyToStart = readyToStart;
+	return response;
+}
 
-	SenderAction& action = result.senderAction;
-	AddressedMessageBundle& messageBundle = result.addressedMessages;
-	UserId& userToBind = result.userToBind;
+AddUserToGameResult NavalBattleSessionManager::buildFailedJoinResponse(AddUserToGameError error) const {
+	AddUserToGameResult response;
+	response.success = false;
+	response.readyToStart = false;
+	response.error = error;
+	return response;
+}
 
-	UserId u = request.userId;
-	GameId g = request.gameId;
-	userToBind = u;
+MessageResult NavalBattleSessionManager::buildImmediateJoinResult(const UserId& userId, SenderAction senderAction, const AddUserToGameResult& response) const {
+	MessageResult result;
+	result.userToBind = userId;
+	result.senderAction = senderAction;
+	result.addressedMessages.addMessage(ToUser(userId), response);
+	return result;
+}
 
-	//game is already in progress
-	auto inProgressGame = _gameIdToSessionMap.find(g);
-	if (inProgressGame != _gameIdToSessionMap.end()) {
-		action = SenderAction::RejectMessage;
-		AddUserToGameResult r;
-		r.success = false;
-		r.error = AddUserToGameError::gameFull;
-		r.readyToStart = false;
-		messageBundle.addMessage(ToUser(u), r);
-		return result;
-	}
+void NavalBattleSessionManager::addReconnectRestoreMessages(MessageResult& result, NavalBattleSession* session, const UserId& userId) const {
+	result.addressedMessages.addMessageBundle(session->getStartupInfoMessageBundleForUser(userId));
+	result.addressedMessages.addMessageBundle(session->getSnapshotMessageBundleForUser(userId));
+}
 
-	auto lobbyGame = _lobbyGames.find(g);
-	//game does not exist yet
-	if (lobbyGame == _lobbyGames.end()) {
-		action = SenderAction::Bind;
-		AddUserToGameResult r;
-		_lobbyGames.insert({ g, u });
-		r.readyToStart = false;
-		r.success = true;
-		messageBundle.addMessage(ToUser(u), r);
-		return result;
-	}
+MessageResult NavalBattleSessionManager::handleInProgressGameJoin(
+	const UserId& userId,
+	NavalBattleSession* session
+) const {
+	(void)session;
+	return buildImmediateJoinResult(userId, SenderAction::RejectMessage, buildFailedJoinResponse(AddUserToGameError::gameFull));
+}
 
-	//game exists only in lobby
-	//...and this user is trying to join twice
-	if (lobbyGame->second == u) {
-		action = SenderAction::TerminateSession;
-		AddUserToGameResult r;
-		r.success = false;
-		r.error = AddUserToGameError::userAlreadyInGame;
-		r.readyToStart = false;
-		messageBundle.addMessage(ToUser(u), r);
-		return result;
-	}
+MessageResult NavalBattleSessionManager::handleNewLobbyJoin(
+	const UserId& userId,
+	const GameId& gameId
+) {
+	_lobbyGames.insert({ gameId, userId });
+	return buildImmediateJoinResult(userId, SenderAction::Bind, buildSuccessfulJoinResponse(false));
+}
 
-	//...and this is the second user
-	action = SenderAction::Bind;
-	NavalBattleSession* s = new NavalBattleSession(g, lobbyGame->second, u, _gameMode);
-	_gameIdToSessionMap[g] = s;
-	_lobbyGames.erase(lobbyGame);
-	AddUserToGameResult r;
-	r.success = true;
-	r.readyToStart = true;
-	messageBundle.addMessage(ToUser(u), r);
+MessageResult NavalBattleSessionManager::handleExistingLobbyOwnerJoin(
+	const UserId& userId
+) const {
+	return buildImmediateJoinResult(userId, SenderAction::TerminateSession, buildFailedJoinResponse(AddUserToGameError::userAlreadyInGame));
+}
 
-	//send both users startup info
-	AddressedMessageBundle startupMessages = s->getStartupInfoMessageBundles();
+MessageResult NavalBattleSessionManager::handleSecondPlayerJoin(
+	const UserId& userId,
+	const GameId& gameId,
+	const UserId& firstUser
+) {
+	MessageResult result;
+	result.userToBind = userId;
+	result.senderAction = SenderAction::Bind;
+
+	NavalBattleSession* session = new NavalBattleSession(gameId, firstUser, userId, _gameMode);
+	_gameIdToSessionMap[gameId] = session;
+	_lobbyGames.erase(gameId);
+
+	result.addressedMessages.addMessage(ToUser(userId), buildSuccessfulJoinResponse(true));
+
+	AddressedMessageBundle startupMessages = session->getStartupInfoMessageBundles();
 	for (const AddressedMessage& m : startupMessages)
-		messageBundle.addMessage(m.address, m.message);
+		result.addressedMessages.addMessage(m.address, m.message);
 
 	return result;
+}
+
+MessageResult NavalBattleSessionManager::handleJoinRequest(const JoinRequest& request) {
+	UserId u = request.userId;
+	GameId g = request.gameId;
+
+	// game is already in progress
+	auto inProgressGame = _gameIdToSessionMap.find(g);
+	if (inProgressGame != _gameIdToSessionMap.end())
+		return handleInProgressGameJoin(u, inProgressGame->second);
+
+	auto lobbyGame = _lobbyGames.find(g);
+	// game does not exist yet
+	if (lobbyGame == _lobbyGames.end())
+		return handleNewLobbyJoin(u, g);
+
+	// game exists only in lobby and this user is trying to join twice
+	if (lobbyGame->second == u)
+		return handleExistingLobbyOwnerJoin(u);
+
+	// this is the second user
+	const UserId firstUser = lobbyGame->second;
+	return handleSecondPlayerJoin(u, g, firstUser);
 }
 
 MessageResult NavalBattleSessionManager::handleActionRequest(const ActionRequest& request){
@@ -75,7 +105,8 @@ MessageResult NavalBattleSessionManager::handleActionRequest(const ActionRequest
 	answer.senderAction = SenderAction::None;
 
 	NavalBattleSession* session = findSession(request.gameId);
-	answer.addressedMessages = session->handleAction(request.userId, request.action);
+	if (session)
+		answer.addressedMessages = session->handleAction(request.userId, request.action);
 
 	return answer;
 }
