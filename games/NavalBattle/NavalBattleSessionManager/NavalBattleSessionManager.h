@@ -3,6 +3,7 @@
 #include "EndpointTypes.h"
 #include "GameEntities.h"
 #include <map>
+#include <optional>
 #include <random>
 
 namespace NavalBattle {
@@ -26,11 +27,26 @@ public:
 	NavalBattleSession* findSession(GameId g);
 
 private:
+	enum class GameLifecycleState {
+		lobby,
+		inProgress
+	};
+
+	struct GameRecord {
+		GameLifecycleState state;
+		NavalBattleSession* session = nullptr;
+		std::optional<UserId> waitingPlayer;
+	};
+
 	AddUserToGameResult buildSuccessfulJoinResponse(bool readyToStart, const std::string& connectionToken) const;
 
 	AddUserToGameResult buildFailedJoinResponse(AddUserToGameError error, const std::string& connectionToken) const;
 
 	MessageResult buildImmediateJoinResult(const UserId& userId, SenderAction senderAction, const AddUserToGameResult& response) const;
+
+	MessageResult buildImmediateSuccessfulJoinResult(const UserId& userId, SenderAction senderAction, bool readyToStart, const std::string& connectionToken) const;
+
+	MessageResult buildImmediateFailedJoinResult(const UserId& userId, SenderAction senderAction, AddUserToGameError error, const std::string& connectionToken) const;
 
 	void addReconnectRestoreMessages(MessageResult& result, NavalBattleSession* session, const UserId& userId) const;
 
@@ -66,9 +82,12 @@ private:
 
 	std::string rotateConnectionToken(const UserId& userId);
 
+	GameRecord* findGameRecord(const GameId& gameId);
+
+	const GameRecord* findGameRecord(const GameId& gameId) const;
+
 	GameMode _gameMode;
-	std::map<GameId, NavalBattleSession*> _gameIdToSessionMap;
-	std::map<GameId, UserId> _lobbyGames;
+	std::map<GameId, GameRecord> _games;
 	std::map<UserId, std::string> _userReconnectTokens;
 	std::mt19937_64 _rng{std::random_device{}()};
 };

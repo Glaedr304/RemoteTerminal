@@ -35,6 +35,14 @@ MessageResult NavalBattleSessionManager::buildImmediateJoinResult(const UserId& 
 	return result;
 }
 
+MessageResult NavalBattleSessionManager::buildImmediateSuccessfulJoinResult(const UserId& userId, SenderAction senderAction, bool readyToStart, const std::string& connectionToken) const {
+	return buildImmediateJoinResult(userId, senderAction, buildSuccessfulJoinResponse(readyToStart, connectionToken));
+}
+
+MessageResult NavalBattleSessionManager::buildImmediateFailedJoinResult(const UserId& userId, SenderAction senderAction, AddUserToGameError error, const std::string& connectionToken) const {
+	return buildImmediateJoinResult(userId, senderAction, buildFailedJoinResponse(error, connectionToken));
+}
+
 void NavalBattleSessionManager::addReconnectRestoreMessages(MessageResult& result, NavalBattleSession* session, const UserId& userId) const {
 	result.addressedMessages.addMessageBundle(session->getStartupInfoMessageBundleForUser(userId));
 	result.addressedMessages.addMessageBundle(session->getSnapshotMessageBundleForUser(userId));
@@ -55,7 +63,7 @@ MessageResult NavalBattleSessionManager::handleInProgressGameJoin(
 		return result;
 	}
 
-	return buildImmediateJoinResult(userId, SenderAction::RejectMessage, buildFailedJoinResponse(AddUserToGameError::gameFull, connectionToken));
+	return buildImmediateFailedJoinResult(userId, SenderAction::RejectMessage, AddUserToGameError::gameFull, connectionToken);
 }
 
 MessageResult NavalBattleSessionManager::handleNewLobbyJoin(
@@ -63,8 +71,12 @@ MessageResult NavalBattleSessionManager::handleNewLobbyJoin(
 	const GameId& gameId,
 	const std::string& connectionToken
 ) {
-	_lobbyGames.insert({ gameId, userId });
-	return buildImmediateJoinResult(userId, SenderAction::Bind, buildSuccessfulJoinResponse(false, connectionToken));
+	GameRecord record;
+	record.state = GameLifecycleState::lobby;
+	record.session = nullptr;
+	record.waitingPlayer = userId;
+	_games[gameId] = record;
+	return buildImmediateSuccessfulJoinResult(userId, SenderAction::Bind, false, connectionToken);
 }
 
 MessageResult NavalBattleSessionManager::handleExistingLobbyOwnerJoin(
@@ -73,9 +85,9 @@ MessageResult NavalBattleSessionManager::handleExistingLobbyOwnerJoin(
 	const std::string& connectionToken
 ) const {
 	if (validReconnectToken)
-		return buildImmediateJoinResult(userId, SenderAction::Bind, buildSuccessfulJoinResponse(false, connectionToken));
+		return buildImmediateSuccessfulJoinResult(userId, SenderAction::Bind, false, connectionToken);
 
-	return buildImmediateJoinResult(userId, SenderAction::TerminateSession, buildFailedJoinResponse(AddUserToGameError::userAlreadyInGame, connectionToken));
+	return buildImmediateFailedJoinResult(userId, SenderAction::TerminateSession, AddUserToGameError::userAlreadyInGame, connectionToken);
 }
 
 MessageResult NavalBattleSessionManager::handleSecondPlayerJoin(
@@ -89,8 +101,10 @@ MessageResult NavalBattleSessionManager::handleSecondPlayerJoin(
 	result.senderAction = SenderAction::Bind;
 
 	NavalBattleSession* session = new NavalBattleSession(gameId, firstUser, userId, _gameMode);
-	_gameIdToSessionMap[gameId] = session;
-	_lobbyGames.erase(gameId);
+	GameRecord& record = _games[gameId];
+	record.state = GameLifecycleState::inProgress;
+	record.session = session;
+	record.waitingPlayer.reset();
 
 	result.addressedMessages.addMessage(ToUser(userId), buildSuccessfulJoinResponse(true, connectionToken));
 
@@ -120,29 +134,37 @@ std::string NavalBattleSessionManager::rotateConnectionToken(const UserId& userI
 	return newToken;
 }
 
+NavalBattleSessionManager::GameRecord* NavalBattleSessionManager::findGameRecord(const GameId& gameId) {
+	return const_cast<GameRecord*>(static_cast<const NavalBattleSessionManager*>(this)->findGameRecord(gameId));
+}
+
+const NavalBattleSessionManager::GameRecord* NavalBattleSessionManager::findGameRecord(const GameId& gameId) const {
+	auto it = _games.find(gameId);
+	if (it == _games.end())
+		return nullptr;
+	return &it->second;
+}
+
 MessageResult NavalBattleSessionManager::handleJoinRequest(const JoinRequest& request) {
 	UserId u = request.userId;
 	GameId g = request.gameId;
 	const bool validReconnectToken = isReconnectTokenValid(u, request.connectionToken);
 	const std::string connectionToken = rotateConnectionToken(u);
 
-	// game is already in progress
-	auto inProgressGame = _gameIdToSessionMap.find(g);
-	if (inProgressGame != _gameIdToSessionMap.end())
-		return handleInProgressGameJoin(u, inProgressGame->second, validReconnectToken, connectionToken);
-
-	auto lobbyGame = _lobbyGames.find(g);
-	// game does not exist yet
-	if (lobbyGame == _lobbyGames.end())
+	GameRecord* record = findGameRecord(g);
+	if (!record)
 		return handleNewLobbyJoin(u, g, connectionToken);
 
-	// game exists only in lobby and this user is trying to join twice
-	if (lobbyGame->second == u)
+	if (record->state == GameLifecycleState::inProgress)
+		return handleInProgressGameJoin(u, record->session, validReconnectToken, connectionToken);
+
+	if (!record->waitingPlayer.has_value())
+		return handleNewLobbyJoin(u, g, connectionToken);
+
+	if (record->waitingPlayer.value() == u)
 		return handleExistingLobbyOwnerJoin(u, validReconnectToken, connectionToken);
 
-	// this is the second user
-	const UserId firstUser = lobbyGame->second;
-	return handleSecondPlayerJoin(u, g, firstUser, connectionToken);
+	return handleSecondPlayerJoin(u, g, record->waitingPlayer.value(), connectionToken);
 }
 
 MessageResult NavalBattleSessionManager::handleActionRequest(const ActionRequest& request){
@@ -159,13 +181,19 @@ MessageResult NavalBattleSessionManager::handleActionRequest(const ActionRequest
 }
 
 void NavalBattleSessionManager::destroySession(GameId g) {
-	delete _gameIdToSessionMap[g];
-	_gameIdToSessionMap.erase(g);
+	auto record = _games.find(g);
+	if (record == _games.end())
+		return;
+
+	if (record->second.session)
+		delete record->second.session;
+
+	_games.erase(record);
 }
 
 NavalBattleSession* NavalBattleSessionManager::findSession(GameId g) {
-	auto f = _gameIdToSessionMap.find(g);
-	if (f == _gameIdToSessionMap.end())
+	GameRecord* record = findGameRecord(g);
+	if (!record || record->state != GameLifecycleState::inProgress)
 		return nullptr;
-	return (*f).second;
+	return record->session;
 }
