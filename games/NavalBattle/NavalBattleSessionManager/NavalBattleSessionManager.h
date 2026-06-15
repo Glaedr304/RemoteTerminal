@@ -3,6 +3,7 @@
 #include "EndpointTypes.h"
 #include "GameEntities.h"
 #include <map>
+#include <random>
 
 namespace NavalBattle {
 
@@ -25,9 +26,9 @@ public:
 	NavalBattleSession* findSession(GameId g);
 
 private:
-	AddUserToGameResult buildSuccessfulJoinResponse(bool readyToStart) const;
+	AddUserToGameResult buildSuccessfulJoinResponse(bool readyToStart, const std::string& connectionToken) const;
 
-	AddUserToGameResult buildFailedJoinResponse(AddUserToGameError error) const;
+	AddUserToGameResult buildFailedJoinResponse(AddUserToGameError error, const std::string& connectionToken) const;
 
 	MessageResult buildImmediateJoinResult(const UserId& userId, SenderAction senderAction, const AddUserToGameResult& response) const;
 
@@ -35,27 +36,41 @@ private:
 
 	MessageResult handleInProgressGameJoin(
 		const UserId& userId,
-		NavalBattleSession* session
+		NavalBattleSession* session,
+		bool validReconnectToken,
+		const std::string& connectionToken
 	) const;
 
 	MessageResult handleNewLobbyJoin(
 		const UserId& userId,
-		const GameId& gameId
+		const GameId& gameId,
+		const std::string& connectionToken
 	);
 
 	MessageResult handleExistingLobbyOwnerJoin(
-		const UserId& userId
+		const UserId& userId,
+		bool validReconnectToken,
+		const std::string& connectionToken
 	) const;
 
 	MessageResult handleSecondPlayerJoin(
 		const UserId& userId,
 		const GameId& gameId,
-		const UserId& firstUser
+		const UserId& firstUser,
+		const std::string& connectionToken
 	);
+
+	std::string generateConnectionToken();
+
+	bool isReconnectTokenValid(const UserId& userId, const std::string& connectionToken) const;
+
+	std::string rotateConnectionToken(const UserId& userId);
 
 	GameMode _gameMode;
 	std::map<GameId, NavalBattleSession*> _gameIdToSessionMap;
 	std::map<GameId, UserId> _lobbyGames;
+	std::map<UserId, std::string> _userReconnectTokens;
+	std::mt19937_64 _rng{std::random_device{}()};
 };
 
 } // namespace NavalBattle

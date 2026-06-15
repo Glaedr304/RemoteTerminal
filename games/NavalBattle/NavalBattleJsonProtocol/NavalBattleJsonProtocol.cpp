@@ -1049,6 +1049,7 @@ Json::Value toJson(const AddUserToGameResult& r) {
 	answer["success"] = r.success;
 	answer["readytostart"] = r.readyToStart;
 	answer["error"] = toJson(r.error);
+	answer["connectiontoken"] = toJson(r.connectionToken);
 
 	return answer;
 }
@@ -1090,7 +1091,8 @@ Json::Value toJson(const OutboundMessage& r) {
 JoinRequest joinRequestFromJson(const Json::Value& v) {
 	JoinRequest answer(
 		userIdFromJson(v["userid"]),
-		gameIdFromJson(v["gameid"])
+		gameIdFromJson(v["gameid"]),
+		v.isMember("connectiontoken") && v["connectiontoken"].isString() ? v["connectiontoken"].asString() : ""
 	);
 	return answer;
 }

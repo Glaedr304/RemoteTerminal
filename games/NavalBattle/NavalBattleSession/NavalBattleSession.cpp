@@ -153,6 +153,10 @@ AddressedMessageBundle NavalBattleSession::getSnapshotMessageBundleForUser(const
 	return answer;
 }
 
+bool NavalBattleSession::hasUser(const UserId& u) const {
+	return _userToPlayerMap.find(u) != _userToPlayerMap.end();
+}
+
 UserId NavalBattleSession::opponentForUser(const UserId& u) {
 	return _playerToUserMap[opponent(_userToPlayerMap[u])];
 }

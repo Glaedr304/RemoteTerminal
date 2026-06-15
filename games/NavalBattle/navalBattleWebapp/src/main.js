@@ -58,6 +58,22 @@ let selectedVehicle = null; // { type: 'ship' | 'plane', id: number }
 let activeAbility = null; // { vehicleId: number, type: string, firingPattern: string | null }
 let antiAircraftMode = false; // true when player is selecting a target for anti-aircraft fire
 
+const CONNECTION_TOKEN_STORAGE_PREFIX = "navalbattle.connectiontoken.";
+
+function connectionTokenStorageKey(userId, gameId) {
+    return `${CONNECTION_TOKEN_STORAGE_PREFIX}${userId}::${gameId}`;
+}
+
+function getStoredConnectionToken(userId, gameId) {
+    if (!userId || !gameId) return "";
+    return localStorage.getItem(connectionTokenStorageKey(userId, gameId)) || "";
+}
+
+function storeConnectionToken(userId, gameId, token) {
+    if (!userId || !gameId || !token) return;
+    localStorage.setItem(connectionTokenStorageKey(userId, gameId), token);
+}
+
 // Ability configuration - what additional options each ability needs
 const ABILITY_CONFIG = {
     torpedo:  { needsTarget: true, needsFiringPattern: true,  patterns: ["vertical", "horizontal"], targetType: "opponent" },
@@ -1322,6 +1338,7 @@ connectBtn.addEventListener("click", () => {
             type: "hello",
             userid: myUserId,
             gameid: gameId,
+            connectiontoken: getStoredConnectionToken(myUserId, gameId),
         };
 
         sendMessage(helloMessage);
@@ -1349,6 +1366,9 @@ connectBtn.addEventListener("click", () => {
                     applyActionResult(obj[key]);
                     break;
                 case "readytostart":
+                    if (typeof obj.connectiontoken === "string" && obj.connectiontoken.length > 0) {
+                        storeConnectionToken(myUserId, gameId, obj.connectiontoken);
+                    }
                     if (obj.success === true && obj[key] === false) {
                         showMessage("Waiting for opponent to join...", "info");
                     }

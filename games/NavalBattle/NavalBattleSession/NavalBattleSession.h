@@ -25,6 +25,8 @@ public:
 
 	AddressedMessageBundle getSnapshotMessageBundleForUser(const UserId& u);
 
+    bool hasUser(const UserId& u) const;
+
     UserId opponentForUser(const UserId& u);
 
 private:

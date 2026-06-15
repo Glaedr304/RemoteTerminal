@@ -142,6 +142,7 @@ namespace NavalBattle {
         bool success = false;
         bool readyToStart = false;
         AddUserToGameError error;
+        std::string connectionToken;
     };
 
     struct RematchRequest {
@@ -186,6 +187,7 @@ namespace NavalBattle {
     struct JoinRequest {
         UserId userId;
         GameId gameId;
+        std::string connectionToken;
     };
 
     struct ActionRequest {
